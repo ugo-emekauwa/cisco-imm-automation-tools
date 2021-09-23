@@ -5,7 +5,7 @@
 </h1>  
 
 <p align="center">
-  Cisco IMM Automation Tools is a collection of software for automating the build and deployment of Cisco UCS Pools, Policies, and Profiles on Cisco Intersight. Each  tool can be easily ran as a script or imported as a Python function to meet your IMM automation needs.
+  Cisco IMM Automation Tools is a collection of software for automating the build and deployment of Cisco UCS Pools, Policies, and Profiles on Cisco Intersight for UCS X-Series hardware and previous generation UCS systems.
 </p>
 <br>
 
