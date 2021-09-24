@@ -10,7 +10,7 @@
 <br>
 
 ## Build and Deployment Tools
-- [UCS Domain Deployment Tool](./src/deployment_tools/ucs_domain_deployment_tool) - Build, assign and deploy a UCS domain profile and all policies in minutes.
+- [UCS Domain Deployment Tool](./src/deployment_tools/ucs_domain_deployment_tool) - Build, assign and deploy a UCS domain profile with all policies in minutes.
 - [UCS Server Deployment Tool](./src/deployment_tools/ucs_server_deployment_tool) - Coming soon!!!
 
 ## Policy Makers
