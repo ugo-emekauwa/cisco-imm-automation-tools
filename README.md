@@ -31,14 +31,14 @@
 - [Link Aggregation Policy Maker](./src/policy_makers/link_aggregation_policy_maker) - Make a UCS link aggregation policy.
 
 ## Pool Makers
-- [IP Pool Maker](./src/policy_makers/ip_pool_maker) - Make a UCS IP pool.
-- [IQN Pool Maker](./src/policy_makers/iqn_pool_maker) - Make a UCS IQN pool.
-- [MAC Pool Maker](./src/policy_makers/mac_pool_maker) - Make a UCS MAC pool.
-- [WWNN Pool Maker](./src/policy_makers/wwnn_pool_maker) - Make a UCS WWNN pool.
-- [WWPN Pool Maker](./src/policy_makers/wwpn_pool_maker) - Make a UCS WWPN pool.
+- [IP Pool Maker](./src/pool_makers/ip_pool_maker) - Make a UCS IP pool.
+- [IQN Pool Maker](./src/pool_makers/iqn_pool_maker) - Make a UCS IQN pool.
+- [MAC Pool Maker](./src/pool_makers/mac_pool_maker) - Make a UCS MAC pool.
+- [WWNN Pool Maker](./src/pool_makers/wwnn_pool_maker) - Make a UCS WWNN pool.
+- [WWPN Pool Maker](./src/pool_makers/wwpn_pool_maker) - Make a UCS WWPN pool.
 
 ## Base Profile Makers
-- [Base UCS Domain Profile Maker](./src/policy_makers/ucs_domain_profile_maker) - Make and assign a base UCS domain profile without the policies.
+- [Base UCS Domain Profile Maker](./src/profile_makers/ucs_domain_profile_maker) - Make and assign a base UCS domain profile without the policies.
 
 ## Author
 Ugo Emekauwa
