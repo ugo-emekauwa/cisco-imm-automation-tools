@@ -12,10 +12,27 @@
 ## Build and Deployment Tools
 - [UCS Domain Deployment Tool](./src/deployment_tools/ucs_domain_deployment_tool) - Build, assign and deploy a UCS domain profile and all policies in minutes.
 - [UCS Server Deployment Tool](./src/deployment_tools/ucs_server_deployment_tool) - Coming soon!!!
-<br>
+
+## Policy Makers
+- [Port Policy Maker](./src/policy_makers/port_policy_maker)
+- [VLAN Policy Maker](./src/policy_makers/vlan_policy_maker)
+- [VSAN Policy Maker](./src/policy_makers/vsan_policy_maker)
+- [Multicast Policy Maker](./src/policy_makers/multicast_policy_maker)
+- [NTP Policy Maker](./src/policy_makers/ntp_policy_maker)
+- [Network Connectivity Policy Maker](./src/policy_makers/network_connectivity_policy_maker)
+- [System QoS Policy Maker](./src/policy_makers/system_qos_policy_maker)
+- [Switch Control Policy Maker](./src/policy_makers/switch_control_policy_maker)
+- [SNMP Policy Maker](./src/policy_makers/snmp_policy_maker)
+- [Syslog Policy Maker](./src/policy_makers/syslog_policy_maker)
+- [Ethernet Network Group Policy Maker](./src/policy_makers/ethernet_network_group_policy_maker)
+- [Ethernet Network Control Policy Maker](./src/policy_makers/ethernet_network_control_policy_maker)
+- [Flow Control Policy Maker](./src/policy_makers/flow_control_policy_maker)
+- [Link Control Policy Maker](./src/policy_makers/link_control_policy_maker)
+- [Link Aggregation Policy Maker](./src/policy_makers/link_aggregation_policy_maker)
 
 ## Author
 Ugo Emekauwa
 
 ## Contact Information
 uemekauw@cisco.com or uemekauwa@gmail.com
+
