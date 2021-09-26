@@ -9,7 +9,20 @@
 </p>
 <br>
 
-## Prerequisites:
+## Features
+- Automatically build a UCS Domain Profile with all 15 UCS Domain Policies of your choosing and configured to your exact specification. Anything that can be done through the Intersight GUI can be done here and more!
+
+- Automatically assign the UCS Domain Profile to a Fabric Interconnect cluster registered under Intersight, using either the Target Name, IP address(es), or serial number(s).
+
+- Automatically deploy the UCS Domain Profile to the assigned Fabric Interconnect cluster.
+
+- Set default Multicast Policies for any configured VLANs.
+
+- Set default Ethernet Network Group, Ethernet Network Control, Flow Control, Link Control, and Link Aggregation Policies for any configured ports .
+
+- Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
+
+## Prerequisites
 1. Python 3 installed, which can be downloaded from [https://www.python.org/downloads/](https://www.python.org/downloads/).
 2. Install the Cisco Intersight SDK for Python by running the following command:
    ```
@@ -54,7 +67,7 @@
     
       ![Figure 7 - Copy and save the API key data](./assets/Figure_7_Copy_and_save_the_API_key_data.png "Figure 7 - Copy and save the API key data")
 
-## How to Use:
+## How to Use
 1. Please ensure that the above [**Prerequisites**](https://github.com/ugo-emekauwa/cisco-imm-automation-tools#prerequisites) have been met.
 2. Within the Cisco IMM Automation Tools repository, navigate to the folder \src\deployment_tools\ucs_domain_deployment_tool.
 3. Edit the ucs_domain_deployment_tool.py file to set the **`key_id`** variable using the following instructions:
@@ -107,7 +120,7 @@
 5. Save the changes you have made to the ucs_domain_deployment_tool.py file.
 6. Run the ucs_domain_deployment_tool.py file.
 
-## Where to Demo:
+## Where to Demo
 The UCS Domain Deployment Tool can be demoed on Cisco dCloud in the following content:
 
 1. [**_Getting Started with Cisco Intersight v2_**](https://dcloud2-rtp.cisco.com/content/instantdemo/getting-started-with-cisco-intersight-v2)
@@ -117,8 +130,8 @@ The UCS Domain Deployment Tool can be demoed on Cisco dCloud in the following co
 
 dCloud is available at [https://dcloud.cisco.com](https://dcloud.cisco.com), where Cisco product demonstrations and labs can be found in the Catalog.
 
-## Author:
+## Author
 Ugo Emekauwa
 
-## Contact Information:
+## Contact Information
 uemekauw@cisco.com or uemekauwa@gmail.com
