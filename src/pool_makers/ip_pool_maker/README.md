@@ -12,6 +12,8 @@
 ## Features
 - Automatically build an Intersight IP Pool to your exact specification. Anything that can be done through the Intersight GUI can be done here and more!
 
+- Set the assignment order of the Pool to sequential order, if desired.
+
 - Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
 
 ## Prerequisites
