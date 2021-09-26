@@ -18,7 +18,7 @@
 
 - Set default Multicast Policies for any configured VLANs.
 
-- Set default Ethernet Network Group, Ethernet Network Control, Flow Control, Link Control, and Link Aggregation Policies for any configured ports .
+- Set default Ethernet Network Group, Ethernet Network Control, Flow Control, Link Control, and Link Aggregation Policies for any configured ports.
 
 - Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
 
