@@ -16,6 +16,8 @@
 
 - Automatically attach the VSAN Policy to a UCS Domain Profile if desired, during the VSAN Policy configuration. The VSAN Policy can be attached to Fabric Interconnect A, B, or both.
 
+- Quickly restore VSAN Policy configurations as part of your on-prem Intersight backup solution.
+
 - Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
 
 ## Prerequisites
