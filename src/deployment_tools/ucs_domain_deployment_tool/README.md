@@ -20,9 +20,9 @@
 
 - Set default Ethernet Network Group, Ethernet Network Control, Flow Control, Link Control, and Link Aggregation Policies for any configured ports.
 
-- Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
-
 - Quickly restore UCS Domain and UCS Policy configurations as part of your on-prem Intersight backup solution.
+
+- Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
 
 ## Prerequisites
 1. Python 3 installed, which can be downloaded from [https://www.python.org/downloads/](https://www.python.org/downloads/).
