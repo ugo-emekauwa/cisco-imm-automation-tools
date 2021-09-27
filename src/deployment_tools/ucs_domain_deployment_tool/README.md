@@ -22,6 +22,8 @@
 
 - Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
 
+- Quickly restore UCS Domain and UCS Policy configurations as part of your on-prem Intersight backup solution.
+
 ## Prerequisites
 1. Python 3 installed, which can be downloaded from [https://www.python.org/downloads/](https://www.python.org/downloads/).
 2. Install the Cisco Intersight SDK for Python by running the following command:
