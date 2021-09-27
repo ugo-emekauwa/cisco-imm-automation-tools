@@ -16,6 +16,8 @@
 
 - Set default Ethernet Network Group, Ethernet Network Control, Flow Control, Link Control, and Link Aggregation Policies for any configured ports.
 
+- Quickly restore Port Policy configurations as part of your on-prem Intersight backup solution.
+
 - Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
 
 ## Prerequisites
