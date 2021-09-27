@@ -16,6 +16,8 @@
 
 - Set default Multicast Policies for any configured VLANs.
 
+- Quickly restore VLAN Policy configurations as part of your on-prem Intersight backup solution.
+
 - Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
 
 ## Prerequisites
