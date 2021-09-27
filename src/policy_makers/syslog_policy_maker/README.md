@@ -16,6 +16,8 @@
 
 - Automatically attach the Syslog Policy to a UCS Domain Profile if desired, during the Syslog Policy configuration.
 
+- Quickly restore Syslog Policy configurations as part of your on-prem Intersight backup solution.
+
 - Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
 
 ## Prerequisites
