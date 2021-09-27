@@ -14,6 +14,8 @@
 
 - Automatically attach the System QoS Policy to a UCS Domain Profile if desired, during the System QoS Policy configuration.
 
+- Quickly restore System QoS Policy configurations as part of your on-prem Intersight backup solution.
+
 - Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
 
 ## Prerequisites
