@@ -14,6 +14,8 @@
 
 - Set the assignment order of the Pool to sequential order, if desired.
 
+- Quickly restore WWPN Pool configurations as part of your on-prem Intersight backup solution.
+
 - Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
 
 ## Prerequisites
