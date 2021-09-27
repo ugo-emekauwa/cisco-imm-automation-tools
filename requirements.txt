@@ -1,0 +1,7 @@
+certifi >= 2019.11.28
+intersight-openapi-client >= 1.0.0
+pycryptodome >= 3.9.8
+python-dateutil >= 2.8.1
+requests >= 2.22.0
+six >= 1.15.0
+urllib3 >= 1.25.8
