@@ -12,6 +12,8 @@
 ## Features
 - Automatically build an Intersight Flow Control Policy to your exact specification. Anything that can be done through the Intersight GUI can be done here and more!
 
+- Quickly restore Flow Control Policy configurations as part of your on-prem Intersight backup solution.
+
 - Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
 
 ## Prerequisites
