@@ -14,6 +14,8 @@
 
 - Assign the base UCS Domain Profile to a Fabric Interconnect cluster registered under Intersight, using either the Target Name, IP address(es), or serial number(s).
 
+- Quickly restore UCS Domain Profile configurations as part of your on-prem Intersight backup solution.
+
 - Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
 
 **`NOTE:`** If building a UCS Domain Profile **with** all UCS Domain Policies is desired, please use the [**UCS Domain Deployment Tool**](https://github.com/ugo-emekauwa/cisco-imm-automation-tools/tree/main/src/deployment_tools/ucs_domain_deployment_tool) located at [https://github.com/ugo-emekauwa/cisco-imm-automation-tools/tree/main/src/deployment_tools/ucs_domain_deployment_tool](https://github.com/ugo-emekauwa/cisco-imm-automation-tools/tree/main/src/deployment_tools/ucs_domain_deployment_tool).
