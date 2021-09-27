@@ -14,6 +14,8 @@
 
 - Automatically attach the Network Connectivity Policy to a UCS Domain Profile if desired, during the Network Connectivity Policy configuration.
 
+- Quickly restore Network Connectivity Policy configurations as part of your on-prem Intersight backup solution.
+
 - Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
 
 ## Prerequisites
