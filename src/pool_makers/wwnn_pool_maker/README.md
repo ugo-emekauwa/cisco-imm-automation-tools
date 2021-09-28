@@ -117,12 +117,10 @@
 6. Run the wwnn_pool_maker.py file.
 
 ## Where to Demo
-The WWNN Pool Maker can be demoed on Cisco dCloud in the following content:
+The WWNN Pool Maker can be demoed on Cisco dCloud in the following soon to be released content:
 
-1. [**_Getting Started with Cisco Intersight v2_**](https://dcloud2-rtp.cisco.com/content/instantdemo/getting-started-with-cisco-intersight-v2)
-    - **`NOTE:`** Before running the WWNN Pool Maker, change the Pool organization to "Sandpit".
-2. **_Cisco UCS X-Series with Intersight v1 (Instant Demo)_** - Coming soon!
-3. **_Cisco UCS X-Series with Intersight Lab v1 (Scheduled Demo/Sandbox)_** - Coming soon!
+1. **_Cisco Intersight Managed Mode (IMM) with UCS X-Series v1 (Instant Demo)_** - Coming soon!
+2. **_Cisco Intersight Managed Mode (IMM) with UCS X-Series Lab v1 (Scheduled Demo/Sandbox)_** - Coming soon!
 
 dCloud is available at [https://dcloud.cisco.com](https://dcloud.cisco.com), where Cisco product demonstrations and labs can be found in the Catalog.
 
