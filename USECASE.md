@@ -41,7 +41,7 @@
 - [Base UCS Domain Profile Maker](./src/profile_makers/ucs_domain_profile_maker) - Make and assign a base UCS domain profile without the policies.
 
 ## Demonstrations and Learning Labs
-Cisco IMM Automation Tools can be demoed on Cisco dCloud in the following soon to be released labs:
+Cisco IMM Automation Tools can be demoed on Cisco dCloud in the following soon to be released content:
 
 1. **_Cisco Intersight Managed Mode (IMM) with UCS X-Series v1 (Instant Demo)_** - Coming soon!
 2. **_Cisco Intersight Managed Mode (IMM) with UCS X-Series Lab v1 (Scheduled Demo/Sandbox)_** - Coming soon!
@@ -53,4 +53,3 @@ Ugo Emekauwa
 
 ## Contact Information
 uemekauw@cisco.com or uemekauwa@gmail.com
-
