@@ -7675,7 +7675,7 @@ def main():
             allowed_vlans=ethernet_network_group_policy_allowed_vlans,
             native_vlan=ethernet_network_group_policy_native_vlan,
             policy_description=ethernet_network_group_policy_description,
-            organization=ethernet_network_group_policy_organization,
+            organization=ucs_domain_profile_organization,
             tags=ethernet_network_group_policy_tags,
             preconfigured_api_instance=main_intersight_api_instance
             )
@@ -7695,7 +7695,7 @@ def main():
             lldp_enable_transmit=ethernet_network_control_policy_lldp_enable_transmit,
             lldp_enable_receive=ethernet_network_control_policy_lldp_enable_receive,
             policy_description=ethernet_network_control_policy_description,
-            organization=ethernet_network_control_policy_organization,
+            organization=ucs_domain_profile_organization,
             tags=ethernet_network_control_policy_tags,
             preconfigured_api_instance=main_intersight_api_instance
             )
@@ -7712,7 +7712,7 @@ def main():
             receive=flow_control_policy_receive,
             send=flow_control_policy_send,
             policy_description=flow_control_policy_description,
-            organization=flow_control_policy_organization,
+            organization=ucs_domain_profile_organization,
             tags=flow_control_policy_tags,
             preconfigured_api_instance=main_intersight_api_instance
             )
@@ -7728,7 +7728,7 @@ def main():
             admin_state=link_control_policy_admin_state,
             mode=link_control_policy_mode,
             policy_description=link_control_policy_description,
-            organization=link_control_policy_organization,
+            organization=ucs_domain_profile_organization,
             tags=link_control_policy_tags,
             preconfigured_api_instance=main_intersight_api_instance
             )
@@ -7744,7 +7744,7 @@ def main():
             suspend_individual=link_aggregation_policy_suspend_individual,
             lacp_rate=link_aggregation_policy_lacp_rate,
             policy_description=link_aggregation_policy_description,
-            organization=link_aggregation_policy_organization,
+            organization=ucs_domain_profile_organization,
             tags=link_aggregation_policy_tags,
             preconfigured_api_instance=main_intersight_api_instance
             )
@@ -7927,7 +7927,7 @@ def main():
             syslog_local_logging_minimum_severity_to_report=syslog_policy_local_logging_minimum_severity_to_report,
             syslog_remote_logging_server_list=syslog_policy_remote_logging_server_list,
             policy_description=syslog_policy_description,
-            organization=syslog_policy_organization,
+            organization=ucs_domain_profile_organization,
             tags=syslog_policy_tags,
             preconfigured_api_instance=main_intersight_api_instance,
             ucs_domain_profile_name=deployment_tool_ucs_domain_profile_name
@@ -7978,7 +7978,7 @@ def main():
             snmp_users_list=snmp_policy_users_list,
             snmp_trap_destinations_list=snmp_policy_trap_destinations_list,
             policy_description=snmp_policy_description,
-            organization=snmp_policy_organization,
+            organization=ucs_domain_profile_organization,
             tags=snmp_policy_tags,
             preconfigured_api_instance=main_intersight_api_instance,
             ucs_domain_profile_name=deployment_tool_ucs_domain_profile_name
