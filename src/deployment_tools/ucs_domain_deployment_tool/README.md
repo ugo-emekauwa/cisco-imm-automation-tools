@@ -39,8 +39,8 @@
     ```
     git clone https://github.com/ugo-emekauwa/cisco-imm-automation-tools
     ```
-5. Unzip the downloaded Cisco IMM Automation Tools repository file.
-6. Generate a version 2 API key from your Intersight account.
+   If you are downloading the repository file as a zipped file, unzip the file once the download has completed.
+5. Generate a version 2 API key from your Intersight account.
 
     **(a).** Log into your Intersight account, click the Settings icon and select **Settings**.
     
@@ -89,7 +89,7 @@
       ```py
       key_id = "5c89885075646127773ec143/5c82fc477577712d3088eb2f/5c8987b17577712d302eaaff"
       ```
-3. Edit the ucs_domain_deployment_tool.py file to set the **`key`** variable using the following instructions:
+4. Edit the ucs_domain_deployment_tool.py file to set the **`key`** variable using the following instructions:
 
     **(a).** Open the ucs_domain_deployment_tool.py file in an IDLE or text editor of choice.
     
@@ -105,7 +105,7 @@
       ```py
       key = "C:\\Keys\\Key1\\SecretKey.txt"
       ```
-4. Edit the ucs_domain_deployment_tool.py file to set all the configuration variable values using the following instructions:
+5. Edit the ucs_domain_deployment_tool.py file to set all the configuration variable values using the following instructions:
 
     **(a).** Open the ucs_domain_deployment_tool.py file in an IDLE or text editor of choice.
 
@@ -120,8 +120,8 @@
     Completion of editing the configuration variable values is marked by the comment **`####### Finish Configuration Settings - The required value entries are complete. #######`**.
       
       ![Figure 15 - Finish Configuration Settings location](./assets/Figure_15_Finish_Configuration_Settings_location.png "Figure 15 - Finish Configuration Settings location")
-5. Save the changes you have made to the ucs_domain_deployment_tool.py file.
-6. Run the ucs_domain_deployment_tool.py file.
+6. Save the changes you have made to the ucs_domain_deployment_tool.py file.
+7. Run the ucs_domain_deployment_tool.py file.
 
 ## Where to Demo
 The UCS Domain Deployment Tool can be demoed on Cisco dCloud in the following soon to be released content:
