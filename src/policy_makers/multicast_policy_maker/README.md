@@ -31,6 +31,7 @@
     ```
     git clone https://github.com/ugo-emekauwa/cisco-imm-automation-tools
     ```
+   If you are downloading the repository file as a zipped file, unzip the file once the download has completed.
 5. Generate a version 2 API key from your Intersight account.
 
     **(a).** Log into your Intersight account, click the Settings icon and select **Settings**.
@@ -63,7 +64,7 @@
 
 ## How to Use
 1. Please ensure that the above [**Prerequisites**](https://github.com/ugo-emekauwa/cisco-imm-automation-tools#prerequisites) have been met.
-2. Within the Cisco IMM Automation Tools repository, navigate to the folder \src\policy_makers\multicast_policy_maker.
+2. Within the unzipped Cisco IMM Automation Tools repository, navigate to the folder \src\policy_makers\multicast_policy_maker.
 3. Edit the multicast_policy_maker.py file to set the **`key_id`** variable using the following instructions:
 
     **(a).** Open the multicast_policy_maker.py file in an IDLE or text editor of choice.
@@ -80,7 +81,7 @@
       ```py
       key_id = "5c89885075646127773ec143/5c82fc477577712d3088eb2f/5c8987b17577712d302eaaff"
       ```
-3. Edit the multicast_policy_maker.py file to set the **`key`** variable using the following instructions:
+4. Edit the multicast_policy_maker.py file to set the **`key`** variable using the following instructions:
 
     **(a).** Open the multicast_policy_maker.py file in an IDLE or text editor of choice.
     
@@ -96,7 +97,7 @@
       ```py
       key = "C:\\Keys\\Key1\\SecretKey.txt"
       ```
-4. Edit the multicast_policy_maker.py file to set all the configuration variable values using the following instructions:
+5. Edit the multicast_policy_maker.py file to set all the configuration variable values using the following instructions:
 
     **(a).** Open the multicast_policy_maker.py file in an IDLE or text editor of choice.
 
@@ -111,8 +112,8 @@
     Completion of editing the configuration variable values is marked by the comment **`####### Finish Configuration Settings - The required value entries are complete. #######`**.
       
       ![Figure 15 - Finish Configuration Settings location](./assets/Figure_15_Finish_Configuration_Settings_location.png "Figure 15 - Finish Configuration Settings location")
-5. Save the changes you have made to the multicast_policy_maker.py file.
-6. Run the multicast_policy_maker.py file.
+6. Save the changes you have made to the multicast_policy_maker.py file.
+7. Run the multicast_policy_maker.py file.
 
 ## Where to Demo
 The Multicast Policy Maker can be demoed on Cisco dCloud in the following soon to be released content:
