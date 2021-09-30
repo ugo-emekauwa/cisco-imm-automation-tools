@@ -39,7 +39,8 @@
     ```
     git clone https://github.com/ugo-emekauwa/cisco-imm-automation-tools
     ```
-5. Generate a version 2 API key from your Intersight account.
+5. Unzip the downloaded Cisco IMM Automation Tools repository file.
+6. Generate a version 2 API key from your Intersight account.
 
     **(a).** Log into your Intersight account, click the Settings icon and select **Settings**.
     
@@ -71,7 +72,7 @@
 
 ## How to Use
 1. Please ensure that the above [**Prerequisites**](https://github.com/ugo-emekauwa/cisco-imm-automation-tools#prerequisites) have been met.
-2. Within the Cisco IMM Automation Tools repository, navigate to the folder \src\deployment_tools\ucs_domain_deployment_tool.
+2. Within the unzipped Cisco IMM Automation Tools repository, navigate to the folder \src\deployment_tools\ucs_domain_deployment_tool.
 3. Edit the ucs_domain_deployment_tool.py file to set the **`key_id`** variable using the following instructions:
 
     **(a).** Open the ucs_domain_deployment_tool.py file in an IDLE or text editor of choice.
