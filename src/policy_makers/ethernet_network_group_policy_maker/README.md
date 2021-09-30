@@ -1,18 +1,18 @@
-<h1 align="center">Ethernet Network Group Policy Maker</h1>
+<h1 align="center">Ethernet Network Control Policy Maker</h1>
 
 <h1 align="center">
   <img alt="Policy Makers Title Image" title="Policy Makers" src="./assets/Policy_Makers_Title_Graphic.png">
 </h1>  
 
 <p align="center">
-  The Ethernet Network Group Policy Maker for Cisco Intersight automates the creation of Ethernet Network Group Policies.
+  The Ethernet Network Control Policy Maker for Cisco Intersight automates the creation of Ethernet Network Control Policies.
 </p>
 <br>
 
 ## Features
-- Automatically build an Intersight Ethernet Network Group Policy to your exact specification. Anything that can be done through the Intersight GUI can be done here and more!
+- Automatically build an Intersight Ethernet Network Control Policy to your exact specification. Anything that can be done through the Intersight GUI can be done here and more!
 
-- Quickly restore Ethernet Network Group Policy configurations as part of your on-prem Intersight backup solution.
+- Quickly restore Ethernet Network Control Policy configurations as part of your on-prem Intersight backup solution.
 
 - Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
 
@@ -31,6 +31,7 @@
     ```
     git clone https://github.com/ugo-emekauwa/cisco-imm-automation-tools
     ```
+   If you are downloading the repository file as a zipped file, unzip the file once the download has completed.
 5. Generate a version 2 API key from your Intersight account.
 
     **(a).** Log into your Intersight account, click the Settings icon and select **Settings**.
@@ -63,10 +64,10 @@
 
 ## How to Use
 1. Please ensure that the above [**Prerequisites**](https://github.com/ugo-emekauwa/cisco-imm-automation-tools#prerequisites) have been met.
-2. Within the Cisco IMM Automation Tools repository, navigate to the folder \src\policy_makers\ethernet_network_group_policy_maker.
-3. Edit the ethernet_network_group_policy_maker.py file to set the **`key_id`** variable using the following instructions:
+2. Within the unzipped Cisco IMM Automation Tools repository, navigate to the folder \src\policy_makers\ethernet_network_control_policy_maker.
+3. Edit the ethernet_network_control_policy_maker.py file to set the **`key_id`** variable using the following instructions:
 
-    **(a).** Open the ethernet_network_group_policy_maker.py file in an IDLE or text editor of choice.
+    **(a).** Open the ethernet_network_control_policy_maker.py file in an IDLE or text editor of choice.
     
     **(b).** Find the comment **`# MODULE REQUIREMENT 1 #`**.
      
@@ -80,9 +81,9 @@
       ```py
       key_id = "5c89885075646127773ec143/5c82fc477577712d3088eb2f/5c8987b17577712d302eaaff"
       ```
-3. Edit the ethernet_network_group_policy_maker.py file to set the **`key`** variable using the following instructions:
+4. Edit the ethernet_network_control_policy_maker.py file to set the **`key`** variable using the following instructions:
 
-    **(a).** Open the ethernet_network_group_policy_maker.py file in an IDLE or text editor of choice.
+    **(a).** Open the ethernet_network_control_policy_maker.py file in an IDLE or text editor of choice.
     
     **(b).** Find the comment **`# MODULE REQUIREMENT 2 #`**.
     
@@ -96,9 +97,9 @@
       ```py
       key = "C:\\Keys\\Key1\\SecretKey.txt"
       ```
-4. Edit the ethernet_network_group_policy_maker.py file to set all the configuration variable values using the following instructions:
+5. Edit the ethernet_network_control_policy_maker.py file to set all the configuration variable values using the following instructions:
 
-    **(a).** Open the ethernet_network_group_policy_maker.py file in an IDLE or text editor of choice.
+    **(a).** Open the ethernet_network_control_policy_maker.py file in an IDLE or text editor of choice.
 
     **(b).** Find the comment **`# MODULE REQUIREMENT 3 #`**.
     
@@ -111,11 +112,11 @@
     Completion of editing the configuration variable values is marked by the comment **`####### Finish Configuration Settings - The required value entries are complete. #######`**.
       
       ![Figure 15 - Finish Configuration Settings location](./assets/Figure_15_Finish_Configuration_Settings_location.png "Figure 15 - Finish Configuration Settings location")
-5. Save the changes you have made to the ethernet_network_group_policy_maker.py file.
-6. Run the ethernet_network_group_policy_maker.py file.
+6. Save the changes you have made to the ethernet_network_control_policy_maker.py file.
+7. Run the ethernet_network_control_policy_maker.py file.
 
 ## Where to Demo
-The Ethernet Network Group Policy Maker can be demoed on Cisco dCloud in the following soon to be released content:
+The Ethernet Network Control Policy Maker can be demoed on Cisco dCloud in the following soon to be released content:
 
 1. **_Cisco Intersight Managed Mode (IMM) with UCS X-Series v1 (Instant Demo)_** - Coming soon!
 2. **_Cisco Intersight Managed Mode (IMM) with UCS X-Series Lab v1 (Scheduled Demo/Sandbox)_** - Coming soon!
