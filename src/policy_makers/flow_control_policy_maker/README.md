@@ -17,22 +17,24 @@
 - Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
 
 ## Prerequisites
-1. Python 3 installed, which can be downloaded from [https://www.python.org/downloads/](https://www.python.org/downloads/).
-2. Install the Cisco Intersight SDK for Python by running the following command:
+1. Python 3.7 or higher installed, which can be downloaded from [https://www.python.org/downloads/](https://www.python.org/downloads/).
+    - If you're installing for the first time on Windows, select the option **"Add Python 3.x to PATH"** during the installation.
+2. Git installed, which can be downloaded from [https://git-scm.com/downloads/](https://git-scm.com/downloads/).
+3. Install the Cisco Intersight SDK for Python by running the following command:
    ```
-   python -m pip install git+https://github.com/CiscoUcs/intersight-python.git
+   pip install git+https://github.com/CiscoUcs/intersight-python.git
    ```
    More information on the Cisco Intersight SDK for Python can be found at [https://github.com/CiscoUcs/intersight-python](https://github.com/CiscoUcs/intersight-python).
-3. [_Optional_] If you already have the Cisco Intersight SDK for Python installed, you may need to upgrade. An upgrade can be performed by running the following command:
+4. [_Optional_] If you already have the Cisco Intersight SDK for Python installed, you may need to upgrade. An upgrade can be performed by running the following command:
    ```
-   python -m pip install git+https://github.com/CiscoUcs/intersight-python.git --upgrade --user
+   pip install git+https://github.com/CiscoUcs/intersight-python.git --upgrade --user
    ```
-4. Clone or download the Cisco IMM Automation Tools repository by using the ![GitHub Code Button](./assets/GitHub_Code_Button.png "GitHub Code Button") link on the main repository web page or by running the following command:
+5. Clone or download the Cisco IMM Automation Tools repository by using the ![GitHub Code Button](./assets/GitHub_Code_Button.png "GitHub Code Button") link on the main repository web page or by running the following command from the target directory:
     ```
     git clone https://github.com/ugo-emekauwa/cisco-imm-automation-tools
     ```
    If you are downloading the repository file as a zipped file, unzip the file once the download has completed.
-5. Generate a version 2 API key from your Intersight account.
+6. Generate a version 2 API key from your Intersight account.
 
     **(a).** Log into your Intersight account, click the Settings icon and select **Settings**.
     
