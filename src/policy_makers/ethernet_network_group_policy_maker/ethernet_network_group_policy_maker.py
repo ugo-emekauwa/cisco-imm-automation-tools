@@ -75,7 +75,6 @@ import sys
 import traceback
 import json
 import copy
-import requests
 import intersight
 from intersight.intersight_api_client import IntersightApiClient
 
