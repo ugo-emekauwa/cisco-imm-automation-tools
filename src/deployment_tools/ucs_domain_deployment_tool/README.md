@@ -1,9 +1,10 @@
 <h1 align="center">UCS Domain Deployment Tool</h1>
 
-<h1 align="center">
+<br>
+<p align="center">
   <img alt="Deployment Tools Title Image" title="Deployment Tools" src="./assets/Deployment_Tools_Title_Graphic.png">
-</h1>  
-
+</p>  
+<br>
 <p align="center">
   The UCS Domain Deployment Tool for Cisco Intersight automates the comprehensive build and deployment of UCS Domain Profiles and Policies for Cisco IMM (Intersight Managed Mode).
 </p>
@@ -128,8 +129,8 @@
 ## Where to Demo
 The UCS Domain Deployment Tool can be demoed on Cisco dCloud in the following soon to be released content:
 
-1. **_Cisco Intersight Managed Mode (IMM) with UCS X-Series v1 (Instant Demo)_** - Coming soon!
-2. **_Cisco Intersight Managed Mode (IMM) with UCS X-Series Lab v1 (Scheduled Demo/Sandbox)_** - Coming soon!
+1. [**_Cisco Intersight Mode with UCS X-Series v1 - Instant Demo_**](https://dcloud2-rtp.cisco.com/content/instantdemo/cisco-intersight-mode-with-ucs-x-series-v1-instant-demo-2)
+2. **_Cisco Intersight Mode with UCS X-Series Lab v1 - Scheduled Demo/Sandbox_** - Coming soon!
 
 dCloud is available at [https://dcloud.cisco.com](https://dcloud.cisco.com), where Cisco product demonstrations and labs can be found in the Catalog.
 
