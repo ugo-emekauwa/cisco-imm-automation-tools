@@ -1,9 +1,10 @@
 <h1 align="center">VSAN Policy Maker</h1>
 
-<h1 align="center">
+<br>
+<p align="center">
   <img alt="Policy Makers Title Image" title="Policy Makers" src="./assets/Policy_Makers_Title_Graphic.png">
-</h1>  
-
+</p>  
+<br>
 <p align="center">
   The VSAN Policy Maker for Cisco Intersight automates the creation of VSAN Policies.
 </p>
@@ -124,8 +125,8 @@
 ## Where to Demo
 The VSAN Policy Maker can be demoed on Cisco dCloud in the following soon to be released content:
 
-1. **_Cisco Intersight Managed Mode (IMM) with UCS X-Series v1 (Instant Demo)_** - Coming soon!
-2. **_Cisco Intersight Managed Mode (IMM) with UCS X-Series Lab v1 (Scheduled Demo/Sandbox)_** - Coming soon!
+1. [**_Cisco Intersight Mode with UCS X-Series v1 - Instant Demo_**](https://dcloud2-rtp.cisco.com/content/instantdemo/cisco-intersight-mode-with-ucs-x-series-v1-instant-demo-2)
+2. **_Cisco Intersight Mode with UCS X-Series Lab v1 - Scheduled Demo/Sandbox_** - Coming soon!
 
 dCloud is available at [https://dcloud.cisco.com](https://dcloud.cisco.com), where Cisco product demonstrations and labs can be found in the Catalog.
 
