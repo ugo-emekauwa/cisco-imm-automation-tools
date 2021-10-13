@@ -23,6 +23,8 @@
 
 - Quickly restore UCS Domain Profile and Policy configurations as part of your on-prem Intersight backup solution.
 
+- Optionally, import into other Python programs or scripts to use the many included functions for easy integration.
+
 - Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
 
 ## Prerequisites
@@ -127,7 +129,7 @@
 7. Run the ucs_domain_deployment_tool.py file.
 
 ## Where to Demo
-The UCS Domain Deployment Tool can be demoed on Cisco dCloud in the following soon to be released content:
+The UCS Domain Deployment Tool can be demoed on Cisco dCloud in the following content:
 
 1. [**_Cisco Intersight Mode with UCS X-Series v1 - Instant Demo_**](https://dcloud2-rtp.cisco.com/content/instantdemo/cisco-intersight-mode-with-ucs-x-series-v1-instant-demo-2)
 2. **_Cisco Intersight Mode with UCS X-Series Lab v1 - Scheduled Demo/Sandbox_** - Coming soon!
