@@ -17,6 +17,8 @@
 
 - Quickly restore UCS Domain Profile configurations as part of your on-prem Intersight backup solution.
 
+- Optionally, import into other Python programs or scripts to use the matching named function for easy integration.
+
 - Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
 
 **`NOTE:`** If building a UCS Domain Profile **with** all UCS Domain Policies is desired, please use the [**UCS Domain Deployment Tool**](https://github.com/ugo-emekauwa/cisco-imm-automation-tools/tree/main/src/deployment_tools/ucs_domain_deployment_tool) located at [https://github.com/ugo-emekauwa/cisco-imm-automation-tools/tree/main/src/deployment_tools/ucs_domain_deployment_tool](https://github.com/ugo-emekauwa/cisco-imm-automation-tools/tree/main/src/deployment_tools/ucs_domain_deployment_tool).
@@ -123,7 +125,7 @@
 7. Run the ucs_domain_profile_maker.py file.
 
 ## Where to Demo
-The Base UCS Domain Profile Maker can be demoed on Cisco dCloud in the following soon to be released content:
+The Base UCS Domain Profile Maker can be demoed on Cisco dCloud in the following content:
 
 1. [**_Cisco Intersight Mode with UCS X-Series v1 - Instant Demo_**](https://dcloud2-rtp.cisco.com/content/instantdemo/cisco-intersight-mode-with-ucs-x-series-v1-instant-demo-2)
 2. **_Cisco Intersight Mode with UCS X-Series Lab v1 - Scheduled Demo/Sandbox_** - Coming soon!
