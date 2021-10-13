@@ -19,6 +19,8 @@
 
 - Quickly restore Syslog Policy configurations as part of your on-prem Intersight backup solution.
 
+- Optionally, import into other Python programs or scripts to use the matching named function for easy integration.
+
 - Supported with Intersight SaaS, Connected Virtual Appliance, and Private Virtual Appliance.
 
 ## Prerequisites
@@ -123,7 +125,7 @@
 7. Run the syslog_policy_maker.py file.
 
 ## Where to Demo
-The Syslog Policy Maker can be demoed on Cisco dCloud in the following soon to be released content:
+The Syslog Policy Maker can be demoed on Cisco dCloud in the following content:
 
 1. [**_Cisco Intersight Mode with UCS X-Series v1 - Instant Demo_**](https://dcloud2-rtp.cisco.com/content/instantdemo/cisco-intersight-mode-with-ucs-x-series-v1-instant-demo-2)
 2. **_Cisco Intersight Mode with UCS X-Series Lab v1 - Scheduled Demo/Sandbox_** - Coming soon!
