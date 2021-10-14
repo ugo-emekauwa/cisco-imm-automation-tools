@@ -32,6 +32,9 @@
 - [Flow Control Policy Maker](./src/policy_makers/flow_control_policy_maker) - Make a UCS flow control policy.
 - [Link Control Policy Maker](./src/policy_makers/link_control_policy_maker) - Make a UCS link control policy.
 - [Link Aggregation Policy Maker](./src/policy_makers/link_aggregation_policy_maker) - Make a UCS link aggregation policy.
+- [BIOS Policy Maker](./src/policy_makers/bios_policy_maker) - Make a UCS BIOS policy.
+- [Fibre Channel Network Policy Maker](./src/policy_makers/fibre_channel_network_policy_maker) - Make a UCS fibre channel network policy.
+- [Virtual KVM Policy Maker](./src/policy_makers/virtual_kvm_policy_maker) - Make a UCS virtual KVM policy.
 
 ## Pool Makers
 - [IP Pool Maker](./src/pool_makers/ip_pool_maker) - Make a UCS IP pool.
