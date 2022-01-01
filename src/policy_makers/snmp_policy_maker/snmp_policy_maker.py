@@ -1,5 +1,5 @@
 """
-SNMP Policy Maker for Cisco Intersight, v1.0
+SNMP Policy Maker for Cisco Intersight, v2.0
 Author: Ugo Emekauwa
 Contact: uemekauw@cisco.com, uemekauwa@gmail.com
 Summary: The SNMP Policy Maker for Cisco Intersight automates the creation
@@ -109,13 +109,50 @@ import traceback
 import json
 import copy
 import intersight
-from intersight.intersight_api_client import IntersightApiClient
+import re
+
+# Function to get Intersight API client as specified in the Intersight Python SDK documentation for OpenAPI 3.x
+def get_api_client(api_key_id, api_secret_file, endpoint="https://intersight.com"):
+    with open(api_secret_file, 'r') as f:
+        api_key = f.read()
+
+    if re.search('BEGIN RSA PRIVATE KEY', api_key):
+        # API Key v2 format
+        signing_algorithm = intersight.signing.ALGORITHM_RSASSA_PKCS1v15
+        signing_scheme = intersight.signing.SCHEME_RSA_SHA256
+        hash_algorithm = intersight.signing.HASH_SHA256
+
+    elif re.search('BEGIN EC PRIVATE KEY', api_key):
+        # API Key v3 format
+        signing_algorithm = intersight.signing.ALGORITHM_ECDSA_MODE_DETERMINISTIC_RFC6979
+        signing_scheme = intersight.signing.SCHEME_HS2019
+        hash_algorithm = intersight.signing.HASH_SHA256
+
+    configuration = intersight.Configuration(
+        host=endpoint,
+        signing_info=intersight.signing.HttpSigningConfiguration(
+            key_id=api_key_id,
+            private_key_path=api_secret_file,
+            signing_scheme=signing_scheme,
+            signing_algorithm=signing_algorithm,
+            hash_algorithm=hash_algorithm,
+            signed_headers=[
+                intersight.signing.HEADER_REQUEST_TARGET,
+                intersight.signing.HEADER_HOST,
+                intersight.signing.HEADER_DATE,
+                intersight.signing.HEADER_DIGEST,
+            ]
+        )
+    )
+
+    return intersight.ApiClient(configuration)
+
 
 # Establish function to test for the availability of the Intersight API and Intersight account
 def test_intersight_api_service(intersight_api_key_id,
                                 intersight_api_key,
                                 intersight_base_url="https://intersight.com/api/v1",
-                                preconfigured_api_instance=None
+                                preconfigured_api_client=None
                                 ):
     """This is a function to test the availability of the Intersight API and
     Intersight account. The tested Intersight account contains the user who is
@@ -131,11 +168,11 @@ def test_intersight_api_service(intersight_api_key_id,
             is "https://intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance. The
             default value is "https://intersight.com/api/v1".
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
 
@@ -148,21 +185,25 @@ def test_intersight_api_service(intersight_api_key_id,
             An exception occurred due to an issue with the provided API Key
             and/or API Key ID.
     """
-    # Define Intersight SDK IntersightApiClient variable
-    if preconfigured_api_instance is None:
-        api_instance = IntersightApiClient(host=intersight_base_url,
-                                           private_key=intersight_api_key,
-                                           api_key_id=intersight_api_key_id
-                                           )
+    # Define Intersight SDK ApiClient variable
+    if preconfigured_api_client is None:
+        api_client = get_api_client(api_key_id=intersight_api_key_id,
+                                    api_secret_file=intersight_api_key,
+                                    endpoint=intersight_base_url
+                                    )
     else:
-        api_instance = preconfigured_api_instance
+        api_client = preconfigured_api_client
     try:
         # Check that Intersight Account is accessible
         print("Testing access to the Intersight API by verifying the "
               "Intersight account information...")
-        check_intersight_account = intersight.IamAccountApi(api_instance)
-        get_intersight_account = check_intersight_account.iam_accounts_get()
-        if check_intersight_account.api_client.last_response.status != 200:
+        api_client.call_api(resource_path="/iam/Accounts",
+                            method="GET",
+                            auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                            )
+        response = api_client.last_response.data
+        iam_account = json.loads(response)
+        if api_client.last_response.status != 200:
             print("\nThe Intersight API and Account Availability Test did not "
                   "pass.")
             print("The Intersight account information could not be verified.")
@@ -171,7 +212,7 @@ def test_intersight_api_service(intersight_api_key_id,
                   "been entered, then re-attempt execution.\n")
             sys.exit(0)
         else:
-            intersight_account_name = get_intersight_account.results[0].name
+            intersight_account_name = iam_account["Results"][0]["Name"]
             print("The Intersight API and Account Availability Test has "
                   "passed.\n")
             print(f"The Intersight account named '{intersight_account_name}' "
@@ -183,6 +224,7 @@ def test_intersight_api_service(intersight_api_key_id,
         print("Exiting due to the Intersight API being unavailable.\n")
         print("Please verify that the correct API Key ID and API Key have "
               "been entered, then re-attempt execution.\n")
+        traceback.print_exc()
         sys.exit(0)
 
 
@@ -194,7 +236,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                                      object_type="object",
                                      organization="default",
                                      intersight_base_url="https://intersight.com/api/v1",
-                                     preconfigured_api_instance=None
+                                     preconfigured_api_client=None
                                      ):
     """This is a function to retrieve the MOID of Intersight objects
     using the Intersight API.
@@ -218,11 +260,11 @@ def intersight_object_moid_retriever(intersight_api_key_id,
             Optional; The base URL for Intersight API paths. The default value
             is "https://intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
 
@@ -234,19 +276,23 @@ def intersight_object_moid_retriever(intersight_api_key_id,
             An exception occurred due to an issue accessing the Intersight API
             path. The status code or error message will be specified.
     """
-    # Define Intersight SDK IntersightApiClient variable
-    if preconfigured_api_instance is None:
-        api_instance = IntersightApiClient(host=intersight_base_url,
-                                           private_key=intersight_api_key,
-                                           api_key_id=intersight_api_key_id
-                                           )
+    # Define Intersight SDK ApiClient variable
+    if preconfigured_api_client is None:
+        api_client = get_api_client(api_key_id=intersight_api_key_id,
+                                    api_secret_file=intersight_api_key,
+                                    endpoint=intersight_base_url
+                                    )
     else:
-        api_instance = preconfigured_api_instance
+        api_client = preconfigured_api_client
     try:
         # Retrieve the Intersight Account name
-        check_intersight_account = intersight.IamAccountApi(api_instance)
-        get_intersight_account = check_intersight_account.iam_accounts_get()
-        if check_intersight_account.api_client.last_response.status != 200:
+        api_client.call_api(resource_path="/iam/Accounts",
+                            method="GET",
+                            auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                            )
+        response = api_client.last_response.data
+        iam_account = json.loads(response)
+        if api_client.last_response.status != 200:
             print("The provided Intersight account information could not be "
                   "accessed.")
             print("Exiting due to the Intersight account being unavailable.\n")
@@ -254,7 +300,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                   "been entered, then re-attempt execution.\n")
             sys.exit(0)
         else:
-            intersight_account_name = get_intersight_account.results[0].name
+            intersight_account_name = iam_account["Results"][0]["Name"]
     except Exception:
         print("\nA configuration error has occurred!\n")
         print("Unable to access the Intersight API.")
@@ -265,10 +311,11 @@ def intersight_object_moid_retriever(intersight_api_key_id,
     # Retrieving the provided object from Intersight...
     full_intersight_api_path = f"/{intersight_api_path}"
     try:
-        api_instance.call_api(full_intersight_api_path,
-                              "GET"
-                              )
-        response = api_instance.last_response.data
+        api_client.call_api(resource_path=full_intersight_api_path,
+                            method="GET",
+                            auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                            )
+        response = api_client.last_response.data
         intersight_objects = json.loads(response)
         # The Intersight API resource path has been accessed successfully.
     except Exception:
@@ -291,7 +338,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                                                                               object_name=organization,
                                                                               intersight_api_path="organization/Organizations",
                                                                               object_type="Organization",
-                                                                              preconfigured_api_instance=api_instance
+                                                                              preconfigured_api_client=api_client
                                                                               )
                 if intersight_object.get("Organization", {}).get("Moid") == provided_organization_moid:
                     if intersight_object.get("Name") == object_name:
@@ -335,7 +382,7 @@ def get_intersight_objects(intersight_api_key_id,
                            intersight_api_path,
                            object_type="object",
                            intersight_base_url="https://intersight.com/api/v1",
-                           preconfigured_api_instance=None
+                           preconfigured_api_client=None
                            ):
     """This is a function to perform an HTTP GET on all objects under an
     available Intersight API type.
@@ -358,11 +405,11 @@ def get_intersight_objects(intersight_api_key_id,
             Optional; The base URL for Intersight API paths. The default value
             is "https://intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
 
@@ -375,21 +422,22 @@ def get_intersight_objects(intersight_api_key_id,
             An exception occurred due to an issue accessing the Intersight API
             path. The status code or error message will be specified.
     """
-    # Define Intersight SDK IntersightApiClient variable
-    if preconfigured_api_instance is None:
-        api_instance = IntersightApiClient(host=intersight_base_url,
-                                           private_key=intersight_api_key,
-                                           api_key_id=intersight_api_key_id
-                                           )
+    # Define Intersight SDK ApiClient variable
+    if preconfigured_api_client is None:
+        api_client = get_api_client(api_key_id=intersight_api_key_id,
+                                    api_secret_file=intersight_api_key,
+                                    endpoint=intersight_base_url
+                                    )
     else:
-        api_instance = preconfigured_api_instance
+        api_client = preconfigured_api_client
     # Retrieving the provided object from Intersight...
     full_intersight_api_path = f"/{intersight_api_path}"
     try:
-        api_instance.call_api(full_intersight_api_path,
-                              "GET"
-                              )
-        response = api_instance.last_response.data
+        api_client.call_api(resource_path=full_intersight_api_path,
+                            method="GET",
+                            auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                            )
+        response = api_client.last_response.data
         intersight_objects = json.loads(response)
         # The Intersight API resource path has been accessed successfully.
         return intersight_objects
@@ -413,7 +461,7 @@ def get_single_intersight_object(intersight_api_key_id,
                                  object_moid,
                                  object_type="object",
                                  intersight_base_url="https://intersight.com/api/v1",
-                                 preconfigured_api_instance=None
+                                 preconfigured_api_client=None
                                  ):
     """This is a function to perform an HTTP GET on a single object under an
     available Intersight API type.
@@ -438,11 +486,11 @@ def get_single_intersight_object(intersight_api_key_id,
             Optional; The base URL for Intersight API paths. The default value
             is "https://intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
 
@@ -455,21 +503,22 @@ def get_single_intersight_object(intersight_api_key_id,
             An exception occurred due to an issue accessing the Intersight API
             path. The status code or error message will be specified.
     """
-    # Define Intersight SDK IntersightApiClient variable
-    if preconfigured_api_instance is None:
-        api_instance = IntersightApiClient(host=intersight_base_url,
-                                           private_key=intersight_api_key,
-                                           api_key_id=intersight_api_key_id
-                                           )
+    # Define Intersight SDK ApiClient variable
+    if preconfigured_api_client is None:
+        api_client = get_api_client(api_key_id=intersight_api_key_id,
+                                    api_secret_file=intersight_api_key,
+                                    endpoint=intersight_base_url
+                                    )
     else:
-        api_instance = preconfigured_api_instance
+        api_client = preconfigured_api_client
     # Retrieving the provided object from Intersight...
     full_intersight_api_path = f"/{intersight_api_path}/{object_moid}"
     try:
-        api_instance.call_api(full_intersight_api_path,
-                              "GET"
-                              )
-        response = api_instance.last_response.data
+        api_client.call_api(resource_path=full_intersight_api_path,
+                            method="GET",
+                            auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                            )
+        response = api_client.last_response.data
         single_intersight_object = json.loads(response)
         # The Intersight API resource path has been accessed successfully.
         return single_intersight_object
@@ -504,7 +553,7 @@ class UcsPolicy:
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None
+                 preconfigured_api_client=None
                  ):
         self.intersight_api_key_id = intersight_api_key_id
         self.intersight_api_key = intersight_api_key
@@ -516,13 +565,13 @@ class UcsPolicy:
             self.tags = {}
         else:
             self.tags = tags
-        if preconfigured_api_instance is None:
-            self.api_instance = IntersightApiClient(host=self.intersight_base_url,
-                                                    private_key=self.intersight_api_key,
-                                                    api_key_id=self.intersight_api_key_id
-                                                    )
+        if preconfigured_api_client is None:
+            self.api_client = get_api_client(api_key_id=intersight_api_key_id,
+                                             api_secret_file=intersight_api_key,
+                                             endpoint=intersight_base_url
+                                             )
         else:
-            self.api_instance = preconfigured_api_instance
+            self.api_client = preconfigured_api_client
         self.intersight_api_body = {
             "Name": self.policy_name,
             "Description": self.policy_description
@@ -538,7 +587,7 @@ class UcsPolicy:
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance})"
+            f"{self.api_client})"
             )
 
     def __str__(self):
@@ -559,10 +608,11 @@ class UcsPolicy:
         """
         full_intersight_api_path = f"/{self.intersight_api_path}"
         try:
-            self.api_instance.call_api(full_intersight_api_path,
-                                       "POST",
-                                       body=self.intersight_api_body
-                                       )
+            self.api_client.call_api(resource_path=full_intersight_api_path,
+                                     method="POST",
+                                     body=self.intersight_api_body,
+                                     auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                     )
             print(f"The configuration of the base {self.object_type} "
                   "has completed.")
             return "The POST method was successful."
@@ -585,7 +635,7 @@ class UcsPolicy:
                                                                     object_name=self.organization,
                                                                     intersight_api_path="organization/Organizations",
                                                                     object_type="Organization",
-                                                                    preconfigured_api_instance=self.api_instance
+                                                                    preconfigured_api_client=self.api_client
                                                                     )
         # Update the API body with the Intersight Organization MOID
         self.intersight_api_body["Organization"] = {"Moid": policy_organization_moid}
@@ -849,7 +899,7 @@ class DirectlyAttachedUcsDomainPolicy(UcsPolicy):
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  ucs_domain_profile_name="",
                  fabric_interconnect="AB"
                  ):
@@ -860,7 +910,7 @@ class DirectlyAttachedUcsDomainPolicy(UcsPolicy):
                          organization,
                          intersight_base_url,
                          tags,
-                         preconfigured_api_instance
+                         preconfigured_api_client
                          )
         self.ucs_domain_profile_name = ucs_domain_profile_name
         self.fabric_interconnect = fabric_interconnect
@@ -875,7 +925,7 @@ class DirectlyAttachedUcsDomainPolicy(UcsPolicy):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"'{self.ucs_domain_profile_name}', "
             f"'{self.fabric_interconnect}')"
             )
@@ -899,7 +949,7 @@ class DirectlyAttachedUcsDomainPolicy(UcsPolicy):
                                                                        intersight_api_path="fabric/SwitchClusterProfiles",
                                                                        object_type="UCS Domain Profile",
                                                                        organization=self.organization,
-                                                                       preconfigured_api_instance=self.api_instance
+                                                                       preconfigured_api_client=self.api_client
                                                                        )
             # Get UCS Domain Profile object dictionary attributes
             ucs_domain_profile_object = get_single_intersight_object(intersight_api_key_id=None,
@@ -907,7 +957,7 @@ class DirectlyAttachedUcsDomainPolicy(UcsPolicy):
                                                                      intersight_api_path="fabric/SwitchClusterProfiles",
                                                                      object_moid=ucs_domain_profile_moid,
                                                                      object_type="UCS Domain Profile",
-                                                                     preconfigured_api_instance=self.api_instance
+                                                                     preconfigured_api_client=self.api_client
                                                                      )
             # Get Switch Profiles that are attached to the UCS Domain Profile
             ucs_domain_profile_list_of_attached_switch_profiles = ucs_domain_profile_object.get("SwitchProfiles")
@@ -1172,7 +1222,7 @@ class SnmpPolicy(DirectlyAttachedUcsDomainPolicy):
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  ucs_domain_profile_name="",
                  enable_snmp=True,
                  snmp_v2c_features=True,
@@ -1194,7 +1244,7 @@ class SnmpPolicy(DirectlyAttachedUcsDomainPolicy):
                          organization,
                          intersight_base_url,
                          tags,
-                         preconfigured_api_instance,
+                         preconfigured_api_client,
                          ucs_domain_profile_name,
                          fabric_interconnect="AB"
                          )
@@ -1242,7 +1292,7 @@ class SnmpPolicy(DirectlyAttachedUcsDomainPolicy):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"'{self.ucs_domain_profile_name}', "
             f"{self.enable_snmp}, "
             f"{self.snmp_v2c_features}, "
@@ -1278,7 +1328,7 @@ def snmp_policy_maker(intersight_api_key_id,
                       organization="default",
                       intersight_base_url="https://intersight.com/api/v1",
                       tags=None,
-                      preconfigured_api_instance=None,
+                      preconfigured_api_client=None,
                       ucs_domain_profile_name=""
                       ):
     """This is a function used to make a SNMP Policy on Cisco Intersight.
@@ -1377,11 +1427,11 @@ def snmp_policy_maker(intersight_api_key_id,
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
             policy. The default value is None.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
         ucs_domain_profile_name (str):
@@ -1420,7 +1470,7 @@ def snmp_policy_maker(intersight_api_key_id,
                        organization=organization,
                        intersight_base_url=intersight_base_url,
                        tags=tags,
-                       preconfigured_api_instance=preconfigured_api_instance,
+                       preconfigured_api_client=preconfigured_api_client,
                        ucs_domain_profile_name=ucs_domain_profile_name,
                        enable_snmp=enable_snmp,
                        snmp_v2c_features=snmp_v2c_features,
@@ -1442,10 +1492,10 @@ def main():
     maker_type = "Intersight SNMP Policy Maker"
     
     # Establish Intersight SDK for Python API client instance
-    main_intersight_api_instance = IntersightApiClient(host=intersight_base_url,
-                                                       private_key=key,
-                                                       api_key_id=key_id
-                                                       )
+    main_intersight_api_client = get_api_client(api_key_id=key_id,
+                                                api_secret_file=key,
+                                                endpoint=intersight_base_url
+                                                )
     
     # Starting the Policy Maker for Cisco Intersight
     print(f"\nStarting the {maker_type} for Cisco Intersight.\n")
@@ -1455,7 +1505,7 @@ def main():
     test_intersight_api_service(
         intersight_api_key_id=None,
         intersight_api_key=None,
-        preconfigured_api_instance=main_intersight_api_instance
+        preconfigured_api_client=main_intersight_api_client
         )
 
     # Create the Policy in Intersight
@@ -1478,7 +1528,7 @@ def main():
         policy_description=snmp_policy_description,
         organization=snmp_policy_organization,
         tags=snmp_policy_tags,
-        preconfigured_api_instance=main_intersight_api_instance,
+        preconfigured_api_client=main_intersight_api_client,
         ucs_domain_profile_name=ucs_domain_profile_name
         )
 
