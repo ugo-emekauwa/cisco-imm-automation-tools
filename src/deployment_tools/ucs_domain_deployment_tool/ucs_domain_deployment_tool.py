@@ -1,5 +1,5 @@
 """
-UCS Domain Deployment Tool for Cisco Intersight, v1.0
+UCS Domain Deployment Tool for Cisco Intersight, v2.0
 Author: Ugo Emekauwa
 Contact: uemekauw@cisco.com, uemekauwa@gmail.com
 Summary: The UCS Domain Deployment Tool for Cisco Intersight automates the
@@ -14,7 +14,7 @@ import traceback
 import json
 import copy
 import intersight
-from intersight.intersight_api_client import IntersightApiClient
+import re
 import time
 
 ########################
@@ -562,11 +562,48 @@ custom_default_link_aggregation_policy_name = ""
 #############################################################################################################################
 
 
+# Function to get Intersight API client as specified in the Intersight Python SDK documentation for OpenAPI 3.x
+def get_api_client(api_key_id, api_secret_file, endpoint="https://intersight.com"):
+    with open(api_secret_file, 'r') as f:
+        api_key = f.read()
+
+    if re.search('BEGIN RSA PRIVATE KEY', api_key):
+        # API Key v2 format
+        signing_algorithm = intersight.signing.ALGORITHM_RSASSA_PKCS1v15
+        signing_scheme = intersight.signing.SCHEME_RSA_SHA256
+        hash_algorithm = intersight.signing.HASH_SHA256
+
+    elif re.search('BEGIN EC PRIVATE KEY', api_key):
+        # API Key v3 format
+        signing_algorithm = intersight.signing.ALGORITHM_ECDSA_MODE_DETERMINISTIC_RFC6979
+        signing_scheme = intersight.signing.SCHEME_HS2019
+        hash_algorithm = intersight.signing.HASH_SHA256
+
+    configuration = intersight.Configuration(
+        host=endpoint,
+        signing_info=intersight.signing.HttpSigningConfiguration(
+            key_id=api_key_id,
+            private_key_path=api_secret_file,
+            signing_scheme=signing_scheme,
+            signing_algorithm=signing_algorithm,
+            hash_algorithm=hash_algorithm,
+            signed_headers=[
+                intersight.signing.HEADER_REQUEST_TARGET,
+                intersight.signing.HEADER_HOST,
+                intersight.signing.HEADER_DATE,
+                intersight.signing.HEADER_DIGEST,
+            ]
+        )
+    )
+
+    return intersight.ApiClient(configuration)
+
+
 # Establish function to test for the availability of the Intersight API and Intersight account
 def test_intersight_api_service(intersight_api_key_id,
                                 intersight_api_key,
                                 intersight_base_url="https://intersight.com/api/v1",
-                                preconfigured_api_instance=None
+                                preconfigured_api_client=None
                                 ):
     """This is a function to test the availability of the Intersight API and
     Intersight account. The tested Intersight account contains the user who is
@@ -582,11 +619,11 @@ def test_intersight_api_service(intersight_api_key_id,
             is "https://intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance. The
             default value is "https://intersight.com/api/v1".
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
 
@@ -599,21 +636,25 @@ def test_intersight_api_service(intersight_api_key_id,
             An exception occurred due to an issue with the provided API Key
             and/or API Key ID.
     """
-    # Define Intersight SDK IntersightApiClient variable
-    if preconfigured_api_instance is None:
-        api_instance = IntersightApiClient(host=intersight_base_url,
-                                           private_key=intersight_api_key,
-                                           api_key_id=intersight_api_key_id
-                                           )
+    # Define Intersight SDK ApiClient variable
+    if preconfigured_api_client is None:
+        api_client = get_api_client(api_key_id=intersight_api_key_id,
+                                    api_secret_file=intersight_api_key,
+                                    endpoint=intersight_base_url
+                                    )
     else:
-        api_instance = preconfigured_api_instance
+        api_client = preconfigured_api_client
     try:
         # Check that Intersight Account is accessible
         print("Testing access to the Intersight API by verifying the "
               "Intersight account information...")
-        check_intersight_account = intersight.IamAccountApi(api_instance)
-        get_intersight_account = check_intersight_account.iam_accounts_get()
-        if check_intersight_account.api_client.last_response.status != 200:
+        api_client.call_api(resource_path="/iam/Accounts",
+                            method="GET",
+                            auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                            )
+        response = api_client.last_response.data
+        iam_account = json.loads(response)
+        if api_client.last_response.status != 200:
             print("\nThe Intersight API and Account Availability Test did not "
                   "pass.")
             print("The Intersight account information could not be verified.")
@@ -622,7 +663,7 @@ def test_intersight_api_service(intersight_api_key_id,
                   "been entered, then re-attempt execution.\n")
             sys.exit(0)
         else:
-            intersight_account_name = get_intersight_account.results[0].name
+            intersight_account_name = iam_account["Results"][0]["Name"]
             print("The Intersight API and Account Availability Test has "
                   "passed.\n")
             print(f"The Intersight account named '{intersight_account_name}' "
@@ -634,6 +675,7 @@ def test_intersight_api_service(intersight_api_key_id,
         print("Exiting due to the Intersight API being unavailable.\n")
         print("Please verify that the correct API Key ID and API Key have "
               "been entered, then re-attempt execution.\n")
+        traceback.print_exc()
         sys.exit(0)
 
 
@@ -645,7 +687,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                                      object_type="object",
                                      organization="default",
                                      intersight_base_url="https://intersight.com/api/v1",
-                                     preconfigured_api_instance=None
+                                     preconfigured_api_client=None
                                      ):
     """This is a function to retrieve the MOID of Intersight objects
     using the Intersight API.
@@ -669,11 +711,11 @@ def intersight_object_moid_retriever(intersight_api_key_id,
             Optional; The base URL for Intersight API paths. The default value
             is "https://intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
 
@@ -685,19 +727,23 @@ def intersight_object_moid_retriever(intersight_api_key_id,
             An exception occurred due to an issue accessing the Intersight API
             path. The status code or error message will be specified.
     """
-    # Define Intersight SDK IntersightApiClient variable
-    if preconfigured_api_instance is None:
-        api_instance = IntersightApiClient(host=intersight_base_url,
-                                           private_key=intersight_api_key,
-                                           api_key_id=intersight_api_key_id
-                                           )
+    # Define Intersight SDK ApiClient variable
+    if preconfigured_api_client is None:
+        api_client = get_api_client(api_key_id=intersight_api_key_id,
+                                    api_secret_file=intersight_api_key,
+                                    endpoint=intersight_base_url
+                                    )
     else:
-        api_instance = preconfigured_api_instance
+        api_client = preconfigured_api_client
     try:
         # Retrieve the Intersight Account name
-        check_intersight_account = intersight.IamAccountApi(api_instance)
-        get_intersight_account = check_intersight_account.iam_accounts_get()
-        if check_intersight_account.api_client.last_response.status != 200:
+        api_client.call_api(resource_path="/iam/Accounts",
+                            method="GET",
+                            auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                            )
+        response = api_client.last_response.data
+        iam_account = json.loads(response)
+        if api_client.last_response.status != 200:
             print("The provided Intersight account information could not be "
                   "accessed.")
             print("Exiting due to the Intersight account being unavailable.\n")
@@ -705,7 +751,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                   "been entered, then re-attempt execution.\n")
             sys.exit(0)
         else:
-            intersight_account_name = get_intersight_account.results[0].name
+            intersight_account_name = iam_account["Results"][0]["Name"]
     except Exception:
         print("\nA configuration error has occurred!\n")
         print("Unable to access the Intersight API.")
@@ -716,10 +762,11 @@ def intersight_object_moid_retriever(intersight_api_key_id,
     # Retrieving the provided object from Intersight...
     full_intersight_api_path = f"/{intersight_api_path}"
     try:
-        api_instance.call_api(full_intersight_api_path,
-                              "GET"
-                              )
-        response = api_instance.last_response.data
+        api_client.call_api(resource_path=full_intersight_api_path,
+                            method="GET",
+                            auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                            )
+        response = api_client.last_response.data
         intersight_objects = json.loads(response)
         # The Intersight API resource path has been accessed successfully.
     except Exception:
@@ -742,7 +789,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                                                                               object_name=organization,
                                                                               intersight_api_path="organization/Organizations",
                                                                               object_type="Organization",
-                                                                              preconfigured_api_instance=api_instance
+                                                                              preconfigured_api_client=api_client
                                                                               )
                 if intersight_object.get("Organization", {}).get("Moid") == provided_organization_moid:
                     if intersight_object.get("Name") == object_name:
@@ -786,7 +833,7 @@ def get_intersight_objects(intersight_api_key_id,
                            intersight_api_path,
                            object_type="object",
                            intersight_base_url="https://intersight.com/api/v1",
-                           preconfigured_api_instance=None
+                           preconfigured_api_client=None
                            ):
     """This is a function to perform an HTTP GET on all objects under an
     available Intersight API type.
@@ -809,11 +856,11 @@ def get_intersight_objects(intersight_api_key_id,
             Optional; The base URL for Intersight API paths. The default value
             is "https://intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
 
@@ -826,21 +873,22 @@ def get_intersight_objects(intersight_api_key_id,
             An exception occurred due to an issue accessing the Intersight API
             path. The status code or error message will be specified.
     """
-    # Define Intersight SDK IntersightApiClient variable
-    if preconfigured_api_instance is None:
-        api_instance = IntersightApiClient(host=intersight_base_url,
-                                           private_key=intersight_api_key,
-                                           api_key_id=intersight_api_key_id
-                                           )
+    # Define Intersight SDK ApiClient variable
+    if preconfigured_api_client is None:
+        api_client = get_api_client(api_key_id=intersight_api_key_id,
+                                    api_secret_file=intersight_api_key,
+                                    endpoint=intersight_base_url
+                                    )
     else:
-        api_instance = preconfigured_api_instance
+        api_client = preconfigured_api_client
     # Retrieving the provided object from Intersight...
     full_intersight_api_path = f"/{intersight_api_path}"
     try:
-        api_instance.call_api(full_intersight_api_path,
-                              "GET"
-                              )
-        response = api_instance.last_response.data
+        api_client.call_api(resource_path=full_intersight_api_path,
+                            method="GET",
+                            auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                            )
+        response = api_client.last_response.data
         intersight_objects = json.loads(response)
         # The Intersight API resource path has been accessed successfully.
         return intersight_objects
@@ -864,7 +912,7 @@ def get_single_intersight_object(intersight_api_key_id,
                                  object_moid,
                                  object_type="object",
                                  intersight_base_url="https://intersight.com/api/v1",
-                                 preconfigured_api_instance=None
+                                 preconfigured_api_client=None
                                  ):
     """This is a function to perform an HTTP GET on a single object under an
     available Intersight API type.
@@ -889,11 +937,11 @@ def get_single_intersight_object(intersight_api_key_id,
             Optional; The base URL for Intersight API paths. The default value
             is "https://intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
 
@@ -906,21 +954,22 @@ def get_single_intersight_object(intersight_api_key_id,
             An exception occurred due to an issue accessing the Intersight API
             path. The status code or error message will be specified.
     """
-    # Define Intersight SDK IntersightApiClient variable
-    if preconfigured_api_instance is None:
-        api_instance = IntersightApiClient(host=intersight_base_url,
-                                           private_key=intersight_api_key,
-                                           api_key_id=intersight_api_key_id
-                                           )
+    # Define Intersight SDK ApiClient variable
+    if preconfigured_api_client is None:
+        api_client = get_api_client(api_key_id=intersight_api_key_id,
+                                    api_secret_file=intersight_api_key,
+                                    endpoint=intersight_base_url
+                                    )
     else:
-        api_instance = preconfigured_api_instance
+        api_client = preconfigured_api_client
     # Retrieving the provided object from Intersight...
     full_intersight_api_path = f"/{intersight_api_path}/{object_moid}"
     try:
-        api_instance.call_api(full_intersight_api_path,
-                              "GET"
-                              )
-        response = api_instance.last_response.data
+        api_client.call_api(resource_path=full_intersight_api_path,
+                            method="GET",
+                            auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                            )
+        response = api_client.last_response.data
         single_intersight_object = json.loads(response)
         # The Intersight API resource path has been accessed successfully.
         return single_intersight_object
@@ -945,7 +994,7 @@ def advanced_intersight_object_moid_retriever(intersight_api_key_id,
                                               object_type="object",
                                               organization="default",
                                               intersight_base_url="https://intersight.com/api/v1",
-                                              preconfigured_api_instance=None
+                                              preconfigured_api_client=None
                                               ):
     """This is a function to retrieve the MOID of Intersight objects based on
     various provided attributes using the Intersight API.
@@ -970,11 +1019,11 @@ def advanced_intersight_object_moid_retriever(intersight_api_key_id,
             Optional; The base URL for Intersight API paths. The default value
             is "https://intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
 
@@ -986,19 +1035,23 @@ def advanced_intersight_object_moid_retriever(intersight_api_key_id,
             An exception occurred due to an issue accessing the Intersight API
             path. The status code or error message will be specified.
     """
-    # Define Intersight SDK IntersightApiClient variable
-    if preconfigured_api_instance is None:
-        api_instance = IntersightApiClient(host=intersight_base_url,
-                                           private_key=intersight_api_key,
-                                           api_key_id=intersight_api_key_id
-                                           )
+    # Define Intersight SDK ApiClient variable
+    if preconfigured_api_client is None:
+        api_client = get_api_client(api_key_id=intersight_api_key_id,
+                                    api_secret_file=intersight_api_key,
+                                    endpoint=intersight_base_url
+                                    )
     else:
-        api_instance = preconfigured_api_instance
+        api_client = preconfigured_api_client
     try:
         # Retrieve the Intersight Account name
-        check_intersight_account = intersight.IamAccountApi(api_instance)
-        get_intersight_account = check_intersight_account.iam_accounts_get()
-        if check_intersight_account.api_client.last_response.status != 200:
+        api_client.call_api(resource_path="/iam/Accounts",
+                            method="GET",
+                            auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                            )
+        response = api_client.last_response.data
+        iam_account = json.loads(response)
+        if api_client.last_response.status != 200:
             print("The provided Intersight account information could not be "
                   "accessed.")
             print("Exiting due to the Intersight account being unavailable.\n")
@@ -1006,7 +1059,7 @@ def advanced_intersight_object_moid_retriever(intersight_api_key_id,
                   "been entered, then re-attempt execution.\n")
             sys.exit(0)
         else:
-            intersight_account_name = get_intersight_account.results[0].name
+            intersight_account_name = iam_account["Results"][0]["Name"]
     except Exception:
         print("\nA configuration error has occurred!\n")
         print("Unable to access the Intersight API.")
@@ -1017,10 +1070,11 @@ def advanced_intersight_object_moid_retriever(intersight_api_key_id,
     # Retrieving the provided object from Intersight...
     full_intersight_api_path = f"/{intersight_api_path}"
     try:
-        api_instance.call_api(full_intersight_api_path,
-                              "GET"
-                              )
-        response = api_instance.last_response.data
+        api_client.call_api(resource_path=full_intersight_api_path,
+                            method="GET",
+                            auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                            )
+        response = api_client.last_response.data
         intersight_objects = json.loads(response)
         # The Intersight API resource path has been accessed successfully.
     except Exception:
@@ -1043,7 +1097,7 @@ def advanced_intersight_object_moid_retriever(intersight_api_key_id,
                                                                               object_name=organization,
                                                                               intersight_api_path="organization/Organizations",
                                                                               object_type="Organization",
-                                                                              preconfigured_api_instance=api_instance
+                                                                              preconfigured_api_client=api_client
                                                                               )
                 if intersight_object.get("Organization", {}).get("Moid") == provided_organization_moid:
                     for object_attribute in object_attributes:
@@ -1337,7 +1391,7 @@ class IdConfigurator:
                  id_list=None,
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
-                 preconfigured_api_instance=None
+                 preconfigured_api_client=None
                  ):
         self.intersight_api_key_id = intersight_api_key_id
         self.intersight_api_key = intersight_api_key
@@ -1348,13 +1402,13 @@ class IdConfigurator:
             self.id_list = id_list
         self.organization = organization
         self.intersight_base_url = intersight_base_url
-        if preconfigured_api_instance is None:
-            self.api_instance = IntersightApiClient(host=self.intersight_base_url,
-                                                    private_key=self.intersight_api_key,
-                                                    api_key_id=self.intersight_api_key_id
-                                                    )
+        if preconfigured_api_client is None:
+            self.api_client = get_api_client(api_key_id=intersight_api_key_id,
+                                             api_secret_file=intersight_api_key,
+                                             endpoint=intersight_base_url
+                                             )
         else:
-            self.api_instance = preconfigured_api_instance
+            self.api_client = preconfigured_api_client
         
     def __repr__(self):
         return (
@@ -1365,7 +1419,7 @@ class IdConfigurator:
             f"'{self.id_list}', "
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
-            f"{self.api_instance})"
+            f"{self.api_client})"
             )
 
     def __str__(self):
@@ -1471,7 +1525,7 @@ class IdConfigurator:
                                                                              intersight_api_path=id_attribute["IntersightAPIPath"],
                                                                              object_type=id_attribute["Type"],
                                                                              organization=self.organization,
-                                                                             preconfigured_api_instance=self.api_instance
+                                                                             preconfigured_api_client=self.api_client
                                                                              )
                         staged_intersight_api_body[id_attribute["Name"]] = {"Moid": id_attribute_moid}
                 else:
@@ -1484,7 +1538,7 @@ class IdConfigurator:
                                                                                  intersight_api_path=id_attribute["IntersightAPIPath"],
                                                                                  object_type=id_attribute["Type"],
                                                                                  organization=self.organization,
-                                                                                 preconfigured_api_instance=self.api_instance
+                                                                                 preconfigured_api_client=self.api_client
                                                                                  )
                             staged_intersight_api_body[id_attribute["Name"]] = {"Moid": id_attribute_moid}
 
@@ -1507,7 +1561,7 @@ class UcsPolicy:
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None
+                 preconfigured_api_client=None
                  ):
         self.intersight_api_key_id = intersight_api_key_id
         self.intersight_api_key = intersight_api_key
@@ -1519,13 +1573,13 @@ class UcsPolicy:
             self.tags = {}
         else:
             self.tags = tags
-        if preconfigured_api_instance is None:
-            self.api_instance = IntersightApiClient(host=self.intersight_base_url,
-                                                    private_key=self.intersight_api_key,
-                                                    api_key_id=self.intersight_api_key_id
-                                                    )
+        if preconfigured_api_client is None:
+            self.api_client = get_api_client(api_key_id=intersight_api_key_id,
+                                             api_secret_file=intersight_api_key,
+                                             endpoint=intersight_base_url
+                                             )
         else:
-            self.api_instance = preconfigured_api_instance
+            self.api_client = preconfigured_api_client
         self.intersight_api_body = {
             "Name": self.policy_name,
             "Description": self.policy_description
@@ -1541,7 +1595,7 @@ class UcsPolicy:
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance})"
+            f"{self.api_client})"
             )
 
     def __str__(self):
@@ -1562,10 +1616,11 @@ class UcsPolicy:
         """
         full_intersight_api_path = f"/{self.intersight_api_path}"
         try:
-            self.api_instance.call_api(full_intersight_api_path,
-                                       "POST",
-                                       body=self.intersight_api_body
-                                       )
+            self.api_client.call_api(resource_path=full_intersight_api_path,
+                                     method="POST",
+                                     body=self.intersight_api_body,
+                                     auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                     )
             print(f"The configuration of the base {self.object_type} "
                   "has completed.")
             return "The POST method was successful."
@@ -1588,7 +1643,7 @@ class UcsPolicy:
                                                                     object_name=self.organization,
                                                                     intersight_api_path="organization/Organizations",
                                                                     object_type="Organization",
-                                                                    preconfigured_api_instance=self.api_instance
+                                                                    preconfigured_api_client=self.api_client
                                                                     )
         # Update the API body with the Intersight Organization MOID
         self.intersight_api_body["Organization"] = {"Moid": policy_organization_moid}
@@ -1852,7 +1907,7 @@ class DirectlyAttachedUcsDomainPolicy(UcsPolicy):
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  ucs_domain_profile_name="",
                  fabric_interconnect="AB"
                  ):
@@ -1863,7 +1918,7 @@ class DirectlyAttachedUcsDomainPolicy(UcsPolicy):
                          organization,
                          intersight_base_url,
                          tags,
-                         preconfigured_api_instance
+                         preconfigured_api_client
                          )
         self.ucs_domain_profile_name = ucs_domain_profile_name
         self.fabric_interconnect = fabric_interconnect
@@ -1878,7 +1933,7 @@ class DirectlyAttachedUcsDomainPolicy(UcsPolicy):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"'{self.ucs_domain_profile_name}', "
             f"'{self.fabric_interconnect}')"
             )
@@ -1902,7 +1957,7 @@ class DirectlyAttachedUcsDomainPolicy(UcsPolicy):
                                                                        intersight_api_path="fabric/SwitchClusterProfiles",
                                                                        object_type="UCS Domain Profile",
                                                                        organization=self.organization,
-                                                                       preconfigured_api_instance=self.api_instance
+                                                                       preconfigured_api_client=self.api_client
                                                                        )
             # Get UCS Domain Profile object dictionary attributes
             ucs_domain_profile_object = get_single_intersight_object(intersight_api_key_id=None,
@@ -1910,7 +1965,7 @@ class DirectlyAttachedUcsDomainPolicy(UcsPolicy):
                                                                      intersight_api_path="fabric/SwitchClusterProfiles",
                                                                      object_moid=ucs_domain_profile_moid,
                                                                      object_type="UCS Domain Profile",
-                                                                     preconfigured_api_instance=self.api_instance
+                                                                     preconfigured_api_client=self.api_client
                                                                      )
             # Get Switch Profiles that are attached to the UCS Domain Profile
             ucs_domain_profile_list_of_attached_switch_profiles = ucs_domain_profile_object.get("SwitchProfiles")
@@ -1997,7 +2052,7 @@ class UcsDomainProfile:
                  ucs_domain_profile_organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None
+                 preconfigured_api_client=None
                  ):
         self.intersight_api_key_id = intersight_api_key_id
         self.intersight_api_key = intersight_api_key
@@ -2009,13 +2064,13 @@ class UcsDomainProfile:
             self.tags = {}
         else:
             self.tags = tags
-        if preconfigured_api_instance is None:
-            self.api_instance = IntersightApiClient(host=self.intersight_base_url,
-                                                    private_key=self.intersight_api_key,
-                                                    api_key_id=self.intersight_api_key_id
-                                                    )
+        if preconfigured_api_client is None:
+            self.api_client = get_api_client(api_key_id=intersight_api_key_id,
+                                             api_secret_file=intersight_api_key,
+                                             endpoint=intersight_base_url
+                                             )
         else:
-            self.api_instance = preconfigured_api_instance
+            self.api_client = preconfigured_api_client
         self.intersight_api_body = {
             "Name": self.ucs_domain_profile_name,
             "Description": self.ucs_domain_profile_description,
@@ -2031,7 +2086,7 @@ class UcsDomainProfile:
             f"'{self.ucs_domain_profile_organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance})"
+            f"{self.api_client})"
             )
 
     def __str__(self):
@@ -2052,10 +2107,11 @@ class UcsDomainProfile:
         """
         full_intersight_api_path = f"/{self.intersight_api_path}"
         try:
-            self.api_instance.call_api(full_intersight_api_path,
-                                       "POST",
-                                       body=self.intersight_api_body
-                                       )
+            self.api_client.call_api(resource_path=full_intersight_api_path,
+                                     method="POST",
+                                     body=self.intersight_api_body,
+                                     auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                     )
             print(f"The configuration of the base {self.object_type} "
                   "has completed.")
             return "The POST method was successful."
@@ -2078,7 +2134,7 @@ class UcsDomainProfile:
                                                                                 object_name=self.ucs_domain_profile_organization,
                                                                                 intersight_api_path="organization/Organizations",
                                                                                 object_type="Organization",
-                                                                                preconfigured_api_instance=self.api_instance
+                                                                                preconfigured_api_client=self.api_client
                                                                                 )
         # Update the API body with the Intersight Organization MOID
         self.intersight_api_body["Organization"] = {"Moid": ucs_domain_profile_organization_moid}
@@ -2122,7 +2178,7 @@ class SwitchProfile(UcsDomainProfile):
                  ucs_domain_profile_organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  fabric_interconnect="A"
                  ):
         super().__init__(intersight_api_key_id,
@@ -2132,7 +2188,7 @@ class SwitchProfile(UcsDomainProfile):
                          ucs_domain_profile_organization,
                          intersight_base_url,
                          tags,
-                         preconfigured_api_instance
+                         preconfigured_api_client
                          )
         self.fabric_interconnect = fabric_interconnect
         self.intersight_api_body = {
@@ -2149,7 +2205,7 @@ class SwitchProfile(UcsDomainProfile):
             f"'{self.ucs_domain_profile_organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"'{self.fabric_interconnect}')"
             )
 
@@ -2184,10 +2240,11 @@ class SwitchProfile(UcsDomainProfile):
         else:
             full_intersight_api_path = f"/{self.intersight_api_path}"
         try:
-            self.api_instance.call_api(full_intersight_api_path,
-                                       "POST",
-                                       body=self.intersight_api_body
-                                       )
+            self.api_client.call_api(resource_path=full_intersight_api_path,
+                                     method="POST",
+                                     body=self.intersight_api_body,
+                                     auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                     )
             if moid:
                 print(f"Configuring the underlying {self.object_type} "
                       f"named {switch_profile_name}...")
@@ -2260,7 +2317,7 @@ class SwitchProfile(UcsDomainProfile):
                                                                    intersight_api_path=self.cluster_profile_intersight_api_path,
                                                                    object_type=self.cluster_profile_type,
                                                                    organization=self.ucs_domain_profile_organization,
-                                                                   preconfigured_api_instance=self.api_instance
+                                                                   preconfigured_api_client=self.api_client
                                                                    )
         # Update the API body with the UCS Domain Profile a.k.a. Switch Cluster Profile
         self.intersight_api_body["SwitchClusterProfile"] = {"Moid": ucs_domain_profile_moid}
@@ -2277,7 +2334,7 @@ def ucs_domain_profile_maker(intersight_api_key_id,
                              ucs_domain_profile_organization="default",
                              intersight_base_url="https://intersight.com/api/v1",
                              tags=None,
-                             preconfigured_api_instance=None
+                             preconfigured_api_client=None
                              ):
     """This is a function used to make a UCS Domain Profile on Cisco Intersight.
 
@@ -2301,11 +2358,11 @@ def ucs_domain_profile_maker(intersight_api_key_id,
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
             profile. The default value is None.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
     """
@@ -2341,7 +2398,7 @@ def ucs_domain_profile_maker(intersight_api_key_id,
                              ucs_domain_profile_organization=ucs_domain_profile_organization,
                              intersight_base_url=intersight_base_url,
                              tags=tags,
-                             preconfigured_api_instance=preconfigured_api_instance
+                             preconfigured_api_client=preconfigured_api_client
                              ))
 
     # Define and create Switch Profile object for Fabric Interconnect A in Intersight
@@ -2352,7 +2409,7 @@ def ucs_domain_profile_maker(intersight_api_key_id,
                           ucs_domain_profile_organization=ucs_domain_profile_organization,
                           intersight_base_url=intersight_base_url,
                           tags=tags,
-                          preconfigured_api_instance=preconfigured_api_instance,
+                          preconfigured_api_client=preconfigured_api_client,
                           fabric_interconnect="A"
                           ))
 
@@ -2366,7 +2423,7 @@ def ucs_domain_profile_maker(intersight_api_key_id,
                           ucs_domain_profile_organization=ucs_domain_profile_organization,
                           intersight_base_url=intersight_base_url,
                           tags=tags,
-                          preconfigured_api_instance=preconfigured_api_instance,
+                          preconfigured_api_client=preconfigured_api_client,
                           fabric_interconnect="B"
                           ))
 
@@ -2380,7 +2437,7 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
                                          deploy_ucs_domain_profile=False,
                                          ucs_domain_profile_organization="default",
                                          intersight_base_url="https://intersight.com/api/v1",
-                                         preconfigured_api_instance=None
+                                         preconfigured_api_client=None
                                          ):
     """This is a function to assign and deploy a UCS Domain Profile to
     an Intersight Target.
@@ -2414,11 +2471,11 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
             Optional; The base URL for Intersight API paths. The default value
             is "https://intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
     """
@@ -2449,12 +2506,12 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
                 The status code or error message will be specified.
         """
         full_intersight_api_path = f"/fabric/SwitchProfiles/{switch_profile_moid}"
-        
         try:
-            api_instance.call_api(full_intersight_api_path,
-                                  "POST",
-                                  body=switch_profile_api_body
-                                  )
+            api_client.call_api(resource_path=full_intersight_api_path,
+                                method="POST",
+                                body=switch_profile_api_body,
+                                auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                )
             print("The configuration of the Switch Profile for Fabric "
                   f"Interconnect {switch_profile_fabric_id} has been updated.")
             print("Any accompanying Intersight Requests will be initiated.")
@@ -2469,19 +2526,23 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
             traceback.print_exc()
             return "The POST method failed."
     
-    # Define Intersight SDK IntersightApiClient variable
-    if preconfigured_api_instance is None:
-        api_instance = IntersightApiClient(host=intersight_base_url,
-                                           private_key=intersight_api_key,
-                                           api_key_id=intersight_api_key_id
-                                           )
+    # Define Intersight SDK ApiClient variable
+    if preconfigured_api_client is None:
+        api_client = get_api_client(api_key_id=intersight_api_key_id,
+                                    api_secret_file=intersight_api_key,
+                                    endpoint=intersight_base_url
+                                    )
     else:
-        api_instance = preconfigured_api_instance
+        api_client = preconfigured_api_client
     try:
         # Retrieve the Intersight Account name
-        check_intersight_account = intersight.IamAccountApi(api_instance)
-        get_intersight_account = check_intersight_account.iam_accounts_get()
-        if check_intersight_account.api_client.last_response.status != 200:
+        api_client.call_api(resource_path="/iam/Accounts",
+                            method="GET",
+                            auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                            )
+        response = api_client.last_response.data
+        iam_account = json.loads(response)
+        if api_client.last_response.status != 200:
             print("The provided Intersight account information could not be "
                   "accessed.")
             print("Exiting due to the Intersight account being unavailable.\n")
@@ -2489,7 +2550,7 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
                   "been entered, then re-attempt execution.\n")
             sys.exit(0)
         else:
-            intersight_account_name = get_intersight_account.results[0].name
+            intersight_account_name = iam_account["Results"][0]["Name"]
     except Exception:
         print("\nA configuration error has occurred!\n")
         print("Unable to access the Intersight API.")
@@ -2504,7 +2565,7 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
                                                                intersight_api_path="fabric/SwitchClusterProfiles",
                                                                object_type="UCS Domain Profile",
                                                                organization=ucs_domain_profile_organization,
-                                                               preconfigured_api_instance=api_instance
+                                                               preconfigured_api_client=api_client
                                                                )
     # Get UCS Domain Profile object dictionary attributes
     ucs_domain_profile_object = get_single_intersight_object(intersight_api_key_id=None,
@@ -2512,7 +2573,7 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
                                                              intersight_api_path="fabric/SwitchClusterProfiles",
                                                              object_moid=ucs_domain_profile_moid,
                                                              object_type="UCS Domain Profile",
-                                                             preconfigured_api_instance=api_instance
+                                                             preconfigured_api_client=api_client
                                                              )
     # Get Switch Profiles that are attached to the UCS Domain Profile
     ucs_domain_profile_list_of_attached_switch_profiles = ucs_domain_profile_object.get("SwitchProfiles")
@@ -2553,7 +2614,7 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
                                                               intersight_api_key=None,
                                                               intersight_api_path="asset/Targets",
                                                               object_type="Target",
-                                                              preconfigured_api_instance=api_instance
+                                                              preconfigured_api_client=api_client
                                                               )
         if retrieved_intersight_targets.get("Results"):
             for intersight_target in retrieved_intersight_targets.get("Results"):
@@ -2655,7 +2716,7 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
                                                                        intersight_api_key=None,
                                                                        intersight_api_path="network/Elements",
                                                                        object_type="Fabric Interconnect",
-                                                                       preconfigured_api_instance=api_instance
+                                                                       preconfigured_api_client=api_client
                                                                        )
         if retrieved_intersight_network_elements.get("Results"):
             for network_element in retrieved_intersight_network_elements.get("Results"):
@@ -2773,7 +2834,7 @@ class MulticastPolicy(UcsPolicy):
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  snooping_state="Enabled",
                  querier_state="Disabled",
                  querier_ip_address="",
@@ -2786,7 +2847,7 @@ class MulticastPolicy(UcsPolicy):
                          organization,
                          intersight_base_url,
                          tags,
-                         preconfigured_api_instance
+                         preconfigured_api_client
                          )
         self.snooping_state = snooping_state
         self.querier_state = querier_state
@@ -2811,7 +2872,7 @@ class MulticastPolicy(UcsPolicy):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"'{self.snooping_state}', "
             f"'{self.querier_state}', "
             f"'{self.querier_ip_address}', "
@@ -2830,7 +2891,7 @@ def multicast_policy_maker(intersight_api_key_id,
                            organization="default",
                            intersight_base_url="https://intersight.com/api/v1",
                            tags=None,
-                           preconfigured_api_instance=None
+                           preconfigured_api_client=None
                            ):
     """This is a function used to make a Multicast Policy on Cisco Intersight.
 
@@ -2868,11 +2929,11 @@ def multicast_policy_maker(intersight_api_key_id,
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
             policy. The default value is None.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
     """
@@ -2908,7 +2969,7 @@ def multicast_policy_maker(intersight_api_key_id,
                             organization=organization,
                             intersight_base_url=intersight_base_url,
                             tags=tags,
-                            preconfigured_api_instance=preconfigured_api_instance,
+                            preconfigured_api_client=preconfigured_api_client,
                             snooping_state=snooping_state,
                             querier_state=querier_state,
                             querier_ip_address=querier_ip_address,
@@ -2931,7 +2992,7 @@ class VlanPolicy(DirectlyAttachedUcsDomainPolicy):
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  ucs_domain_profile_name="",
                  fabric_interconnect="AB"
                  ):
@@ -2942,7 +3003,7 @@ class VlanPolicy(DirectlyAttachedUcsDomainPolicy):
                          organization,
                          intersight_base_url,
                          tags,
-                         preconfigured_api_instance,
+                         preconfigured_api_client,
                          ucs_domain_profile_name,
                          fabric_interconnect
                          )
@@ -2957,7 +3018,7 @@ class VlanPolicy(DirectlyAttachedUcsDomainPolicy):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"'{self.ucs_domain_profile_name}', "
             f"'{self.fabric_interconnect}')"
             )
@@ -2996,7 +3057,7 @@ class Vlan(IdConfigurator):
                  id_list=None,
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  default_multicast_policy_name="",
                  native_vlan_id=None
                  ):
@@ -3006,7 +3067,7 @@ class Vlan(IdConfigurator):
                          id_list,
                          organization,
                          intersight_base_url,
-                         preconfigured_api_instance
+                         preconfigured_api_client
                          )
         self.default_multicast_policy_name = default_multicast_policy_name
         self.native_vlan_id = native_vlan_id
@@ -3020,7 +3081,7 @@ class Vlan(IdConfigurator):
             f"'{self.id_list}', "
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"'{self.default_multicast_policy_name}', "
             f"{self.native_vlan_id})"
             )
@@ -3059,10 +3120,11 @@ class Vlan(IdConfigurator):
             else:
                 full_intersight_api_path = f"/{self.intersight_api_path}"
             try:
-                self.api_instance.call_api(full_intersight_api_path,
-                                           "POST",
-                                           body=body
-                                           )
+                self.api_client.call_api(resource_path=full_intersight_api_path,
+                                         method="POST",
+                                         body=body,
+                                         auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                         )
                 if moid:
                     print(f"The configuration of {self.object_type} "
                           f"{vlan_name} has been updated.")
@@ -3095,7 +3157,7 @@ class Vlan(IdConfigurator):
                                                            object_type=self.policy_type,
                                                            organization=self.organization,
                                                            intersight_base_url=self.intersight_base_url,
-                                                           preconfigured_api_instance=self.api_instance
+                                                           preconfigured_api_client=self.api_client
                                                            )
             for id_dictionary in self.id_list:
                 vlans_enumerated_id_range = self.enumerated_id_range_retriever(id_dictionary,
@@ -3126,7 +3188,7 @@ class Vlan(IdConfigurator):
                                                                               intersight_api_path=self.intersight_api_path,
                                                                               object_type=self.object_type,
                                                                               intersight_base_url=self.intersight_base_url,
-                                                                              preconfigured_api_instance=self.api_instance
+                                                                              preconfigured_api_client=self.api_client
                                                                               )
                 if all_intersight_vlans_pre_check_cycle.get("Results"):
                     # Verify that a VLAN object matching the native VLAN ID exists
@@ -3183,7 +3245,7 @@ class Vlan(IdConfigurator):
                                                                            intersight_api_path=self.intersight_api_path,
                                                                            object_type=self.object_type,
                                                                            intersight_base_url=self.intersight_base_url,
-                                                                           preconfigured_api_instance=self.api_instance
+                                                                           preconfigured_api_client=self.api_client
                                                                            )
                 if all_intersight_vlans_update_cycle.get("Results"):
                     for native_vlan_id_update in all_intersight_vlans_update_cycle.get("Results"):
@@ -3232,7 +3294,7 @@ def vlan_policy_maker(intersight_api_key_id,
                       organization="default",
                       intersight_base_url="https://intersight.com/api/v1",
                       tags=None,
-                      preconfigured_api_instance=None,
+                      preconfigured_api_client=None,
                       ucs_domain_profile_name="",
                       fabric_interconnect="AB"
                       ):
@@ -3289,11 +3351,11 @@ def vlan_policy_maker(intersight_api_key_id,
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
             policy. The default value is None.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
         ucs_domain_profile_name (str):
@@ -3338,7 +3400,7 @@ def vlan_policy_maker(intersight_api_key_id,
                        organization=organization,
                        intersight_base_url=intersight_base_url,
                        tags=tags,
-                       preconfigured_api_instance=preconfigured_api_instance,
+                       preconfigured_api_client=preconfigured_api_client,
                        ucs_domain_profile_name=ucs_domain_profile_name,
                        fabric_interconnect=fabric_interconnect
                        ))
@@ -3350,7 +3412,7 @@ def vlan_policy_maker(intersight_api_key_id,
                  id_list=vlan_list,
                  organization=organization,
                  intersight_base_url=intersight_base_url,
-                 preconfigured_api_instance=preconfigured_api_instance,
+                 preconfigured_api_client=preconfigured_api_client,
                  default_multicast_policy_name=default_multicast_policy_name,
                  native_vlan_id=native_vlan_id
                  ))
@@ -3371,7 +3433,7 @@ class VsanPolicy(DirectlyAttachedUcsDomainPolicy):
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  ucs_domain_profile_name="",
                  fabric_interconnect="A",
                  enable_uplink_trunking=False
@@ -3383,7 +3445,7 @@ class VsanPolicy(DirectlyAttachedUcsDomainPolicy):
                          organization,
                          intersight_base_url,
                          tags,
-                         preconfigured_api_instance,
+                         preconfigured_api_client,
                          ucs_domain_profile_name,
                          fabric_interconnect
                          )
@@ -3404,7 +3466,7 @@ class VsanPolicy(DirectlyAttachedUcsDomainPolicy):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"'{self.ucs_domain_profile_name}', "
             f"'{self.fabric_interconnect}', "
             f"{self.enable_uplink_trunking})"
@@ -3437,7 +3499,7 @@ class Vsan(IdConfigurator):
                  id_list=None,
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
-                 preconfigured_api_instance=None
+                 preconfigured_api_client=None
                  ):
         super().__init__(intersight_api_key_id,
                          intersight_api_key,
@@ -3445,7 +3507,7 @@ class Vsan(IdConfigurator):
                          id_list,
                          organization,
                          intersight_base_url,
-                         preconfigured_api_instance
+                         preconfigured_api_client
                          )
 
     def __repr__(self):
@@ -3457,7 +3519,7 @@ class Vsan(IdConfigurator):
             f"'{self.id_list}', "
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
-            f"{self.api_instance})"
+            f"{self.api_client})"
             )
 
     def object_maker(self):
@@ -3494,10 +3556,11 @@ class Vsan(IdConfigurator):
             else:
                 full_intersight_api_path = f"/{self.intersight_api_path}"
             try:
-                self.api_instance.call_api(full_intersight_api_path,
-                                           "POST",
-                                           body=body
-                                           )
+                self.api_client.call_api(resource_path=full_intersight_api_path,
+                                         method="POST",
+                                         body=body,
+                                         auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                         )
                 if moid:
                     print(f"The configuration of {self.object_type} "
                           f"{vsan_name} has been updated.")
@@ -3547,7 +3610,7 @@ class Vsan(IdConfigurator):
                                                                object_type=self.policy_type,
                                                                organization=self.organization,
                                                                intersight_base_url=self.intersight_base_url,
-                                                               preconfigured_api_instance=self.api_instance
+                                                               preconfigured_api_client=self.api_client
                                                                )
                 staged_intersight_api_body["FcNetworkPolicy"] = {"Moid": policy_moid}
                 # Retrieve MOIDs for ID attributes that require MOIDs
@@ -3573,7 +3636,7 @@ def vsan_policy_maker(intersight_api_key_id,
                       organization="default",
                       intersight_base_url="https://intersight.com/api/v1",
                       tags=None,
-                      preconfigured_api_instance=None,
+                      preconfigured_api_client=None,
                       ucs_domain_profile_name="",
                       fabric_interconnect="A"
                       ):
@@ -3632,11 +3695,11 @@ def vsan_policy_maker(intersight_api_key_id,
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
             policy. The default value is None.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
         ucs_domain_profile_name (str):
@@ -3683,7 +3746,7 @@ def vsan_policy_maker(intersight_api_key_id,
                        organization=organization,
                        intersight_base_url=intersight_base_url,
                        tags=tags,
-                       preconfigured_api_instance=preconfigured_api_instance,
+                       preconfigured_api_client=preconfigured_api_client,
                        ucs_domain_profile_name=ucs_domain_profile_name,
                        fabric_interconnect=fabric_interconnect,
                        enable_uplink_trunking=enable_uplink_trunking
@@ -3696,7 +3759,7 @@ def vsan_policy_maker(intersight_api_key_id,
                  id_list=vsan_list,
                  organization=organization,
                  intersight_base_url=intersight_base_url,
-                 preconfigured_api_instance=preconfigured_api_instance
+                 preconfigured_api_client=preconfigured_api_client
                  ))
 
 
@@ -3716,7 +3779,7 @@ class EthernetNetworkGroupPolicy(UcsPolicy):
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  allowed_vlans="1",
                  native_vlan=1
                  ):
@@ -3727,7 +3790,7 @@ class EthernetNetworkGroupPolicy(UcsPolicy):
                          organization,
                          intersight_base_url,
                          tags,
-                         preconfigured_api_instance
+                         preconfigured_api_client
                          )
         self.allowed_vlans = allowed_vlans
         self.native_vlan = native_vlan
@@ -3749,7 +3812,7 @@ class EthernetNetworkGroupPolicy(UcsPolicy):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"'{self.allowed_vlans}', "
             f"{self.native_vlan})"
             )
@@ -3764,7 +3827,7 @@ def ethernet_network_group_policy_maker(intersight_api_key_id,
                                         organization="default",
                                         intersight_base_url="https://intersight.com/api/v1",
                                         tags=None,
-                                        preconfigured_api_instance=None
+                                        preconfigured_api_client=None
                                         ):
     """This is a function used to make an Ethernet Network Group Policy on Cisco
     Intersight.
@@ -3799,11 +3862,11 @@ def ethernet_network_group_policy_maker(intersight_api_key_id,
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
             policy. The default value is None.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
     """
@@ -3840,7 +3903,7 @@ def ethernet_network_group_policy_maker(intersight_api_key_id,
                                        organization=organization,
                                        intersight_base_url=intersight_base_url,
                                        tags=tags,
-                                       preconfigured_api_instance=preconfigured_api_instance,
+                                       preconfigured_api_client=preconfigured_api_client,
                                        allowed_vlans=allowed_vlans,
                                        native_vlan=native_vlan
                                        ))
@@ -3900,7 +3963,7 @@ class EthernetNetworkControlPolicy(UcsPolicy):
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  enable_cdp=False,
                  mac_register_mode="Only Native VLAN",
                  action_on_uplink_fail="Link Down",
@@ -3915,7 +3978,7 @@ class EthernetNetworkControlPolicy(UcsPolicy):
                          organization,
                          intersight_base_url,
                          tags,
-                         preconfigured_api_instance
+                         preconfigured_api_client
                          )
         self.enable_cdp = enable_cdp
         self.mac_register_mode = mac_register_mode
@@ -3943,7 +4006,7 @@ class EthernetNetworkControlPolicy(UcsPolicy):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"{self.enable_cdp}, "
             f"'{self.mac_register_mode}', "
             f"'{self.action_on_uplink_fail}', "
@@ -3966,7 +4029,7 @@ def ethernet_network_control_policy_maker(intersight_api_key_id,
                                           organization="default",
                                           intersight_base_url="https://intersight.com/api/v1",
                                           tags=None,
-                                          preconfigured_api_instance=None
+                                          preconfigured_api_client=None
                                           ):
     """This is a function used to make an Ethernet Network Control Policy on
     Cisco Intersight.
@@ -4017,11 +4080,11 @@ def ethernet_network_control_policy_maker(intersight_api_key_id,
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
             policy. The default value is None.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
     """
@@ -4057,7 +4120,7 @@ def ethernet_network_control_policy_maker(intersight_api_key_id,
                                          organization=organization,
                                          intersight_base_url=intersight_base_url,
                                          tags=tags,
-                                         preconfigured_api_instance=preconfigured_api_instance,
+                                         preconfigured_api_client=preconfigured_api_client,
                                          enable_cdp=enable_cdp,
                                          mac_register_mode=mac_register_mode,
                                          action_on_uplink_fail=action_on_uplink_fail,
@@ -4096,7 +4159,7 @@ class FlowControlPolicy(UcsPolicy):
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  priority="Auto",
                  receive="Disabled",
                  send="Disabled"
@@ -4108,7 +4171,7 @@ class FlowControlPolicy(UcsPolicy):
                          organization,
                          intersight_base_url,
                          tags,
-                         preconfigured_api_instance
+                         preconfigured_api_client
                          )
         self.priority = priority
         self.receive = receive
@@ -4130,7 +4193,7 @@ class FlowControlPolicy(UcsPolicy):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"'{self.priority}', "
             f"'{self.receive}', "
             f"'{self.send}')"
@@ -4147,7 +4210,7 @@ def flow_control_policy_maker(intersight_api_key_id,
                               organization="default",
                               intersight_base_url="https://intersight.com/api/v1",
                               tags=None,
-                              preconfigured_api_instance=None
+                              preconfigured_api_client=None
                               ):
     """This is a function used to make a Flow Control Policy on Cisco
     Intersight.
@@ -4183,11 +4246,11 @@ def flow_control_policy_maker(intersight_api_key_id,
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
             policy. The default value is None.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
     """
@@ -4223,7 +4286,7 @@ def flow_control_policy_maker(intersight_api_key_id,
                               organization=organization,
                               intersight_base_url=intersight_base_url,
                               tags=tags,
-                              preconfigured_api_instance=preconfigured_api_instance,
+                              preconfigured_api_client=preconfigured_api_client,
                               priority=priority,
                               receive=receive,
                               send=send
@@ -4245,7 +4308,7 @@ class LinkControlPolicy(UcsPolicy):
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  admin_state="Enabled",
                  mode="Normal"
                  ):
@@ -4256,7 +4319,7 @@ class LinkControlPolicy(UcsPolicy):
                          organization,
                          intersight_base_url,
                          tags,
-                         preconfigured_api_instance
+                         preconfigured_api_client
                          )
         self.admin_state = admin_state
         self.mode = mode
@@ -4271,7 +4334,7 @@ class LinkControlPolicy(UcsPolicy):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"'{self.admin_state}', "
             f"'{self.mode}')"
             )
@@ -4322,7 +4385,7 @@ def link_control_policy_maker(intersight_api_key_id,
                               organization="default",
                               intersight_base_url="https://intersight.com/api/v1",
                               tags=None,
-                              preconfigured_api_instance=None
+                              preconfigured_api_client=None
                               ):
     """This is a function used to make a Link Control Policy on Cisco
     Intersight.
@@ -4355,11 +4418,11 @@ def link_control_policy_maker(intersight_api_key_id,
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
             policy. The default value is None.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
     """
@@ -4395,7 +4458,7 @@ def link_control_policy_maker(intersight_api_key_id,
                               organization=organization,
                               intersight_base_url=intersight_base_url,
                               tags=tags,
-                              preconfigured_api_instance=preconfigured_api_instance,
+                              preconfigured_api_client=preconfigured_api_client,
                               admin_state=admin_state,
                               mode=mode
                               ))
@@ -4430,7 +4493,7 @@ class LinkAggregationPolicy(UcsPolicy):
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  suspend_individual=False,
                  lacp_rate="Normal"
                  ):
@@ -4441,7 +4504,7 @@ class LinkAggregationPolicy(UcsPolicy):
                          organization,
                          intersight_base_url,
                          tags,
-                         preconfigured_api_instance
+                         preconfigured_api_client
                          )
         self.suspend_individual = suspend_individual
         self.lacp_rate = lacp_rate
@@ -4461,7 +4524,7 @@ class LinkAggregationPolicy(UcsPolicy):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"{self.suspend_individual}, "
             f"'{self.lacp_rate}')"
             )
@@ -4476,7 +4539,7 @@ def link_aggregation_policy_maker(intersight_api_key_id,
                                   organization="default",
                                   intersight_base_url="https://intersight.com/api/v1",
                                   tags=None,
-                                  preconfigured_api_instance=None
+                                  preconfigured_api_client=None
                                   ):
     """This is a function used to make a Link Aggregation Policy on Cisco
     Intersight.
@@ -4509,11 +4572,11 @@ def link_aggregation_policy_maker(intersight_api_key_id,
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
             policy. The default value is None.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
     """
@@ -4549,7 +4612,7 @@ def link_aggregation_policy_maker(intersight_api_key_id,
                                   organization=organization,
                                   intersight_base_url=intersight_base_url,
                                   tags=tags,
-                                  preconfigured_api_instance=preconfigured_api_instance,
+                                  preconfigured_api_client=preconfigured_api_client,
                                   suspend_individual=suspend_individual,
                                   lacp_rate=lacp_rate
                                   ))
@@ -4570,7 +4633,7 @@ class PortPolicy(DirectlyAttachedUcsDomainPolicy):
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  ucs_domain_profile_name="",
                  fabric_interconnect="AB",
                  fabric_interconnect_model="UCS-FI-6454"
@@ -4582,7 +4645,7 @@ class PortPolicy(DirectlyAttachedUcsDomainPolicy):
                          organization,
                          intersight_base_url,
                          tags,
-                         preconfigured_api_instance,
+                         preconfigured_api_client,
                          ucs_domain_profile_name,
                          fabric_interconnect
                          )
@@ -4604,7 +4667,7 @@ class PortPolicy(DirectlyAttachedUcsDomainPolicy):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"'{self.ucs_domain_profile_name}', "
             f"'{self.fabric_interconnect}', "
             f"'{self.fabric_interconnect_model}')"
@@ -4628,7 +4691,7 @@ class PortModes(IdConfigurator):
                  id_list=None,
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  default_slot_id=1
                  ):
         super().__init__(intersight_api_key_id,
@@ -4637,7 +4700,7 @@ class PortModes(IdConfigurator):
                          id_list,
                          organization,
                          intersight_base_url,
-                         preconfigured_api_instance
+                         preconfigured_api_client
                          )
         self.default_slot_id = default_slot_id
         
@@ -4650,7 +4713,7 @@ class PortModes(IdConfigurator):
             f"'{self.id_list}', "
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"{self.default_slot_id})"
             )
 
@@ -4677,10 +4740,11 @@ class PortModes(IdConfigurator):
             """
             full_intersight_api_path = f"/{self.intersight_api_path}"
             try:
-                self.api_instance.call_api(full_intersight_api_path,
-                                           "POST",
-                                           body=body
-                                           )
+                self.api_client.call_api(resource_path=full_intersight_api_path,
+                                         method="POST",
+                                         body=body,
+                                         auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                         )
                 print(f"The configuration of {self.object_type} "
                       f"for ports {full_fc_port_mode_start_port_id} - "
                       f"{full_fc_port_mode_end_port_id} has completed.")
@@ -4705,7 +4769,7 @@ class PortModes(IdConfigurator):
                                                            intersight_api_path=self.policy_intersight_api_path,
                                                            object_type=self.policy_type,
                                                            organization=self.organization,
-                                                           preconfigured_api_instance=self.api_instance
+                                                           preconfigured_api_client=self.api_client
                                                            )
             for id_dictionary in self.id_list:
                 ports_enumerated_id_range = self.enumerated_id_range_retriever(id_dictionary,
@@ -4741,7 +4805,7 @@ class Port(IdConfigurator):
                  id_list=None,
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  default_slot_id=1,
                  default_aggregate_port_id=0
                  ):
@@ -4751,7 +4815,7 @@ class Port(IdConfigurator):
                          id_list,
                          organization,
                          intersight_base_url,
-                         preconfigured_api_instance
+                         preconfigured_api_client
                          )
         self.default_slot_id = default_slot_id
         self.default_aggregate_port_id = default_aggregate_port_id
@@ -4765,7 +4829,7 @@ class Port(IdConfigurator):
             f"'{self.id_list}', "
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"{self.default_slot_id}, "
             f"{self.default_aggregate_port_id})"
             )
@@ -4793,10 +4857,11 @@ class Port(IdConfigurator):
             """
             full_intersight_api_path = f"/{self.intersight_api_path}"
             try:
-                self.api_instance.call_api(full_intersight_api_path,
-                                           "POST",
-                                           body=body
-                                           )
+                self.api_client.call_api(resource_path=full_intersight_api_path,
+                                         method="POST",
+                                         body=body,
+                                         auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                         )
                 print(f"The configuration of {self.object_type} "
                       f"{full_current_port_id} has completed.")
                 return "The POST method was successful."
@@ -4819,7 +4884,7 @@ class Port(IdConfigurator):
                                                            intersight_api_path=self.policy_intersight_api_path,
                                                            object_type=self.policy_type,
                                                            organization=self.organization,
-                                                           preconfigured_api_instance=self.api_instance
+                                                           preconfigured_api_client=self.api_client
                                                            )
             for id_dictionary in self.id_list:
                 ports_enumerated_id_range = self.enumerated_id_range_retriever(id_dictionary,
@@ -4882,7 +4947,7 @@ class EthernetUplinkPort(Port):
                  id_list=None,
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  default_slot_id=1,
                  default_aggregate_port_id=0,
                  default_flow_control_policy_name="",
@@ -4894,7 +4959,7 @@ class EthernetUplinkPort(Port):
                          id_list,
                          organization,
                          intersight_base_url,
-                         preconfigured_api_instance,
+                         preconfigured_api_client,
                          default_slot_id,
                          default_aggregate_port_id
                          )
@@ -4910,7 +4975,7 @@ class EthernetUplinkPort(Port):
             f"'{self.id_list}', "
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"{self.default_slot_id}, "
             f"{self.default_aggregate_port_id}, "
             f"'{self.default_flow_control_policy_name}', "
@@ -4941,7 +5006,7 @@ class FcoeUplinkPort(Port):
                  id_list=None,
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  default_slot_id=1,
                  default_aggregate_port_id=0,
                  default_link_control_policy_name=""
@@ -4952,7 +5017,7 @@ class FcoeUplinkPort(Port):
                          id_list,
                          organization,
                          intersight_base_url,
-                         preconfigured_api_instance,
+                         preconfigured_api_client,
                          default_slot_id,
                          default_aggregate_port_id
                          )
@@ -4967,7 +5032,7 @@ class FcoeUplinkPort(Port):
             f"'{self.id_list}', "
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"{self.default_slot_id}, "
             f"{self.default_aggregate_port_id}, "
             f"'{self.default_link_control_policy_name}')"
@@ -5028,7 +5093,7 @@ class AppliancePort(Port):
                  id_list=None,
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  default_slot_id=1,
                  default_aggregate_port_id=0,
                  default_ethernet_network_group_policy_name="",
@@ -5040,7 +5105,7 @@ class AppliancePort(Port):
                          id_list,
                          organization,
                          intersight_base_url,
-                         preconfigured_api_instance,
+                         preconfigured_api_client,
                          default_slot_id,
                          default_aggregate_port_id
                          )
@@ -5056,7 +5121,7 @@ class AppliancePort(Port):
             f"'{self.id_list}', "
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"{self.default_slot_id}, "
             f"{self.default_aggregate_port_id}, "
             f"'{self.default_ethernet_network_group_policy_name}', "
@@ -5080,7 +5145,7 @@ class PortChannel(IdConfigurator):
                  id_list=None,
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  default_slot_id=1,
                  default_aggregate_port_id=0
                  ):
@@ -5090,7 +5155,7 @@ class PortChannel(IdConfigurator):
                          id_list,
                          organization,
                          intersight_base_url,
-                         preconfigured_api_instance
+                         preconfigured_api_client
                          )
         self.default_slot_id = default_slot_id
         self.default_aggregate_port_id = default_aggregate_port_id
@@ -5104,7 +5169,7 @@ class PortChannel(IdConfigurator):
             f"'{self.id_list}', "
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"{self.default_slot_id}, "
             f"{self.default_aggregate_port_id})"
             )
@@ -5132,10 +5197,11 @@ class PortChannel(IdConfigurator):
             """
             full_intersight_api_path = f"/{self.intersight_api_path}"
             try:
-                self.api_instance.call_api(full_intersight_api_path,
-                                           "POST",
-                                           body=body
-                                           )
+                self.api_client.call_api(resource_path=full_intersight_api_path,
+                                         method="POST",
+                                         body=body,
+                                         auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                         )
                 print(f"The configuration of {self.object_type} "
                       f"{current_port_channel_id} has completed with the "
                       "following member ports: "
@@ -5163,7 +5229,7 @@ class PortChannel(IdConfigurator):
                                                            intersight_api_path=self.policy_intersight_api_path,
                                                            object_type=self.policy_type,
                                                            organization=self.organization,
-                                                           preconfigured_api_instance=self.api_instance
+                                                           preconfigured_api_client=self.api_client
                                                            )
             for pc_id_dictionary in self.id_list:
                 ports_enumerated_id_range = self.enumerated_id_range_retriever(pc_id_dictionary,
@@ -5249,7 +5315,7 @@ class EthernetUplinkPortChannel(PortChannel):
                  id_list=None,
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  default_slot_id=1,
                  default_aggregate_port_id=0,
                  default_flow_control_policy_name="",
@@ -5262,7 +5328,7 @@ class EthernetUplinkPortChannel(PortChannel):
                          id_list,
                          organization,
                          intersight_base_url,
-                         preconfigured_api_instance,
+                         preconfigured_api_client,
                          default_slot_id,
                          default_aggregate_port_id
                          )
@@ -5279,7 +5345,7 @@ class EthernetUplinkPortChannel(PortChannel):
             f"'{self.id_list}', "
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"{self.default_slot_id}, "
             f"{self.default_aggregate_port_id}, "
             f"'{self.default_flow_control_policy_name}', "
@@ -5328,7 +5394,7 @@ class FcoeUplinkPortChannel(PortChannel):
                  id_list=None,
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  default_slot_id=1,
                  default_aggregate_port_id=0,
                  default_link_aggregation_policy_name="",
@@ -5340,7 +5406,7 @@ class FcoeUplinkPortChannel(PortChannel):
                          id_list,
                          organization,
                          intersight_base_url,
-                         preconfigured_api_instance,
+                         preconfigured_api_client,
                          default_slot_id,
                          default_aggregate_port_id
                          )
@@ -5356,7 +5422,7 @@ class FcoeUplinkPortChannel(PortChannel):
             f"'{self.id_list}', "
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"{self.default_slot_id}, "
             f"{self.default_aggregate_port_id}, "
             f"'{self.default_link_aggregation_policy_name}', "
@@ -5432,7 +5498,7 @@ class AppliancePortChannel(PortChannel):
                  id_list=None,
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  default_slot_id=1,
                  default_aggregate_port_id=0,
                  default_ethernet_network_group_policy_name="",
@@ -5444,7 +5510,7 @@ class AppliancePortChannel(PortChannel):
                          id_list,
                          organization,
                          intersight_base_url,
-                         preconfigured_api_instance,
+                         preconfigured_api_client,
                          default_slot_id,
                          default_aggregate_port_id
                          )
@@ -5460,7 +5526,7 @@ class AppliancePortChannel(PortChannel):
             f"'{self.id_list}', "
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"{self.default_slot_id}, "
             f"{self.default_aggregate_port_id}, "
             f"'{self.default_ethernet_network_group_policy_name}', "
@@ -5486,7 +5552,7 @@ def port_policy_maker(intersight_api_key_id,
                       organization="default",
                       intersight_base_url="https://intersight.com/api/v1",
                       tags=None,
-                      preconfigured_api_instance=None,
+                      preconfigured_api_client=None,
                       ucs_domain_profile_name="",
                       fabric_interconnect="AB",
                       default_flow_control_policy_name="",
@@ -5694,11 +5760,11 @@ def port_policy_maker(intersight_api_key_id,
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
             policy. The default value is None.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
         ucs_domain_profile_name (str):
@@ -5793,7 +5859,7 @@ def port_policy_maker(intersight_api_key_id,
                        organization=organization,
                        intersight_base_url=intersight_base_url,
                        tags=tags,
-                       preconfigured_api_instance=preconfigured_api_instance,
+                       preconfigured_api_client=preconfigured_api_client,
                        ucs_domain_profile_name=ucs_domain_profile_name,
                        fabric_interconnect=fabric_interconnect,
                        fabric_interconnect_model=fabric_interconnect_model
@@ -5806,7 +5872,7 @@ def port_policy_maker(intersight_api_key_id,
                       id_list=fc_port_mode_list,
                       organization=organization,
                       intersight_base_url=intersight_base_url,
-                      preconfigured_api_instance=preconfigured_api_instance,
+                      preconfigured_api_client=preconfigured_api_client,
                       default_slot_id=default_slot_id_of_fc_uplink_ports
                       ))
     
@@ -5817,7 +5883,7 @@ def port_policy_maker(intersight_api_key_id,
                        id_list=server_port_list,
                        organization=organization,
                        intersight_base_url=intersight_base_url,
-                       preconfigured_api_instance=preconfigured_api_instance,
+                       preconfigured_api_client=preconfigured_api_client,
                        default_slot_id=default_slot_id_of_server_ports,
                        default_aggregate_port_id=default_aggregate_port_id_of_server_ports
                        ))
@@ -5829,7 +5895,7 @@ def port_policy_maker(intersight_api_key_id,
                                id_list=ethernet_uplink_port_list,
                                organization=organization,
                                intersight_base_url=intersight_base_url,
-                               preconfigured_api_instance=preconfigured_api_instance,
+                               preconfigured_api_client=preconfigured_api_client,
                                default_slot_id=default_slot_id_of_ethernet_uplink_ports,
                                default_aggregate_port_id=default_aggregate_port_id_of_ethernet_uplink_ports,
                                default_flow_control_policy_name=default_flow_control_policy_name,
@@ -5843,7 +5909,7 @@ def port_policy_maker(intersight_api_key_id,
                            id_list=fcoe_uplink_port_list,
                            organization=organization,
                            intersight_base_url=intersight_base_url,
-                           preconfigured_api_instance=preconfigured_api_instance,
+                           preconfigured_api_client=preconfigured_api_client,
                            default_slot_id=default_slot_id_of_fcoe_uplink_ports,
                            default_aggregate_port_id=default_aggregate_port_id_of_fcoe_uplink_ports,
                            default_link_control_policy_name=default_link_control_policy_name
@@ -5856,7 +5922,7 @@ def port_policy_maker(intersight_api_key_id,
                          id_list=fc_uplink_port_list,
                          organization=organization,
                          intersight_base_url=intersight_base_url,
-                         preconfigured_api_instance=preconfigured_api_instance,
+                         preconfigured_api_client=preconfigured_api_client,
                          default_slot_id=default_slot_id_of_fc_uplink_ports,
                          default_aggregate_port_id=default_aggregate_port_id_of_fc_uplink_ports
                          ))
@@ -5868,7 +5934,7 @@ def port_policy_maker(intersight_api_key_id,
                           id_list=appliance_port_list,
                           organization=organization,
                           intersight_base_url=intersight_base_url,
-                          preconfigured_api_instance=preconfigured_api_instance,
+                          preconfigured_api_client=preconfigured_api_client,
                           default_slot_id=default_slot_id_of_appliance_ports,
                           default_aggregate_port_id=default_aggregate_port_id_of_appliance_ports,
                           default_ethernet_network_group_policy_name=default_ethernet_network_group_policy_name,
@@ -5882,7 +5948,7 @@ def port_policy_maker(intersight_api_key_id,
                                       id_list=ethernet_uplink_port_channel_list,
                                       organization=organization,
                                       intersight_base_url=intersight_base_url,
-                                      preconfigured_api_instance=preconfigured_api_instance,
+                                      preconfigured_api_client=preconfigured_api_client,
                                       default_slot_id=default_slot_id_of_ethernet_uplink_ports,
                                       default_aggregate_port_id=default_aggregate_port_id_of_ethernet_uplink_ports,
                                       default_flow_control_policy_name=default_flow_control_policy_name,
@@ -5897,7 +5963,7 @@ def port_policy_maker(intersight_api_key_id,
                                   id_list=fcoe_uplink_port_channel_list,
                                   organization=organization,
                                   intersight_base_url=intersight_base_url,
-                                  preconfigured_api_instance=preconfigured_api_instance,
+                                  preconfigured_api_client=preconfigured_api_client,
                                   default_slot_id=default_slot_id_of_fcoe_uplink_ports,
                                   default_aggregate_port_id=default_aggregate_port_id_of_fcoe_uplink_ports,
                                   default_link_aggregation_policy_name=default_link_aggregation_policy_name,
@@ -5911,7 +5977,7 @@ def port_policy_maker(intersight_api_key_id,
                                 id_list=fc_uplink_port_channel_list,
                                 organization=organization,
                                 intersight_base_url=intersight_base_url,
-                                preconfigured_api_instance=preconfigured_api_instance,
+                                preconfigured_api_client=preconfigured_api_client,
                                 default_slot_id=default_slot_id_of_fc_uplink_ports,
                                 default_aggregate_port_id=default_aggregate_port_id_of_fc_uplink_ports
                                 ))
@@ -5923,7 +5989,7 @@ def port_policy_maker(intersight_api_key_id,
                                  id_list=appliance_port_channel_list,
                                  organization=organization,
                                  intersight_base_url=intersight_base_url,
-                                 preconfigured_api_instance=preconfigured_api_instance,
+                                 preconfigured_api_client=preconfigured_api_client,
                                  default_slot_id=default_slot_id_of_appliance_ports,
                                  default_aggregate_port_id=default_aggregate_port_id_of_appliance_ports,
                                  default_ethernet_network_group_policy_name=default_ethernet_network_group_policy_name,
@@ -5946,7 +6012,7 @@ class NtpPolicy(DirectlyAttachedUcsDomainPolicy):
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  ucs_domain_profile_name="",
                  ntp_servers=None,
                  timezone="Etc/GMT",
@@ -5959,7 +6025,7 @@ class NtpPolicy(DirectlyAttachedUcsDomainPolicy):
                          organization,
                          intersight_base_url,
                          tags,
-                         preconfigured_api_instance,
+                         preconfigured_api_client,
                          ucs_domain_profile_name,
                          fabric_interconnect="AB"
                          )
@@ -5987,7 +6053,7 @@ class NtpPolicy(DirectlyAttachedUcsDomainPolicy):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"'{self.ucs_domain_profile_name}', "
             f"{self.ntp_servers}, "
             f"'{self.timezone}', "
@@ -6005,7 +6071,7 @@ def ntp_policy_maker(intersight_api_key_id,
                      organization="default",
                      intersight_base_url="https://intersight.com/api/v1",
                      tags=None,
-                     preconfigured_api_instance=None,
+                     preconfigured_api_client=None,
                      ucs_domain_profile_name=""
                      ):
     """This is a function used to make a NTP Policy on Cisco Intersight.
@@ -6042,11 +6108,11 @@ def ntp_policy_maker(intersight_api_key_id,
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
             policy. The default value is None.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
         ucs_domain_profile_name (str):
@@ -6085,7 +6151,7 @@ def ntp_policy_maker(intersight_api_key_id,
                       organization=organization,
                       intersight_base_url=intersight_base_url,
                       tags=tags,
-                      preconfigured_api_instance=preconfigured_api_instance,
+                      preconfigured_api_client=preconfigured_api_client,
                       ucs_domain_profile_name=ucs_domain_profile_name,
                       ntp_servers=ntp_servers,
                       timezone=timezone,
@@ -6233,7 +6299,7 @@ class SyslogPolicy(DirectlyAttachedUcsDomainPolicy):
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  ucs_domain_profile_name="",
                  syslog_local_logging_minimum_severity_to_report="warning",
                  syslog_remote_logging_server_list=None
@@ -6245,7 +6311,7 @@ class SyslogPolicy(DirectlyAttachedUcsDomainPolicy):
                          organization,
                          intersight_base_url,
                          tags,
-                         preconfigured_api_instance,
+                         preconfigured_api_client,
                          ucs_domain_profile_name,
                          fabric_interconnect="AB"
                          )
@@ -6276,7 +6342,7 @@ class SyslogPolicy(DirectlyAttachedUcsDomainPolicy):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"'{self.ucs_domain_profile_name}', "
             f"'{self.syslog_local_logging_minimum_severity_to_report}', "
             f"{self.syslog_remote_logging_server_list})"
@@ -6292,7 +6358,7 @@ def syslog_policy_maker(intersight_api_key_id,
                         organization="default",
                         intersight_base_url="https://intersight.com/api/v1",
                         tags=None,
-                        preconfigured_api_instance=None,
+                        preconfigured_api_client=None,
                         ucs_domain_profile_name=""
                         ):
     """This is a function used to make a Syslog Policy on Cisco Intersight.
@@ -6343,11 +6409,11 @@ def syslog_policy_maker(intersight_api_key_id,
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
             policy. The default value is None.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
         ucs_domain_profile_name (str):
@@ -6386,7 +6452,7 @@ def syslog_policy_maker(intersight_api_key_id,
                          organization=organization,
                          intersight_base_url=intersight_base_url,
                          tags=tags,
-                         preconfigured_api_instance=preconfigured_api_instance,
+                         preconfigured_api_client=preconfigured_api_client,
                          ucs_domain_profile_name=ucs_domain_profile_name,
                          syslog_local_logging_minimum_severity_to_report=syslog_local_logging_minimum_severity_to_report,
                          syslog_remote_logging_server_list=syslog_remote_logging_server_list
@@ -6409,7 +6475,7 @@ class NetworkConnectivityPolicy(DirectlyAttachedUcsDomainPolicy):
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  ucs_domain_profile_name="",
                  preferred_ipv4_dns_server="0.0.0.0",
                  alternate_ipv4_dns_server="0.0.0.0",
@@ -6428,7 +6494,7 @@ class NetworkConnectivityPolicy(DirectlyAttachedUcsDomainPolicy):
                          organization,
                          intersight_base_url,
                          tags,
-                         preconfigured_api_instance,
+                         preconfigured_api_client,
                          ucs_domain_profile_name,
                          fabric_interconnect="AB"
                          )
@@ -6465,7 +6531,7 @@ class NetworkConnectivityPolicy(DirectlyAttachedUcsDomainPolicy):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"'{self.ucs_domain_profile_name}', "
             f"'{self.preferred_ipv4_dns_server}', "
             f"'{self.alternate_ipv4_dns_server}', "
@@ -6495,7 +6561,7 @@ def network_connectivity_policy_maker(intersight_api_key_id,
                                       organization="default",
                                       intersight_base_url="https://intersight.com/api/v1",
                                       tags=None,
-                                      preconfigured_api_instance=None,
+                                      preconfigured_api_client=None,
                                       ucs_domain_profile_name=""
                                       ):
     """This is a function used to make a Network Connectivity Policy on Cisco
@@ -6548,11 +6614,11 @@ def network_connectivity_policy_maker(intersight_api_key_id,
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
             policy. The default value is None.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
         ucs_domain_profile_name (str):
@@ -6591,7 +6657,7 @@ def network_connectivity_policy_maker(intersight_api_key_id,
                                       organization=organization,
                                       intersight_base_url=intersight_base_url,
                                       tags=tags,
-                                      preconfigured_api_instance=preconfigured_api_instance,
+                                      preconfigured_api_client=preconfigured_api_client,
                                       ucs_domain_profile_name=ucs_domain_profile_name,
                                       preferred_ipv4_dns_server=preferred_ipv4_dns_server,
                                       alternate_ipv4_dns_server=alternate_ipv4_dns_server,
@@ -6799,7 +6865,7 @@ class SnmpPolicy(DirectlyAttachedUcsDomainPolicy):
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  ucs_domain_profile_name="",
                  enable_snmp=True,
                  snmp_v2c_features=True,
@@ -6821,7 +6887,7 @@ class SnmpPolicy(DirectlyAttachedUcsDomainPolicy):
                          organization,
                          intersight_base_url,
                          tags,
-                         preconfigured_api_instance,
+                         preconfigured_api_client,
                          ucs_domain_profile_name,
                          fabric_interconnect="AB"
                          )
@@ -6869,7 +6935,7 @@ class SnmpPolicy(DirectlyAttachedUcsDomainPolicy):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"'{self.ucs_domain_profile_name}', "
             f"{self.enable_snmp}, "
             f"{self.snmp_v2c_features}, "
@@ -6905,7 +6971,7 @@ def snmp_policy_maker(intersight_api_key_id,
                       organization="default",
                       intersight_base_url="https://intersight.com/api/v1",
                       tags=None,
-                      preconfigured_api_instance=None,
+                      preconfigured_api_client=None,
                       ucs_domain_profile_name=""
                       ):
     """This is a function used to make a SNMP Policy on Cisco Intersight.
@@ -7004,11 +7070,11 @@ def snmp_policy_maker(intersight_api_key_id,
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
             policy. The default value is None.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
         ucs_domain_profile_name (str):
@@ -7047,7 +7113,7 @@ def snmp_policy_maker(intersight_api_key_id,
                        organization=organization,
                        intersight_base_url=intersight_base_url,
                        tags=tags,
-                       preconfigured_api_instance=preconfigured_api_instance,
+                       preconfigured_api_client=preconfigured_api_client,
                        ucs_domain_profile_name=ucs_domain_profile_name,
                        enable_snmp=enable_snmp,
                        snmp_v2c_features=snmp_v2c_features,
@@ -7079,7 +7145,7 @@ class SystemQosPolicy(DirectlyAttachedUcsDomainPolicy):
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  ucs_domain_profile_name="",
                  qos_class_settings_list=None
                  ):
@@ -7090,7 +7156,7 @@ class SystemQosPolicy(DirectlyAttachedUcsDomainPolicy):
                          organization,
                          intersight_base_url,
                          tags,
-                         preconfigured_api_instance,
+                         preconfigured_api_client,
                          ucs_domain_profile_name,
                          fabric_interconnect="AB"
                          )
@@ -7109,7 +7175,7 @@ class SystemQosPolicy(DirectlyAttachedUcsDomainPolicy):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"'{self.ucs_domain_profile_name}', "
             f"{self.qos_class_settings_list})"
             )
@@ -7143,7 +7209,7 @@ def system_qos_policy_maker(intersight_api_key_id,
                             organization="default",
                             intersight_base_url="https://intersight.com/api/v1",
                             tags=None,
-                            preconfigured_api_instance=None,
+                            preconfigured_api_client=None,
                             ucs_domain_profile_name=""
                             ):
     """This is a function used to make a System QoS Policy on Cisco Intersight.
@@ -7214,11 +7280,11 @@ def system_qos_policy_maker(intersight_api_key_id,
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
             policy. The default value is None.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
         ucs_domain_profile_name (str):
@@ -7257,7 +7323,7 @@ def system_qos_policy_maker(intersight_api_key_id,
                             organization=organization,
                             intersight_base_url=intersight_base_url,
                             tags=tags,
-                            preconfigured_api_instance=preconfigured_api_instance,
+                            preconfigured_api_client=preconfigured_api_client,
                             ucs_domain_profile_name=ucs_domain_profile_name,
                             qos_class_settings_list=qos_class_settings_list
                             ))
@@ -7278,7 +7344,7 @@ class SwitchControlPolicy(DirectlyAttachedUcsDomainPolicy):
                  organization="default",
                  intersight_base_url="https://intersight.com/api/v1",
                  tags=None,
-                 preconfigured_api_instance=None,
+                 preconfigured_api_client=None,
                  ucs_domain_profile_name="",
                  enable_vlan_port_count_optimization=False,
                  mac_address_table_aging_time_option="Default",
@@ -7293,7 +7359,7 @@ class SwitchControlPolicy(DirectlyAttachedUcsDomainPolicy):
                          organization,
                          intersight_base_url,
                          tags,
-                         preconfigured_api_instance,
+                         preconfigured_api_client,
                          ucs_domain_profile_name,
                          fabric_interconnect="AB"
                          )
@@ -7322,7 +7388,7 @@ class SwitchControlPolicy(DirectlyAttachedUcsDomainPolicy):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
-            f"{self.api_instance}, "
+            f"{self.api_client}, "
             f"'{self.ucs_domain_profile_name}', "
             f"'{self.enable_vlan_port_count_optimization}', "
             f"'{self.mac_address_table_aging_time_option}', "
@@ -7381,7 +7447,7 @@ def switch_control_policy_maker(intersight_api_key_id,
                                 organization="default",
                                 intersight_base_url="https://intersight.com/api/v1",
                                 tags=None,
-                                preconfigured_api_instance=None,
+                                preconfigured_api_client=None,
                                 ucs_domain_profile_name=""
                                 ):
     """This is a function used to make a Switch Control Policy on Cisco Intersight.
@@ -7432,11 +7498,11 @@ def switch_control_policy_maker(intersight_api_key_id,
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
             policy. The default value is None.
-        preconfigured_api_instance ("IntersightApiClient"):
-            Optional; An IntersightApiClient class instance which handles
+        preconfigured_api_client ("ApiClient"):
+            Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
-            The default value is None. If a preconfigured_api_instance is
-            provided, empty strings ("") or None can be provided for the
+            The default value is None. If a preconfigured_api_client argument
+            is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
         ucs_domain_profile_name (str):
@@ -7475,7 +7541,7 @@ def switch_control_policy_maker(intersight_api_key_id,
                                 organization=organization,
                                 intersight_base_url=intersight_base_url,
                                 tags=tags,
-                                preconfigured_api_instance=preconfigured_api_instance,
+                                preconfigured_api_client=preconfigured_api_client,
                                 ucs_domain_profile_name=ucs_domain_profile_name,
                                 enable_vlan_port_count_optimization=enable_vlan_port_count_optimization,
                                 mac_address_table_aging_time_option=mac_address_table_aging_time_option,
@@ -7492,10 +7558,10 @@ def main():
     deployment_tool_ucs_domain_profile_name = f"{deployment_name_prefix}{ucs_domain_profile_name}{deployment_name_suffix}"
 
     # Establish Intersight SDK for Python API client instance
-    main_intersight_api_instance = IntersightApiClient(host=intersight_base_url,
-                                                       private_key=key,
-                                                       api_key_id=key_id
-                                                       )
+    main_intersight_api_client = get_api_client(api_key_id=key_id,
+                                                api_secret_file=key,
+                                                endpoint=intersight_base_url
+                                                )
     
     # Starting the UCS Domain Deployment Tool for Cisco Intersight
     print(f"\nStarting the {deployment_tool_type} for Cisco Intersight.\n")
@@ -7505,7 +7571,7 @@ def main():
     test_intersight_api_service(
         intersight_api_key_id=None,
         intersight_api_key=None,
-        preconfigured_api_instance=main_intersight_api_instance
+        preconfigured_api_client=main_intersight_api_client
         )
 
     # Establish the initial UCS Domain Deployment Tool default pre-requisite and support Policy names
@@ -7524,7 +7590,7 @@ def main():
         ucs_domain_profile_description=ucs_domain_profile_description,
         ucs_domain_profile_organization=ucs_domain_profile_organization,
         tags=ucs_domain_profile_tags,
-        preconfigured_api_instance=main_intersight_api_instance
+        preconfigured_api_client=main_intersight_api_client
         )
 
     # Create the Multicast Policy in Intersight
@@ -7542,7 +7608,7 @@ def main():
             policy_description=multicast_policy_description,
             organization=ucs_domain_profile_organization,
             tags=multicast_policy_tags,
-            preconfigured_api_instance=main_intersight_api_instance
+            preconfigured_api_client=main_intersight_api_client
             )
 
     # Create the VLAN Policies in Intersight
@@ -7567,7 +7633,7 @@ def main():
                 policy_description=vlan_policy_a_description,
                 organization=ucs_domain_profile_organization,
                 tags=vlan_policy_a_tags,
-                preconfigured_api_instance=main_intersight_api_instance,
+                preconfigured_api_client=main_intersight_api_client,
                 ucs_domain_profile_name=deployment_tool_ucs_domain_profile_name,
                 fabric_interconnect="AB"
                 )
@@ -7584,7 +7650,7 @@ def main():
                 policy_description=vlan_policy_a_description,
                 organization=ucs_domain_profile_organization,
                 tags=vlan_policy_a_tags,
-                preconfigured_api_instance=main_intersight_api_instance,
+                preconfigured_api_client=main_intersight_api_client,
                 ucs_domain_profile_name=deployment_tool_ucs_domain_profile_name,
                 fabric_interconnect="A"
                 )
@@ -7600,7 +7666,7 @@ def main():
                 policy_description=vlan_policy_b_description,
                 organization=ucs_domain_profile_organization,
                 tags=vlan_policy_b_tags,
-                preconfigured_api_instance=main_intersight_api_instance,
+                preconfigured_api_client=main_intersight_api_client,
                 ucs_domain_profile_name=deployment_tool_ucs_domain_profile_name,
                 fabric_interconnect="B"
                 )
@@ -7620,7 +7686,7 @@ def main():
                 policy_description=vsan_policy_a_description,
                 organization=ucs_domain_profile_organization,
                 tags=vsan_policy_a_tags,
-                preconfigured_api_instance=main_intersight_api_instance,
+                preconfigured_api_client=main_intersight_api_client,
                 ucs_domain_profile_name=deployment_tool_ucs_domain_profile_name,
                 fabric_interconnect="AB"
                 )
@@ -7636,7 +7702,7 @@ def main():
                 policy_description=vsan_policy_a_description,
                 organization=ucs_domain_profile_organization,
                 tags=vsan_policy_a_tags,
-                preconfigured_api_instance=main_intersight_api_instance,
+                preconfigured_api_client=main_intersight_api_client,
                 ucs_domain_profile_name=deployment_tool_ucs_domain_profile_name,
                 fabric_interconnect="A"
                 )
@@ -7651,7 +7717,7 @@ def main():
                 policy_description=vsan_policy_b_description,
                 organization=ucs_domain_profile_organization,
                 tags=vsan_policy_b_tags,
-                preconfigured_api_instance=main_intersight_api_instance,
+                preconfigured_api_client=main_intersight_api_client,
                 ucs_domain_profile_name=deployment_tool_ucs_domain_profile_name,
                 fabric_interconnect="B"
                 )
@@ -7669,7 +7735,7 @@ def main():
             policy_description=ethernet_network_group_policy_description,
             organization=ucs_domain_profile_organization,
             tags=ethernet_network_group_policy_tags,
-            preconfigured_api_instance=main_intersight_api_instance
+            preconfigured_api_client=main_intersight_api_client
             )
 
     # Create the Ethernet Network Control Policy in Intersight
@@ -7689,7 +7755,7 @@ def main():
             policy_description=ethernet_network_control_policy_description,
             organization=ucs_domain_profile_organization,
             tags=ethernet_network_control_policy_tags,
-            preconfigured_api_instance=main_intersight_api_instance
+            preconfigured_api_client=main_intersight_api_client
             )
 
     # Create the Flow Control Policy in Intersight
@@ -7706,7 +7772,7 @@ def main():
             policy_description=flow_control_policy_description,
             organization=ucs_domain_profile_organization,
             tags=flow_control_policy_tags,
-            preconfigured_api_instance=main_intersight_api_instance
+            preconfigured_api_client=main_intersight_api_client
             )
 
     # Create the Link Control Policy in Intersight
@@ -7722,7 +7788,7 @@ def main():
             policy_description=link_control_policy_description,
             organization=ucs_domain_profile_organization,
             tags=link_control_policy_tags,
-            preconfigured_api_instance=main_intersight_api_instance
+            preconfigured_api_client=main_intersight_api_client
             )
 
     # Create the Link Aggregation Policy in Intersight
@@ -7738,7 +7804,7 @@ def main():
             policy_description=link_aggregation_policy_description,
             organization=ucs_domain_profile_organization,
             tags=link_aggregation_policy_tags,
-            preconfigured_api_instance=main_intersight_api_instance
+            preconfigured_api_client=main_intersight_api_client
             )
 
     # Create the Port Policies in Intersight
@@ -7791,7 +7857,7 @@ def main():
                 policy_description=port_policy_a_description,
                 organization=ucs_domain_profile_organization,
                 tags=port_policy_a_tags,
-                preconfigured_api_instance=main_intersight_api_instance,
+                preconfigured_api_client=main_intersight_api_client,
                 ucs_domain_profile_name=deployment_tool_ucs_domain_profile_name,
                 fabric_interconnect="AB",
                 default_flow_control_policy_name=port_policy_default_flow_control_policy_name,
@@ -7831,7 +7897,7 @@ def main():
                 policy_description=port_policy_a_description,
                 organization=ucs_domain_profile_organization,
                 tags=port_policy_a_tags,
-                preconfigured_api_instance=main_intersight_api_instance,
+                preconfigured_api_client=main_intersight_api_client,
                 ucs_domain_profile_name=deployment_tool_ucs_domain_profile_name,
                 fabric_interconnect="A",
                 default_flow_control_policy_name=deployment_tool_flow_control_policy_name,
@@ -7870,7 +7936,7 @@ def main():
                 policy_description=port_policy_b_description,
                 organization=ucs_domain_profile_organization,
                 tags=port_policy_b_tags,
-                preconfigured_api_instance=main_intersight_api_instance,
+                preconfigured_api_client=main_intersight_api_client,
                 ucs_domain_profile_name=deployment_tool_ucs_domain_profile_name,
                 fabric_interconnect="B",
                 default_flow_control_policy_name=deployment_tool_flow_control_policy_name,
@@ -7904,7 +7970,7 @@ def main():
             policy_description=ntp_policy_description,
             organization=ucs_domain_profile_organization,
             tags=ntp_policy_tags,
-            preconfigured_api_instance=main_intersight_api_instance,
+            preconfigured_api_client=main_intersight_api_client,
             ucs_domain_profile_name=deployment_tool_ucs_domain_profile_name
             )
 
@@ -7921,7 +7987,7 @@ def main():
             policy_description=syslog_policy_description,
             organization=ucs_domain_profile_organization,
             tags=syslog_policy_tags,
-            preconfigured_api_instance=main_intersight_api_instance,
+            preconfigured_api_client=main_intersight_api_client,
             ucs_domain_profile_name=deployment_tool_ucs_domain_profile_name
             )
 
@@ -7945,7 +8011,7 @@ def main():
             policy_description=network_connectivity_policy_description,
             organization=ucs_domain_profile_organization,
             tags=network_connectivity_policy_tags,
-            preconfigured_api_instance=main_intersight_api_instance,
+            preconfigured_api_client=main_intersight_api_client,
             ucs_domain_profile_name=deployment_tool_ucs_domain_profile_name
             )
 
@@ -7972,7 +8038,7 @@ def main():
             policy_description=snmp_policy_description,
             organization=ucs_domain_profile_organization,
             tags=snmp_policy_tags,
-            preconfigured_api_instance=main_intersight_api_instance,
+            preconfigured_api_client=main_intersight_api_client,
             ucs_domain_profile_name=deployment_tool_ucs_domain_profile_name
             )
 
@@ -7988,7 +8054,7 @@ def main():
             policy_description=system_qos_policy_description,
             organization=ucs_domain_profile_organization,
             tags=system_qos_policy_tags,
-            preconfigured_api_instance=main_intersight_api_instance,
+            preconfigured_api_client=main_intersight_api_client,
             ucs_domain_profile_name=deployment_tool_ucs_domain_profile_name
             )
 
@@ -8008,7 +8074,7 @@ def main():
             policy_description=switch_control_policy_description,
             organization=ucs_domain_profile_organization,
             tags=switch_control_policy_tags,
-            preconfigured_api_instance=main_intersight_api_instance,
+            preconfigured_api_client=main_intersight_api_client,
             ucs_domain_profile_name=deployment_tool_ucs_domain_profile_name
             )
 
@@ -8022,7 +8088,7 @@ def main():
             assign_ucs_domain_profile=assign_ucs_domain_profile,
             deploy_ucs_domain_profile=deploy_ucs_domain_profile,
             ucs_domain_profile_organization=ucs_domain_profile_organization,
-            preconfigured_api_instance=main_intersight_api_instance
+            preconfigured_api_client=main_intersight_api_client
             )
 
     # UCS Domain Deployment Tool completion
