@@ -35,6 +35,8 @@
 - [BIOS Policy Maker](./src/policy_makers/bios_policy_maker) - Make a UCS BIOS policy.
 - [Fibre Channel Network Policy Maker](./src/policy_makers/fibre_channel_network_policy_maker) - Make a UCS fibre channel network policy.
 - [Virtual KVM Policy Maker](./src/policy_makers/virtual_kvm_policy_maker) - Make a UCS virtual KVM policy.
+- [Ethernet QoS Policy Maker](./src/policy_makers/ethernet_qos_policy_maker) - Make a UCS ethernet QoS policy.
+- [Fibre Channel QoS Policy Maker](./src/policy_makers/fibre_channel_qos_policy_maker) - Make a UCS fibre channel QoS policy.
 
 ## Pool Makers
 - [IP Pool Maker](./src/pool_makers/ip_pool_maker) - Make a UCS IP pool.
