@@ -13,8 +13,6 @@
 ## Features
 - Automatically build an Intersight Ethernet QoS Policy to your exact specification. Anything that can be done through the Intersight GUI can be done here and more!
 
-- Automatically attach the Ethernet QoS Policy to a UCS Domain Profile if desired, during the Ethernet QoS Policy configuration.
-
 - Quickly restore Ethernet QoS Policy configurations as part of your on-prem Intersight backup solution.
 
 - Optionally, import into other Python programs or scripts to use the matching named function for easy integration.
