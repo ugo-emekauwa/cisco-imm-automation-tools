@@ -19,6 +19,7 @@
 ## Policy Makers
 - [BIOS Policy Maker](./src/policy_makers/bios_policy_maker) - Make a UCS BIOS policy.
 - [Boot Order Policy Maker](./src/policy_makers/boot_order_policy_maker) - Make a UCS boot order policy.
+- [Certificate Management Policy Maker](./src/policy_makers/boot_order_policy_maker) - Make a UCS certificate management policy.
 - [Ethernet Network Control Policy Maker](./src/policy_makers/ethernet_network_control_policy_maker) - Make a UCS ethernet network control policy.
 - [Ethernet Network Group Policy Maker](./src/policy_makers/ethernet_network_group_policy_maker) - Make a UCS ethernet network group policy.
 - [Ethernet QoS Policy Maker](./src/policy_makers/ethernet_qos_policy_maker) - Make a UCS ethernet QoS policy.
