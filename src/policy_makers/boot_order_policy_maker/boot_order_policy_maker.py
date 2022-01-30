@@ -85,39 +85,53 @@ import intersight
 import re
 
 # Function to get Intersight API client as specified in the Intersight Python SDK documentation for OpenAPI 3.x
-def get_api_client(api_key_id, api_secret_file, endpoint="https://intersight.com"):
-    with open(api_secret_file, 'r') as f:
-        api_key = f.read()
+## Modified to align with overall formatting and try/except blocks added for additional error handling
+def get_api_client(api_key_id,
+                   api_secret_file,
+                   endpoint="https://intersight.com"
+                   ):
+    try:
+        with open(api_secret_file, 'r') as f:
+            api_key = f.read()
+        
+        if re.search('BEGIN RSA PRIVATE KEY', api_key):
+            # API Key v2 format
+            signing_algorithm = intersight.signing.ALGORITHM_RSASSA_PKCS1v15
+            signing_scheme = intersight.signing.SCHEME_RSA_SHA256
+            hash_algorithm = intersight.signing.HASH_SHA256
 
-    if re.search('BEGIN RSA PRIVATE KEY', api_key):
-        # API Key v2 format
-        signing_algorithm = intersight.signing.ALGORITHM_RSASSA_PKCS1v15
-        signing_scheme = intersight.signing.SCHEME_RSA_SHA256
-        hash_algorithm = intersight.signing.HASH_SHA256
+        elif re.search('BEGIN EC PRIVATE KEY', api_key):
+            # API Key v3 format
+            signing_algorithm = intersight.signing.ALGORITHM_ECDSA_MODE_DETERMINISTIC_RFC6979
+            signing_scheme = intersight.signing.SCHEME_HS2019
+            hash_algorithm = intersight.signing.HASH_SHA256
 
-    elif re.search('BEGIN EC PRIVATE KEY', api_key):
-        # API Key v3 format
-        signing_algorithm = intersight.signing.ALGORITHM_ECDSA_MODE_DETERMINISTIC_RFC6979
-        signing_scheme = intersight.signing.SCHEME_HS2019
-        hash_algorithm = intersight.signing.HASH_SHA256
-
-    configuration = intersight.Configuration(
-        host=endpoint,
-        signing_info=intersight.signing.HttpSigningConfiguration(
-            key_id=api_key_id,
-            private_key_path=api_secret_file,
-            signing_scheme=signing_scheme,
-            signing_algorithm=signing_algorithm,
-            hash_algorithm=hash_algorithm,
-            signed_headers=[
-                intersight.signing.HEADER_REQUEST_TARGET,
-                intersight.signing.HEADER_HOST,
-                intersight.signing.HEADER_DATE,
-                intersight.signing.HEADER_DIGEST,
-            ]
-        )
-    )
-
+        configuration = intersight.Configuration(
+            host=endpoint,
+            signing_info=intersight.signing.HttpSigningConfiguration(
+                key_id=api_key_id,
+                private_key_path=api_secret_file,
+                signing_scheme=signing_scheme,
+                signing_algorithm=signing_algorithm,
+                hash_algorithm=hash_algorithm,
+                signed_headers=[
+                    intersight.signing.HEADER_REQUEST_TARGET,
+                    intersight.signing.HEADER_HOST,
+                    intersight.signing.HEADER_DATE,
+                    intersight.signing.HEADER_DIGEST,
+                    ]
+                )
+            )
+    except Exception:
+        print("\nA configuration error has occurred!\n")
+        print("Unable to access the Intersight API Key.")
+        print("Exiting due to the Intersight API Key being unavailable.\n")
+        print("Please verify that the correct API Key ID and API Key have "
+              "been entered, then re-attempt execution.\n")
+        print("Exception Message: ")
+        traceback.print_exc()
+        sys.exit(0)
+        
     return intersight.ApiClient(configuration)
 
 
@@ -197,6 +211,7 @@ def test_intersight_api_service(intersight_api_key_id,
         print("Exiting due to the Intersight API being unavailable.\n")
         print("Please verify that the correct API Key ID and API Key have "
               "been entered, then re-attempt execution.\n")
+        print("Exception Message: ")
         traceback.print_exc()
         sys.exit(0)
 
@@ -985,6 +1000,15 @@ class BootOrderPolicy(DirectlyAttachedUcsServerPolicy):
             }
         }
     boot_device_attribute_maps = [
+        {"FrontEndName": "Enable",
+         "BackEndName": "Enabled",
+         "Description": "Boot Device Enablement",
+         "FixedFrontEndValues": None,
+         "FronttoBackEndValueMaps": None,
+         "Mandatory": True,
+         "AutomaticInsertion": True,
+         "AutomaticInsertionValue": True
+         },
         {"FrontEndName": "Device Name",
          "BackEndName": "Name",
          "Description": "Boot Device Name",
@@ -1384,11 +1408,6 @@ class BootOrderPolicy(DirectlyAttachedUcsServerPolicy):
                 # Set boot device 'ObjectType' attribute
                 staged_boot_device_dictionary["ObjectType"] = returned_boot_device_type_map
                 staged_boot_device_dictionary.pop("Type")
-                # Set boot device to enabled if not specified
-                try:
-                    staged_boot_device_dictionary_enabled_status = staged_boot_device_dictionary["Enabled"]
-                except:
-                    staged_boot_device_dictionary["Enabled"] = True
                 # Handle setting of attributes which have mismatched Front-End and Back-End labeling
                 for boot_device_attribute_map_dictionary in self.boot_device_attribute_maps:
                     boot_device_attribute_map_handler(boot_device_attribute_map_dictionary)
