@@ -19,7 +19,7 @@
 ## Policy Makers
 - [BIOS Policy Maker](./src/policy_makers/bios_policy_maker) - Make a UCS BIOS policy.
 - [Boot Order Policy Maker](./src/policy_makers/boot_order_policy_maker) - Make a UCS boot order policy.
-- [Certificate Management Policy Maker](./src/policy_makers/boot_order_policy_maker) - Make a UCS certificate management policy.
+- [Certificate Management Policy Maker](./src/policy_makers/cert_mgmt_policy_maker) - Make a UCS certificate management policy.
 - [Ethernet Network Control Policy Maker](./src/policy_makers/ethernet_network_control_policy_maker) - Make a UCS ethernet network control policy.
 - [Ethernet Network Group Policy Maker](./src/policy_makers/ethernet_network_group_policy_maker) - Make a UCS ethernet network group policy.
 - [Ethernet QoS Policy Maker](./src/policy_makers/ethernet_qos_policy_maker) - Make a UCS ethernet QoS policy.
@@ -28,6 +28,7 @@
 - [Flow Control Policy Maker](./src/policy_makers/flow_control_policy_maker) - Make a UCS flow control policy.
 - [Link Aggregation Policy Maker](./src/policy_makers/link_aggregation_policy_maker) - Make a UCS link aggregation policy.
 - [Link Control Policy Maker](./src/policy_makers/link_control_policy_maker) - Make a UCS link control policy.
+- [Local User Policy Maker](./src/policy_makers/local_user_policy_maker) - Make a UCS local user policy.
 - [Multicast Policy Maker](./src/policy_makers/multicast_policy_maker) - Make a UCS multicast policy.
 - [Network Connectivity Policy Maker](./src/policy_makers/network_connectivity_policy_maker) - Make a UCS network connectivity (DNS) policy.
 - [NTP Policy Maker](./src/policy_makers/ntp_policy_maker) - Make a UCS NTP policy.
