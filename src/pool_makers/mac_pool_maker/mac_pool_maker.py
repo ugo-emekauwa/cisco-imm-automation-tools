@@ -65,7 +65,7 @@ mac_blocks_list = [
 mac_assignment_order = "default"       # Options: "default", "sequential"
 
 # Intersight Base URL Setting (Change only if using the Intersight Virtual Appliance)
-intersight_base_url = "https://intersight.com/api/v1"
+intersight_base_url = "https://www.intersight.com/api/v1"
 
 ####### Finish Configuration Settings - The required value entries are complete. #######
 
@@ -135,7 +135,7 @@ def get_api_client(api_key_id,
 # Establish function to test for the availability of the Intersight API and Intersight account
 def test_intersight_api_service(intersight_api_key_id,
                                 intersight_api_key,
-                                intersight_base_url="https://intersight.com/api/v1",
+                                intersight_base_url="https://www.intersight.com/api/v1",
                                 preconfigured_api_client=None
                                 ):
     """This is a function to test the availability of the Intersight API and
@@ -149,9 +149,9 @@ def test_intersight_api_service(intersight_api_key_id,
             The system file path of the Intersight API key.
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance. The
-            default value is "https://intersight.com/api/v1".
+            default value is "https://www.intersight.com/api/v1".
         preconfigured_api_client ("ApiClient"):
             Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
@@ -220,7 +220,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                                      intersight_api_path,
                                      object_type="object",
                                      organization="default",
-                                     intersight_base_url="https://intersight.com/api/v1",
+                                     intersight_base_url="https://www.intersight.com/api/v1",
                                      preconfigured_api_client=None
                                      ):
     """This is a function to retrieve the MOID of Intersight objects
@@ -243,7 +243,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         preconfigured_api_client ("ApiClient"):
             Optional; An ApiClient class instance which handles
@@ -379,7 +379,7 @@ class UcsPool:
                  pool_description="",
                  pool_assignment_order="default",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None
                  ):
@@ -446,6 +446,51 @@ class UcsPool:
             print(f"The configuration of the base {self.object_type} "
                   "has completed.")
             return "The POST method was successful."
+        except intersight.exceptions.ApiException as error:
+            if error.status == 409:
+                existing_intersight_object_name = self.intersight_api_body.get("Name", "object")
+                print(f"The targeted {self.object_type} appears to already "
+                      "exist.")
+                print("An attempt will be made to update the pre-existing "
+                      f"{existing_intersight_object_name}...")
+                try:
+                    existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
+                                                                                       intersight_api_key=None,
+                                                                                       object_name=existing_intersight_object_name,
+                                                                                       intersight_api_path=self.intersight_api_path,
+                                                                                       object_type=self.object_type,
+                                                                                       preconfigured_api_client=self.api_client
+                                                                                       )
+                    # Update full Intersight API path with the MOID of the existing object
+                    full_intersight_api_path_with_moid = f"/{self.intersight_api_path}/{existing_intersight_object_moid}"
+                    self.api_client.call_api(resource_path=full_intersight_api_path_with_moid,
+                                             method="POST",
+                                             body=self.intersight_api_body,
+                                             auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                             )
+                    print(f"The update of the {self.object_type} has "
+                          "completed.")
+                    print(f"The pre-existing {existing_intersight_object_name} "
+                          "has been updated.")
+                    return "The POST method was successful."
+                except Exception:
+                    print("\nA configuration error has occurred!\n")
+                    print(f"Unable to update the {self.object_type} under the "
+                          "Intersight API resource path "
+                          f"'{full_intersight_api_path_with_moid}'.\n")
+                    print(f"The pre-existing {existing_intersight_object_name} "
+                          "could not be updated.")
+                    print("Exception Message: ")
+                    traceback.print_exc()
+                    return "The POST method failed."
+            else:
+                print("\nA configuration error has occurred!\n")
+                print(f"Unable to configure the {self.object_type} under the "
+                      "Intersight API resource path "
+                      f"'{full_intersight_api_path}'.\n")
+                print("Exception Message: ")
+                traceback.print_exc()
+                return "The POST method failed."
         except Exception:
             print("\nA configuration error has occurred!\n")
             print(f"Unable to configure the {self.object_type} under the "
@@ -772,7 +817,7 @@ class MacPool(UcsPool):
                  pool_description="",
                  pool_assignment_order="default",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  mac_blocks_list=None
@@ -815,7 +860,7 @@ def mac_pool_maker(intersight_api_key_id,
                    pool_description="",
                    pool_assignment_order="default",
                    organization="default",
-                   intersight_base_url="https://intersight.com/api/v1",
+                   intersight_base_url="https://www.intersight.com/api/v1",
                    tags=None,
                    preconfigured_api_client=None
                    ):
@@ -856,7 +901,7 @@ def mac_pool_maker(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
@@ -938,6 +983,7 @@ def main():
         pool_description=mac_pool_description,
         pool_assignment_order=mac_assignment_order,
         organization=mac_pool_organization,
+        intersight_base_url=intersight_base_url,
         tags=mac_pool_tags,
         preconfigured_api_client=main_intersight_api_client
         )
