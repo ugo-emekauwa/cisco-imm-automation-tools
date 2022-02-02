@@ -63,7 +63,7 @@ values and replace them with your own, where applicable.
 # GENERAL DEPLOYMENT CONFIGURATION
 
 # Intersight Base URL Setting (Change only if using the Intersight Virtual Appliance)
-intersight_base_url = "https://intersight.com/api/v1"
+intersight_base_url = "https://www.intersight.com/api/v1"
 
 # Global Deployment Name Settings (Optional - These settings will attach a global prefix or suffix to the names of the created UCS Domain Profile and Policies)
 deployment_name_prefix = ""
@@ -616,7 +616,7 @@ def get_api_client(api_key_id,
 # Establish function to test for the availability of the Intersight API and Intersight account
 def test_intersight_api_service(intersight_api_key_id,
                                 intersight_api_key,
-                                intersight_base_url="https://intersight.com/api/v1",
+                                intersight_base_url="https://www.intersight.com/api/v1",
                                 preconfigured_api_client=None
                                 ):
     """This is a function to test the availability of the Intersight API and
@@ -630,9 +630,9 @@ def test_intersight_api_service(intersight_api_key_id,
             The system file path of the Intersight API key.
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance. The
-            default value is "https://intersight.com/api/v1".
+            default value is "https://www.intersight.com/api/v1".
         preconfigured_api_client ("ApiClient"):
             Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
@@ -701,7 +701,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                                      intersight_api_path,
                                      object_type="object",
                                      organization="default",
-                                     intersight_base_url="https://intersight.com/api/v1",
+                                     intersight_base_url="https://www.intersight.com/api/v1",
                                      preconfigured_api_client=None
                                      ):
     """This is a function to retrieve the MOID of Intersight objects
@@ -724,7 +724,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         preconfigured_api_client ("ApiClient"):
             Optional; An ApiClient class instance which handles
@@ -847,7 +847,7 @@ def get_intersight_objects(intersight_api_key_id,
                            intersight_api_key,
                            intersight_api_path,
                            object_type="object",
-                           intersight_base_url="https://intersight.com/api/v1",
+                           intersight_base_url="https://www.intersight.com/api/v1",
                            preconfigured_api_client=None
                            ):
     """This is a function to perform an HTTP GET on all objects under an
@@ -869,7 +869,7 @@ def get_intersight_objects(intersight_api_key_id,
             "object".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         preconfigured_api_client ("ApiClient"):
             Optional; An ApiClient class instance which handles
@@ -926,7 +926,7 @@ def get_single_intersight_object(intersight_api_key_id,
                                  intersight_api_path,
                                  object_moid,
                                  object_type="object",
-                                 intersight_base_url="https://intersight.com/api/v1",
+                                 intersight_base_url="https://www.intersight.com/api/v1",
                                  preconfigured_api_client=None
                                  ):
     """This is a function to perform an HTTP GET on a single object under an
@@ -950,7 +950,7 @@ def get_single_intersight_object(intersight_api_key_id,
             "object".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         preconfigured_api_client ("ApiClient"):
             Optional; An ApiClient class instance which handles
@@ -1008,7 +1008,7 @@ def advanced_intersight_object_moid_retriever(intersight_api_key_id,
                                               intersight_api_path,
                                               object_type="object",
                                               organization="default",
-                                              intersight_base_url="https://intersight.com/api/v1",
+                                              intersight_base_url="https://www.intersight.com/api/v1",
                                               preconfigured_api_client=None
                                               ):
     """This is a function to retrieve the MOID of Intersight objects based on
@@ -1032,7 +1032,7 @@ def advanced_intersight_object_moid_retriever(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         preconfigured_api_client ("ApiClient"):
             Optional; An ApiClient class instance which handles
@@ -1405,7 +1405,7 @@ class IdConfigurator:
                  policy_name,
                  id_list=None,
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  preconfigured_api_client=None
                  ):
         self.intersight_api_key_id = intersight_api_key_id
@@ -1574,7 +1574,7 @@ class UcsPolicy:
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None
                  ):
@@ -1639,6 +1639,51 @@ class UcsPolicy:
             print(f"The configuration of the base {self.object_type} "
                   "has completed.")
             return "The POST method was successful."
+        except intersight.exceptions.ApiException as error:
+            if error.status == 409:
+                existing_intersight_object_name = self.intersight_api_body.get("Name", "object")
+                print(f"The targeted {self.object_type} appears to already "
+                      "exist.")
+                print("An attempt will be made to update the pre-existing "
+                      f"{existing_intersight_object_name}...")
+                try:
+                    existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
+                                                                                       intersight_api_key=None,
+                                                                                       object_name=existing_intersight_object_name,
+                                                                                       intersight_api_path=self.intersight_api_path,
+                                                                                       object_type=self.object_type,
+                                                                                       preconfigured_api_client=self.api_client
+                                                                                       )
+                    # Update full Intersight API path with the MOID of the existing object
+                    full_intersight_api_path_with_moid = f"/{self.intersight_api_path}/{existing_intersight_object_moid}"
+                    self.api_client.call_api(resource_path=full_intersight_api_path_with_moid,
+                                             method="POST",
+                                             body=self.intersight_api_body,
+                                             auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                             )
+                    print(f"The update of the {self.object_type} has "
+                          "completed.")
+                    print(f"The pre-existing {existing_intersight_object_name} "
+                          "has been updated.")
+                    return "The POST method was successful."
+                except Exception:
+                    print("\nA configuration error has occurred!\n")
+                    print(f"Unable to update the {self.object_type} under the "
+                          "Intersight API resource path "
+                          f"'{full_intersight_api_path_with_moid}'.\n")
+                    print(f"The pre-existing {existing_intersight_object_name} "
+                          "could not be updated.")
+                    print("Exception Message: ")
+                    traceback.print_exc()
+                    return "The POST method failed."
+            else:
+                print("\nA configuration error has occurred!\n")
+                print(f"Unable to configure the {self.object_type} under the "
+                      "Intersight API resource path "
+                      f"'{full_intersight_api_path}'.\n")
+                print("Exception Message: ")
+                traceback.print_exc()
+                return "The POST method failed."
         except Exception:
             print("\nA configuration error has occurred!\n")
             print(f"Unable to configure the {self.object_type} under the "
@@ -1920,7 +1965,7 @@ class DirectlyAttachedUcsDomainPolicy(UcsPolicy):
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  ucs_domain_profile_name="",
@@ -2065,7 +2110,7 @@ class UcsDomainProfile:
                  ucs_domain_profile_name,
                  ucs_domain_profile_description="",
                  ucs_domain_profile_organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None
                  ):
@@ -2191,7 +2236,7 @@ class SwitchProfile(UcsDomainProfile):
                  ucs_domain_profile_name,
                  ucs_domain_profile_description="",
                  ucs_domain_profile_organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  fabric_interconnect="A"
@@ -2347,7 +2392,7 @@ def ucs_domain_profile_maker(intersight_api_key_id,
                              ucs_domain_profile_name,
                              ucs_domain_profile_description="",
                              ucs_domain_profile_organization="default",
-                             intersight_base_url="https://intersight.com/api/v1",
+                             intersight_base_url="https://www.intersight.com/api/v1",
                              tags=None,
                              preconfigured_api_client=None
                              ):
@@ -2368,7 +2413,7 @@ def ucs_domain_profile_maker(intersight_api_key_id,
             Profile. The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
@@ -2451,7 +2496,7 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
                                          assign_ucs_domain_profile=True,
                                          deploy_ucs_domain_profile=False,
                                          ucs_domain_profile_organization="default",
-                                         intersight_base_url="https://intersight.com/api/v1",
+                                         intersight_base_url="https://www.intersight.com/api/v1",
                                          preconfigured_api_client=None
                                          ):
     """This is a function to assign and deploy a UCS Domain Profile to
@@ -2484,7 +2529,7 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
             Profile. The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         preconfigured_api_client ("ApiClient"):
             Optional; An ApiClient class instance which handles
@@ -2847,7 +2892,7 @@ class MulticastPolicy(UcsPolicy):
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  snooping_state="Enabled",
@@ -2904,7 +2949,7 @@ def multicast_policy_maker(intersight_api_key_id,
                            querier_ip_address_peer="",
                            policy_description="",
                            organization="default",
-                           intersight_base_url="https://intersight.com/api/v1",
+                           intersight_base_url="https://www.intersight.com/api/v1",
                            tags=None,
                            preconfigured_api_client=None
                            ):
@@ -2939,7 +2984,7 @@ def multicast_policy_maker(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
@@ -3005,7 +3050,7 @@ class VlanPolicy(DirectlyAttachedUcsDomainPolicy):
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  ucs_domain_profile_name="",
@@ -3071,7 +3116,7 @@ class Vlan(IdConfigurator):
                  policy_name,
                  id_list=None,
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  preconfigured_api_client=None,
                  default_multicast_policy_name="",
                  native_vlan_id=None
@@ -3307,7 +3352,7 @@ def vlan_policy_maker(intersight_api_key_id,
                       native_vlan_id=None,
                       policy_description="",
                       organization="default",
-                      intersight_base_url="https://intersight.com/api/v1",
+                      intersight_base_url="https://www.intersight.com/api/v1",
                       tags=None,
                       preconfigured_api_client=None,
                       ucs_domain_profile_name="",
@@ -3361,7 +3406,7 @@ def vlan_policy_maker(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
@@ -3446,7 +3491,7 @@ class VsanPolicy(DirectlyAttachedUcsDomainPolicy):
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  ucs_domain_profile_name="",
@@ -3513,7 +3558,7 @@ class Vsan(IdConfigurator):
                  policy_name,
                  id_list=None,
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  preconfigured_api_client=None
                  ):
         super().__init__(intersight_api_key_id,
@@ -3649,7 +3694,7 @@ def vsan_policy_maker(intersight_api_key_id,
                       vsan_list=None,
                       policy_description="",
                       organization="default",
-                      intersight_base_url="https://intersight.com/api/v1",
+                      intersight_base_url="https://www.intersight.com/api/v1",
                       tags=None,
                       preconfigured_api_client=None,
                       ucs_domain_profile_name="",
@@ -3705,7 +3750,7 @@ def vsan_policy_maker(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
@@ -3792,7 +3837,7 @@ class EthernetNetworkGroupPolicy(UcsPolicy):
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  allowed_vlans="1",
@@ -3840,7 +3885,7 @@ def ethernet_network_group_policy_maker(intersight_api_key_id,
                                         native_vlan=1,
                                         policy_description="",
                                         organization="default",
-                                        intersight_base_url="https://intersight.com/api/v1",
+                                        intersight_base_url="https://www.intersight.com/api/v1",
                                         tags=None,
                                         preconfigured_api_client=None
                                         ):
@@ -3872,7 +3917,7 @@ def ethernet_network_group_policy_maker(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
@@ -3976,7 +4021,7 @@ class EthernetNetworkControlPolicy(UcsPolicy):
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  enable_cdp=False,
@@ -4042,7 +4087,7 @@ def ethernet_network_control_policy_maker(intersight_api_key_id,
                                           lldp_enable_receive=False,
                                           policy_description="",
                                           organization="default",
-                                          intersight_base_url="https://intersight.com/api/v1",
+                                          intersight_base_url="https://www.intersight.com/api/v1",
                                           tags=None,
                                           preconfigured_api_client=None
                                           ):
@@ -4090,7 +4135,7 @@ def ethernet_network_control_policy_maker(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
@@ -4172,7 +4217,7 @@ class FlowControlPolicy(UcsPolicy):
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  priority="Auto",
@@ -4223,7 +4268,7 @@ def flow_control_policy_maker(intersight_api_key_id,
                               send="Disabled",
                               policy_description="",
                               organization="default",
-                              intersight_base_url="https://intersight.com/api/v1",
+                              intersight_base_url="https://www.intersight.com/api/v1",
                               tags=None,
                               preconfigured_api_client=None
                               ):
@@ -4256,7 +4301,7 @@ def flow_control_policy_maker(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
@@ -4321,7 +4366,7 @@ class LinkControlPolicy(UcsPolicy):
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  admin_state="Enabled",
@@ -4398,7 +4443,7 @@ def link_control_policy_maker(intersight_api_key_id,
                               mode="Normal",
                               policy_description="",
                               organization="default",
-                              intersight_base_url="https://intersight.com/api/v1",
+                              intersight_base_url="https://www.intersight.com/api/v1",
                               tags=None,
                               preconfigured_api_client=None
                               ):
@@ -4428,7 +4473,7 @@ def link_control_policy_maker(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
@@ -4506,7 +4551,7 @@ class LinkAggregationPolicy(UcsPolicy):
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  suspend_individual=False,
@@ -4552,7 +4597,7 @@ def link_aggregation_policy_maker(intersight_api_key_id,
                                   lacp_rate="Normal",
                                   policy_description="",
                                   organization="default",
-                                  intersight_base_url="https://intersight.com/api/v1",
+                                  intersight_base_url="https://www.intersight.com/api/v1",
                                   tags=None,
                                   preconfigured_api_client=None
                                   ):
@@ -4582,7 +4627,7 @@ def link_aggregation_policy_maker(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
@@ -4646,7 +4691,7 @@ class PortPolicy(DirectlyAttachedUcsDomainPolicy):
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  ucs_domain_profile_name="",
@@ -4705,7 +4750,7 @@ class PortModes(IdConfigurator):
                  policy_name,
                  id_list=None,
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  preconfigured_api_client=None,
                  default_slot_id=1
                  ):
@@ -4819,7 +4864,7 @@ class Port(IdConfigurator):
                  policy_name,
                  id_list=None,
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  preconfigured_api_client=None,
                  default_slot_id=1,
                  default_aggregate_port_id=0
@@ -4961,7 +5006,7 @@ class EthernetUplinkPort(Port):
                  policy_name,
                  id_list=None,
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  preconfigured_api_client=None,
                  default_slot_id=1,
                  default_aggregate_port_id=0,
@@ -5020,7 +5065,7 @@ class FcoeUplinkPort(Port):
                  policy_name,
                  id_list=None,
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  preconfigured_api_client=None,
                  default_slot_id=1,
                  default_aggregate_port_id=0,
@@ -5107,7 +5152,7 @@ class AppliancePort(Port):
                  policy_name,
                  id_list=None,
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  preconfigured_api_client=None,
                  default_slot_id=1,
                  default_aggregate_port_id=0,
@@ -5159,7 +5204,7 @@ class PortChannel(IdConfigurator):
                  policy_name,
                  id_list=None,
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  preconfigured_api_client=None,
                  default_slot_id=1,
                  default_aggregate_port_id=0
@@ -5329,7 +5374,7 @@ class EthernetUplinkPortChannel(PortChannel):
                  policy_name,
                  id_list=None,
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  preconfigured_api_client=None,
                  default_slot_id=1,
                  default_aggregate_port_id=0,
@@ -5408,7 +5453,7 @@ class FcoeUplinkPortChannel(PortChannel):
                  policy_name,
                  id_list=None,
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  preconfigured_api_client=None,
                  default_slot_id=1,
                  default_aggregate_port_id=0,
@@ -5512,7 +5557,7 @@ class AppliancePortChannel(PortChannel):
                  policy_name,
                  id_list=None,
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  preconfigured_api_client=None,
                  default_slot_id=1,
                  default_aggregate_port_id=0,
@@ -5565,7 +5610,7 @@ def port_policy_maker(intersight_api_key_id,
                       appliance_port_channel_list=None,
                       policy_description="",
                       organization="default",
-                      intersight_base_url="https://intersight.com/api/v1",
+                      intersight_base_url="https://www.intersight.com/api/v1",
                       tags=None,
                       preconfigured_api_client=None,
                       ucs_domain_profile_name="",
@@ -5770,7 +5815,7 @@ def port_policy_maker(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
@@ -6025,7 +6070,7 @@ class NtpPolicy(DirectlyAttachedUcsDomainPolicy):
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  ucs_domain_profile_name="",
@@ -6084,7 +6129,7 @@ def ntp_policy_maker(intersight_api_key_id,
                      enable_ntp=True,
                      policy_description="",
                      organization="default",
-                     intersight_base_url="https://intersight.com/api/v1",
+                     intersight_base_url="https://www.intersight.com/api/v1",
                      tags=None,
                      preconfigured_api_client=None,
                      ucs_domain_profile_name=""
@@ -6118,7 +6163,7 @@ def ntp_policy_maker(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
@@ -6312,7 +6357,7 @@ class SyslogPolicy(DirectlyAttachedUcsDomainPolicy):
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  ucs_domain_profile_name="",
@@ -6371,7 +6416,7 @@ def syslog_policy_maker(intersight_api_key_id,
                         syslog_remote_logging_server_list=None,
                         policy_description="",
                         organization="default",
-                        intersight_base_url="https://intersight.com/api/v1",
+                        intersight_base_url="https://www.intersight.com/api/v1",
                         tags=None,
                         preconfigured_api_client=None,
                         ucs_domain_profile_name=""
@@ -6419,7 +6464,7 @@ def syslog_policy_maker(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
@@ -6488,7 +6533,7 @@ class NetworkConnectivityPolicy(DirectlyAttachedUcsDomainPolicy):
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  ucs_domain_profile_name="",
@@ -6574,7 +6619,7 @@ def network_connectivity_policy_maker(intersight_api_key_id,
                                       alternate_ipv6_dns_server="",
                                       policy_description="",
                                       organization="default",
-                                      intersight_base_url="https://intersight.com/api/v1",
+                                      intersight_base_url="https://www.intersight.com/api/v1",
                                       tags=None,
                                       preconfigured_api_client=None,
                                       ucs_domain_profile_name=""
@@ -6624,7 +6669,7 @@ def network_connectivity_policy_maker(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
@@ -6878,7 +6923,7 @@ class SnmpPolicy(DirectlyAttachedUcsDomainPolicy):
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  ucs_domain_profile_name="",
@@ -6984,7 +7029,7 @@ def snmp_policy_maker(intersight_api_key_id,
                       snmp_trap_destinations_list=None,
                       policy_description="",
                       organization="default",
-                      intersight_base_url="https://intersight.com/api/v1",
+                      intersight_base_url="https://www.intersight.com/api/v1",
                       tags=None,
                       preconfigured_api_client=None,
                       ucs_domain_profile_name=""
@@ -7080,7 +7125,7 @@ def snmp_policy_maker(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
@@ -7158,7 +7203,7 @@ class SystemQosPolicy(DirectlyAttachedUcsDomainPolicy):
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  ucs_domain_profile_name="",
@@ -7222,7 +7267,7 @@ def system_qos_policy_maker(intersight_api_key_id,
                             qos_class_settings_list=None,
                             policy_description="",
                             organization="default",
-                            intersight_base_url="https://intersight.com/api/v1",
+                            intersight_base_url="https://www.intersight.com/api/v1",
                             tags=None,
                             preconfigured_api_client=None,
                             ucs_domain_profile_name=""
@@ -7290,7 +7335,7 @@ def system_qos_policy_maker(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
@@ -7357,7 +7402,7 @@ class SwitchControlPolicy(DirectlyAttachedUcsDomainPolicy):
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  ucs_domain_profile_name="",
@@ -7460,7 +7505,7 @@ def switch_control_policy_maker(intersight_api_key_id,
                                 link_control_recovery_action="None",
                                 policy_description="",
                                 organization="default",
-                                intersight_base_url="https://intersight.com/api/v1",
+                                intersight_base_url="https://www.intersight.com/api/v1",
                                 tags=None,
                                 preconfigured_api_client=None,
                                 ucs_domain_profile_name=""
@@ -7508,7 +7553,7 @@ def switch_control_policy_maker(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
