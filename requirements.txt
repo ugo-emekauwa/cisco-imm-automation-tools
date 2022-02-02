@@ -1,1 +1,1 @@
-intersight-openapi-client >= 1.0.9.4929
+intersight >= 1.0.9.4929
