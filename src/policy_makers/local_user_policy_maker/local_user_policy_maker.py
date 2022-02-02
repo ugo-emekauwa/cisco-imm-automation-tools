@@ -81,7 +81,7 @@ local_users_list = [
     ]
 
 # Intersight Base URL Setting (Change only if using the Intersight Virtual Appliance)
-intersight_base_url = "https://intersight.com/api/v1"
+intersight_base_url = "https://www.intersight.com/api/v1"
 
 # UCS Domain Profile Attachment Settings
 ucs_server_profile_name = ""
@@ -154,7 +154,7 @@ def get_api_client(api_key_id,
 # Establish function to test for the availability of the Intersight API and Intersight account
 def test_intersight_api_service(intersight_api_key_id,
                                 intersight_api_key,
-                                intersight_base_url="https://intersight.com/api/v1",
+                                intersight_base_url="https://www.intersight.com/api/v1",
                                 preconfigured_api_client=None
                                 ):
     """This is a function to test the availability of the Intersight API and
@@ -168,9 +168,9 @@ def test_intersight_api_service(intersight_api_key_id,
             The system file path of the Intersight API key.
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance. The
-            default value is "https://intersight.com/api/v1".
+            default value is "https://www.intersight.com/api/v1".
         preconfigured_api_client ("ApiClient"):
             Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
@@ -239,7 +239,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                                      intersight_api_path,
                                      object_type="object",
                                      organization="default",
-                                     intersight_base_url="https://intersight.com/api/v1",
+                                     intersight_base_url="https://www.intersight.com/api/v1",
                                      preconfigured_api_client=None
                                      ):
     """This is a function to retrieve the MOID of Intersight objects
@@ -262,7 +262,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         preconfigured_api_client ("ApiClient"):
             Optional; An ApiClient class instance which handles
@@ -385,7 +385,7 @@ def get_intersight_objects(intersight_api_key_id,
                            intersight_api_key,
                            intersight_api_path,
                            object_type="object",
-                           intersight_base_url="https://intersight.com/api/v1",
+                           intersight_base_url="https://www.intersight.com/api/v1",
                            preconfigured_api_client=None
                            ):
     """This is a function to perform an HTTP GET on all objects under an
@@ -407,7 +407,7 @@ def get_intersight_objects(intersight_api_key_id,
             "object".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         preconfigured_api_client ("ApiClient"):
             Optional; An ApiClient class instance which handles
@@ -464,7 +464,7 @@ def get_single_intersight_object(intersight_api_key_id,
                                  intersight_api_path,
                                  object_moid,
                                  object_type="object",
-                                 intersight_base_url="https://intersight.com/api/v1",
+                                 intersight_base_url="https://www.intersight.com/api/v1",
                                  preconfigured_api_client=None
                                  ):
     """This is a function to perform an HTTP GET on a single object under an
@@ -488,7 +488,7 @@ def get_single_intersight_object(intersight_api_key_id,
             "object".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         preconfigured_api_client ("ApiClient"):
             Optional; An ApiClient class instance which handles
@@ -546,7 +546,7 @@ def advanced_intersight_object_moid_retriever(intersight_api_key_id,
                                               intersight_api_path,
                                               object_type="object",
                                               organization="default",
-                                              intersight_base_url="https://intersight.com/api/v1",
+                                              intersight_base_url="https://www.intersight.com/api/v1",
                                               preconfigured_api_client=None
                                               ):
     """This is a function to retrieve the MOID of Intersight objects based on
@@ -570,7 +570,7 @@ def advanced_intersight_object_moid_retriever(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         preconfigured_api_client ("ApiClient"):
             Optional; An ApiClient class instance which handles
@@ -716,7 +716,7 @@ class UcsPolicy:
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None
                  ):
@@ -781,6 +781,51 @@ class UcsPolicy:
             print(f"The configuration of the base {self.object_type} "
                   "has completed.")
             return "The POST method was successful."
+        except intersight.exceptions.ApiException as error:
+            if error.status == 409:
+                existing_intersight_object_name = self.intersight_api_body.get("Name", "object")
+                print(f"The targeted {self.object_type} appears to already "
+                      "exist.")
+                print("An attempt will be made to update the pre-existing "
+                      f"{existing_intersight_object_name}...")
+                try:
+                    existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
+                                                                                       intersight_api_key=None,
+                                                                                       object_name=existing_intersight_object_name,
+                                                                                       intersight_api_path=self.intersight_api_path,
+                                                                                       object_type=self.object_type,
+                                                                                       preconfigured_api_client=self.api_client
+                                                                                       )
+                    # Update full Intersight API path with the MOID of the existing object
+                    full_intersight_api_path_with_moid = f"/{self.intersight_api_path}/{existing_intersight_object_moid}"
+                    self.api_client.call_api(resource_path=full_intersight_api_path_with_moid,
+                                             method="POST",
+                                             body=self.intersight_api_body,
+                                             auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                             )
+                    print(f"The update of the {self.object_type} has "
+                          "completed.")
+                    print(f"The pre-existing {existing_intersight_object_name} "
+                          "has been updated.")
+                    return "The POST method was successful."
+                except Exception:
+                    print("\nA configuration error has occurred!\n")
+                    print(f"Unable to update the {self.object_type} under the "
+                          "Intersight API resource path "
+                          f"'{full_intersight_api_path_with_moid}'.\n")
+                    print(f"The pre-existing {existing_intersight_object_name} "
+                          "could not be updated.")
+                    print("Exception Message: ")
+                    traceback.print_exc()
+                    return "The POST method failed."
+            else:
+                print("\nA configuration error has occurred!\n")
+                print(f"Unable to configure the {self.object_type} under the "
+                      "Intersight API resource path "
+                      f"'{full_intersight_api_path}'.\n")
+                print("Exception Message: ")
+                traceback.print_exc()
+                return "The POST method failed."
         except Exception:
             print("\nA configuration error has occurred!\n")
             print(f"Unable to configure the {self.object_type} under the "
@@ -1062,7 +1107,7 @@ class DirectlyAttachedUcsServerPolicy(UcsPolicy):
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  ucs_server_profile_name=""
@@ -1148,7 +1193,7 @@ class LocalUserPolicy(DirectlyAttachedUcsServerPolicy):
                  policy_name,
                  policy_description="",
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
                  ucs_server_profile_name="",
@@ -1246,7 +1291,7 @@ class LocalUser:
                  intersight_api_key_id,
                  intersight_api_key,
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  preconfigured_api_client=None,
                  local_users_list=None
                  ):
@@ -1280,21 +1325,17 @@ class LocalUser:
     def __str__(self):
         return f"{self.__class__.__name__} class object for '{self.policy_name}'"
 
-    def _post_intersight_local_user_object(self,
-                                           local_user_name,
-                                           body,
-                                           moid=None
-                                           ):
-        """This is a function to configure an Intersight object by
+    def _post_intersight_local_user(self,
+                                    local_user_name,
+                                    body
+                                    ):
+        """This is a function to configure an Intersight Local User object by
         performing a POST through the Intersight API.
         Args:
             local_user_name (str):
                 The name of the local user to be posted on Intersight.
             body (dict):
                 The body of the object to be posted on Intersight.
-            moid (str):
-                Optional; The Intersight MOID of the object to be posted
-                on Intersight. The default value is None.
         
         Returns:
             A string with a statement indicating whether the POST method
@@ -1305,34 +1346,63 @@ class LocalUser:
                 An exception occurred while performing the API call.
                 The status code or error message will be specified.
         """
-        if moid:
-            full_intersight_api_path = f"/{self.intersight_api_path}/{moid}"
-        else:
-            full_intersight_api_path = f"/{self.intersight_api_path}"
+        full_intersight_api_path = f"/{self.intersight_api_path}"
         try:
             self.api_client.call_api(resource_path=full_intersight_api_path,
                                      method="POST",
                                      body=body,
                                      auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
                                      )
-            if moid:
-                print(f"The configuration of the {self.object_type} "
-                      f"for {local_user_name} has been updated.")
-            else:
-                print(f"The configuration of the {self.object_type} "
-                      f"for {local_user_name} has completed.")
+            print(f"The configuration of the {self.object_type} "
+                  f"for {local_user_name} has completed.")
             return "The POST method was successful."
-        except Exception:
-            print("\nA configuration error has occurred!\n")
-            if moid:
-                print(f"Unable to update the {self.object_type} "
-                      f"for {local_user_name} under the "
-                      "Intersight API resource path "
-                      f"'{full_intersight_api_path}'.\n")
+        except intersight.exceptions.ApiException as error:
+            if error.status == 409:
+                print(f"The targeted {self.object_type} for "
+                      f"{local_user_name} appears to already exist.")
+                print("An attempt will be made to update the pre-existing "
+                      f"{self.object_type} for {local_user_name}...")
+                try:
+                    existing_intersight_local_user_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
+                                                                                           intersight_api_key=None,
+                                                                                           object_name=local_user_name,
+                                                                                           intersight_api_path=self.intersight_api_path,
+                                                                                           object_type=self.object_type,
+                                                                                           preconfigured_api_client=self.api_client
+                                                                                           )
+                    # Update full Intersight API path with the MOID of the existing object
+                    full_intersight_api_path_with_moid = f"/{self.intersight_api_path}/{existing_intersight_local_user_moid}"
+                    self.api_client.call_api(resource_path=full_intersight_api_path_with_moid,
+                                             method="POST",
+                                             body=body,
+                                             auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                             )
+                    print(f"The update of the {self.object_type} for "
+                          f"{local_user_name} has completed.")
+                    return "The POST method was successful."
+                except Exception:
+                    print("\nA configuration error has occurred!\n")
+                    print(f"Unable to update the {self.object_type} under the "
+                          "Intersight API resource path "
+                          f"'{full_intersight_api_path_with_moid}'.\n")
+                    print(f"The pre-existing {self.object_type} for "
+                          f"{local_user_name} could not be updated.")
+                    print("Exception Message: ")
+                    traceback.print_exc()
+                    return "The POST method failed."
             else:
+                print("\nA configuration error has occurred!\n")
                 print(f"Unable to configure the {self.object_type} "
                       f"for {local_user_name} under the Intersight "
                       f"API resource path '{full_intersight_api_path}'.\n")
+                print("Exception Message: ")
+                traceback.print_exc()
+                return "The POST method failed."
+        except Exception:
+            print("\nA configuration error has occurred!\n")
+            print(f"Unable to configure the {self.object_type} for "
+                  f"{local_user_name} under the Intersight API resource path "
+                  f"'{full_intersight_api_path}'.\n")
             print("Exception Message: ")
             traceback.print_exc()
             return "The POST method failed."
@@ -1472,7 +1542,7 @@ class LocalUser:
                 staged_local_user_dictionary.pop("Password", None)
                 # Create new Local User object in Intersight
                 current_local_user_name = staged_local_user_dictionary.get("Name")
-                self._post_intersight_local_user_object(
+                self._post_intersight_local_user(
                     local_user_name=current_local_user_name,
                     body=staged_local_user_dictionary
                     )
@@ -1481,7 +1551,7 @@ class LocalUser:
 class LocalUserRole(LocalUser):
     """This class is used to configure a Local User Role in Intersight.
     """
-    object_type = "Local User Permissions"
+    object_type = "Local User Role Permission Level"
     intersight_api_path = "iam/EndPointUserRoles"
     policy_type = "Local User Policy"
     policy_intersight_api_path = "iam/EndPointUserPolicies"
@@ -1536,7 +1606,7 @@ class LocalUserRole(LocalUser):
                  intersight_api_key_id,
                  intersight_api_key,
                  organization="default",
-                 intersight_base_url="https://intersight.com/api/v1",
+                 intersight_base_url="https://www.intersight.com/api/v1",
                  preconfigured_api_client=None,
                  local_users_list=None,
                  policy_name=""
@@ -1562,6 +1632,106 @@ class LocalUserRole(LocalUser):
             f"{self.local_users_list}, "
             f"'{self.policy_name}')"
             )
+
+    def _post_intersight_local_user_role(self,
+                                         local_user_name,
+                                         body
+                                         ):
+        """This is a function to configure an Intersight Local User Role object
+        by performing a POST through the Intersight API.
+        Args:
+            local_user_name (str):
+                The name of the local user to be posted on Intersight.
+            body (dict):
+                The body of the object to be posted on Intersight.
+        
+        Returns:
+            A string with a statement indicating whether the POST method
+            was successful or failed.
+            
+        Raises:
+            Exception:
+                An exception occurred while performing the API call.
+                The status code or error message will be specified.
+        """
+        full_intersight_api_path = f"/{self.intersight_api_path}"
+        try:
+            self.api_client.call_api(resource_path=full_intersight_api_path,
+                                     method="POST",
+                                     body=body,
+                                     auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                     )
+            print(f"The configuration of the {self.object_type} "
+                  f"for {local_user_name} has completed.")
+            return "The POST method was successful."
+        except intersight.exceptions.ApiException as error:
+            if error.status == 409:
+                print(f"The targeted {self.object_type} for "
+                      f"{local_user_name} appears to already exist.")
+                print("An attempt will be made to update the pre-existing "
+                      f"{self.object_type} for {local_user_name}...")
+                try:
+                    # Create an attribute dictionary for the advanced_intersight_object_moid_retriever function from the provided Local User Role API body
+                    existing_intersight_local_user_role_attributes = {}
+                    local_user_policy_moid = body["EndPointUserPolicy"]["Moid"]
+                    existing_intersight_local_user_role_attributes["EndPointUserPolicy"] = {
+                        "ClassId": "mo.MoRef",
+                        "Moid": local_user_policy_moid,
+                        "ObjectType": "iam.EndPointUserPolicy",
+                        "link": f"{self.intersight_base_url}/iam/EndPointUserPolicies/{local_user_policy_moid}"
+                        }
+                    local_user_moid = body["EndPointUser"]["Moid"]
+                    existing_intersight_local_user_role_attributes["EndPointUser"] = {
+                        "ClassId": "mo.MoRef",
+                        "Moid": local_user_moid,
+                        "ObjectType": "iam.EndPointUser",
+                        "link": f"{self.intersight_base_url}/iam/EndPointUsers/{local_user_moid}"
+                        }
+                    # Retrieve pre-existing Local User Role MOID
+                    existing_intersight_local_user_role_moid = advanced_intersight_object_moid_retriever(intersight_api_key_id=None,
+                                                                                                         intersight_api_key=None,
+                                                                                                         object_attributes=existing_intersight_local_user_role_attributes,
+                                                                                                         intersight_api_path=self.intersight_api_path,
+                                                                                                         object_type=self.object_type,
+                                                                                                         organization=self.organization,
+                                                                                                         preconfigured_api_client=self.api_client
+                                                                                                         )                    
+                    # Update full Intersight API path with the MOID of the existing object
+                    full_intersight_api_path_with_moid = f"/{self.intersight_api_path}/{existing_intersight_local_user_role_moid}"
+                    self.api_client.call_api(resource_path=full_intersight_api_path_with_moid,
+                                             method="POST",
+                                             body=body,
+                                             auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                             )
+                    print(f"The update of the {self.object_type} for "
+                          f"{local_user_name} has completed.")
+                    return "The POST method was successful."
+                except Exception:
+                    print("\nA configuration error has occurred!\n")
+                    print(f"Unable to update the {self.object_type} under the "
+                          "Intersight API resource path "
+                          f"'{full_intersight_api_path_with_moid}'.\n")
+                    print(f"The pre-existing {self.object_type} for "
+                          f"{local_user_name} could not be updated.")
+                    print("Exception Message: ")
+                    traceback.print_exc()
+                    return "The POST method failed."
+            else:
+                print("\nA configuration error has occurred!\n")
+                print(f"Unable to configure the {self.object_type} "
+                      f"for {local_user_name} under the Intersight "
+                      f"API resource path '{full_intersight_api_path}'.\n")
+                print("Exception Message: ")
+                traceback.print_exc()
+                return "The POST method failed."
+        except Exception:
+            print("\nA configuration error has occurred!\n")
+            print(f"Unable to configure the {self.object_type} for "
+                  f"{local_user_name} under the Intersight API resource path "
+                  f"'{full_intersight_api_path}'.\n")
+            print("Exception Message: ")
+            traceback.print_exc()
+            return "The POST method failed."
 
     def object_maker(self):
         """This function makes the targeted policy object.
@@ -1629,7 +1799,7 @@ class LocalUserRole(LocalUser):
                 staged_local_user_dictionary.pop("Username", None)
                 staged_local_user_dictionary.pop("Name", None)
                 # Create new Local User Role object in Intersight
-                self._post_intersight_local_user_object(
+                self._post_intersight_local_user_role(
                     local_user_name=current_local_user_name,
                     body=staged_local_user_dictionary
                     )
@@ -1648,7 +1818,7 @@ def local_user_policy_maker(intersight_api_key_id,
                             local_users_list=None,
                             policy_description="",
                             organization="default",
-                            intersight_base_url="https://intersight.com/api/v1",
+                            intersight_base_url="https://www.intersight.com/api/v1",
                             tags=None,
                             preconfigured_api_client=None,
                             ucs_server_profile_name=""
@@ -1716,7 +1886,7 @@ def local_user_policy_maker(intersight_api_key_id,
             The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
-            is "https://intersight.com/api/v1". This value typically only
+            is "https://www.intersight.com/api/v1". This value typically only
             needs to be changed if using the Intersight Virtual Appliance.
         tags (dict):
             Optional; The Intersight account tags that will be assigned to the
@@ -1837,6 +2007,7 @@ def main():
         local_users_list=local_users_list,
         policy_description=local_user_policy_description,
         organization=local_user_policy_organization,
+        intersight_base_url=intersight_base_url,
         tags=local_user_policy_tags,
         preconfigured_api_client=main_intersight_api_client,
         ucs_server_profile_name=ucs_server_profile_name
