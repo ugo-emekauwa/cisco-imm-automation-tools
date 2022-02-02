@@ -2175,6 +2175,51 @@ class UcsDomainProfile:
             print(f"The configuration of the base {self.object_type} "
                   "has completed.")
             return "The POST method was successful."
+        except intersight.exceptions.ApiException as error:
+            if error.status == 409:
+                existing_intersight_object_name = self.intersight_api_body.get("Name", "object")
+                print(f"The targeted {self.object_type} appears to already "
+                      "exist.")
+                print("An attempt will be made to update the pre-existing "
+                      f"{existing_intersight_object_name}...")
+                try:
+                    existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
+                                                                                       intersight_api_key=None,
+                                                                                       object_name=existing_intersight_object_name,
+                                                                                       intersight_api_path=self.intersight_api_path,
+                                                                                       object_type=self.object_type,
+                                                                                       preconfigured_api_client=self.api_client
+                                                                                       )
+                    # Update full Intersight API path with the MOID of the existing object
+                    full_intersight_api_path_with_moid = f"/{self.intersight_api_path}/{existing_intersight_object_moid}"
+                    self.api_client.call_api(resource_path=full_intersight_api_path_with_moid,
+                                             method="POST",
+                                             body=self.intersight_api_body,
+                                             auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                             )
+                    print(f"The update of the {self.object_type} has "
+                          "completed.")
+                    print(f"The pre-existing {existing_intersight_object_name} "
+                          "has been updated.")
+                    return "The POST method was successful."
+                except Exception:
+                    print("\nA configuration error has occurred!\n")
+                    print(f"Unable to update the {self.object_type} under the "
+                          "Intersight API resource path "
+                          f"'{full_intersight_api_path_with_moid}'.\n")
+                    print(f"The pre-existing {existing_intersight_object_name} "
+                          "could not be updated.")
+                    print("Exception Message: ")
+                    traceback.print_exc()
+                    return "The POST method failed."
+            else:
+                print("\nA configuration error has occurred!\n")
+                print(f"Unable to configure the {self.object_type} under the "
+                      "Intersight API resource path "
+                      f"'{full_intersight_api_path}'.\n")
+                print("Exception Message: ")
+                traceback.print_exc()
+                return "The POST method failed."
         except Exception:
             print("\nA configuration error has occurred!\n")
             print(f"Unable to configure the {self.object_type} under the "
