@@ -6,7 +6,7 @@
 </p>  
 <br>
 <p align="center">
-  Cisco IMM Automation Tools is a suite of software for automating the build and deployment of Cisco UCS Pools, Policies, and Profiles on Cisco Intersight for UCS X-Series hardware and previous generation UCS systems. The automation of Intersight Managed Mode is simplified and requires minimal programming knowledge.
+  Cisco IMM Automation Tools is a suite of software for automating the build and deployment of Cisco UCS Pools, Policies, and Profiles on Cisco Intersight Infrastructure Services for UCS X-Series hardware and previous generation UCS systems. The automation of Intersight Managed Mode is simplified and requires minimal programming knowledge, enabling users to setup and run quickly.
 </p>
 <br>
 
