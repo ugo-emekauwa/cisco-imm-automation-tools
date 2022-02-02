@@ -44,6 +44,7 @@
 - [Ethernet QoS Policy Maker](./src/policy_makers/ethernet_qos_policy_maker) - Make a UCS ethernet QoS policy.
 - [Fibre Channel Network Policy Maker](./src/policy_makers/fibre_channel_network_policy_maker) - Make a UCS fibre channel network policy.
 - [Fibre Channel QoS Policy Maker](./src/policy_makers/fibre_channel_qos_policy_maker) - Make a UCS fibre channel QoS policy.
+- [IMC Access Policy Maker](./src/policy_makers/imc_access_policy_maker) - Make a UCS IMC access policy.
 - [Local User Policy Maker](./src/policy_makers/local_user_policy_maker) - Make a UCS local user policy.
 - [Virtual KVM Policy Maker](./src/policy_makers/virtual_kvm_policy_maker) - Make a UCS virtual KVM policy.
 
