@@ -74,6 +74,9 @@ syslog_remote_logging_server_list = [
 # Intersight Base URL Setting (Change only if using the Intersight Virtual Appliance)
 intersight_base_url = "https://www.intersight.com/api/v1"
 
+# UCS Server Profile Attachment Settings
+ucs_server_profile_name = ""
+
 # UCS Domain Profile Attachment Settings
 ucs_domain_profile_name = ""
 
@@ -923,12 +926,13 @@ class UcsPolicy:
         self._post_intersight_object()
 
 
-class DirectlyAttachedUcsDomainPolicy(UcsPolicy):
-    """This class is used to configure a UCS Domain Policy in Intersight that
-    is logically directly attached to UCS Fabric Interconnects through UCS
-    Domain Profiles.
+class DirectlyAttachedUcsServerAndDomainPolicy(UcsPolicy):
+    """This class is used to configure a UCS Server and/or UCS Domain Policy in
+    Intersight that is logically directly attached to UCS Servers through
+    UCS Server Profiles and/or UCS Fabric Interconnects through UCS Domain
+    Profiles.
     """
-    object_type = "Directly Attached UCS Domain Policy"
+    object_type = "Directly Attached UCS Server and Domain Policy"
     intersight_api_path = None
 
     def __init__(self,
@@ -940,6 +944,7 @@ class DirectlyAttachedUcsDomainPolicy(UcsPolicy):
                  intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
+                 ucs_server_profile_name="",
                  ucs_domain_profile_name="",
                  fabric_interconnect="AB"
                  ):
@@ -952,6 +957,7 @@ class DirectlyAttachedUcsDomainPolicy(UcsPolicy):
                          tags,
                          preconfigured_api_client
                          )
+        self.ucs_server_profile_name = ucs_server_profile_name
         self.ucs_domain_profile_name = ucs_domain_profile_name
         self.fabric_interconnect = fabric_interconnect
 
@@ -966,18 +972,39 @@ class DirectlyAttachedUcsDomainPolicy(UcsPolicy):
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
             f"{self.api_client}, "
+            f"'{self.ucs_server_profile_name}', "
             f"'{self.ucs_domain_profile_name}', "
             f"'{self.fabric_interconnect}')"
             )
 
-    def _attach_ucs_domain_profile(self):
-        """This is a function to attach an Intersight UCS Domain Profile to an
-        Intersight Policy.
+    def _attach_ucs_server_and_domain_profiles(self):
+        """This is a function to attach an Intersight UCS Server Profile and/or
+        UCS Domain Profile to an Intersight Policy.
 
         Returns:
             A dictionary for the API body of the policy object to be posted on
             Intersight.    
         """
+        # Update the API body with the Profiles key
+        self.intersight_api_body["Profiles"] = []
+        # Attach UCS Server Profile
+        if self.ucs_server_profile_name:
+            print("Attaching the UCS Server Profile named "
+                  f"{self.ucs_server_profile_name}...")
+            # Get UCS Server Profile MOID
+            ucs_server_profile_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
+                                                                       intersight_api_key=None,
+                                                                       object_name=self.ucs_server_profile_name,
+                                                                       intersight_api_path="server/Profiles",
+                                                                       object_type="UCS Server Profile",
+                                                                       organization=self.organization,
+                                                                       preconfigured_api_client=self.api_client
+                                                                       )
+            # Update the API body with the appropriate Server Profile MOID
+            self.intersight_api_body["Profiles"].append(
+                {"Moid": ucs_server_profile_moid,
+                 "ObjectType": "server.Profile"}
+                )
         # Attach UCS Domain Profile
         if self.ucs_domain_profile_name:
             print("Attaching the UCS Domain Profile named "
@@ -1031,26 +1058,27 @@ class DirectlyAttachedUcsDomainPolicy(UcsPolicy):
                 if self.fabric_interconnect == "A":
                     print("The attachment will be made to Fabric Interconnect "
                           "A.")
-                    self.intersight_api_body["Profiles"] = [
+                    self.intersight_api_body["Profiles"].append(
                         {"Moid": fabric_interconnect_a_switch_profile_moid,
                          "ObjectType": "fabric.SwitchProfile"}
-                        ]
+                        )
                 elif self.fabric_interconnect == "B":
                     print("The attachment will be made to Fabric Interconnect "
                           "B.")
-                    self.intersight_api_body["Profiles"] = [
+                    self.intersight_api_body["Profiles"].append(
                         {"Moid": fabric_interconnect_b_switch_profile_moid,
                          "ObjectType": "fabric.SwitchProfile"}
-                        ]
+                        )
                 else:
                     print("The attachment will be made to Fabric Interconnects "
                           "A and B.")
-                    self.intersight_api_body["Profiles"] = [
-                        {"Moid": fabric_interconnect_a_switch_profile_moid,
-                         "ObjectType": "fabric.SwitchProfile"},
-                        {"Moid": fabric_interconnect_b_switch_profile_moid,
-                         "ObjectType": "fabric.SwitchProfile"}
-                        ]
+                    self.intersight_api_body["Profiles"].extend(
+                        [{"Moid": fabric_interconnect_a_switch_profile_moid,
+                          "ObjectType": "fabric.SwitchProfile"},
+                         {"Moid": fabric_interconnect_b_switch_profile_moid,
+                          "ObjectType": "fabric.SwitchProfile"}
+                         ]
+                        )
 
     def object_maker(self):
         """This function makes the targeted policy object.
@@ -1063,13 +1091,13 @@ class DirectlyAttachedUcsDomainPolicy(UcsPolicy):
         self._update_api_body_subobject_attributes()
         # Update the API body with individual mapped object attributes
         self._update_api_body_mapped_object_attributes()
-        # Update the API body with a UCS Domain Profile attached, if specified
-        self._attach_ucs_domain_profile()
+        # Update the API body with a UCS Server and/or Domain Profile attached, if specified
+        self._attach_ucs_server_and_domain_profiles()
         # POST the API body to Intersight
         self._post_intersight_object()
 
 
-class SyslogPolicy(DirectlyAttachedUcsDomainPolicy):
+class SyslogPolicy(DirectlyAttachedUcsServerAndDomainPolicy):
     """This class is used to configure a Syslog Policy in Intersight.
     """
     object_type = "Syslog Policy"
@@ -1209,6 +1237,7 @@ class SyslogPolicy(DirectlyAttachedUcsDomainPolicy):
                  intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
+                 ucs_server_profile_name="",
                  ucs_domain_profile_name="",
                  syslog_local_logging_minimum_severity_to_report="warning",
                  syslog_remote_logging_server_list=None
@@ -1221,6 +1250,7 @@ class SyslogPolicy(DirectlyAttachedUcsDomainPolicy):
                          intersight_base_url,
                          tags,
                          preconfigured_api_client,
+                         ucs_server_profile_name,
                          ucs_domain_profile_name,
                          fabric_interconnect="AB"
                          )
@@ -1251,6 +1281,7 @@ class SyslogPolicy(DirectlyAttachedUcsDomainPolicy):
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
             f"{self.api_client}, "
+            f"'{self.ucs_server_profile_name}', "
             f"'{self.ucs_domain_profile_name}', "
             f"'{self.syslog_local_logging_minimum_severity_to_report}', "
             f"{self.syslog_remote_logging_server_list})"
@@ -1267,6 +1298,7 @@ def syslog_policy_maker(intersight_api_key_id,
                         intersight_base_url="https://www.intersight.com/api/v1",
                         tags=None,
                         preconfigured_api_client=None,
+                        ucs_server_profile_name="",
                         ucs_domain_profile_name=""
                         ):
     """This is a function used to make a Syslog Policy on Cisco Intersight.
@@ -1324,6 +1356,9 @@ def syslog_policy_maker(intersight_api_key_id,
             is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
+        ucs_server_profile_name (str):
+            Optional; The UCS Server Profile the policy should be attached to.
+            The default value is an empty string ("").
         ucs_domain_profile_name (str):
             Optional; The UCS Domain Profile the policy should be attached to.
             The default value is an empty string ("").
@@ -1353,18 +1388,21 @@ def syslog_policy_maker(intersight_api_key_id,
             traceback.print_exc()
 
     # Define and create Syslog Policy object in Intersight
-    builder(SyslogPolicy(intersight_api_key_id=intersight_api_key_id,
-                         intersight_api_key=intersight_api_key,
-                         policy_name=policy_name,
-                         policy_description=policy_description,
-                         organization=organization,
-                         intersight_base_url=intersight_base_url,
-                         tags=tags,
-                         preconfigured_api_client=preconfigured_api_client,
-                         ucs_domain_profile_name=ucs_domain_profile_name,
-                         syslog_local_logging_minimum_severity_to_report=syslog_local_logging_minimum_severity_to_report,
-                         syslog_remote_logging_server_list=syslog_remote_logging_server_list
-                         ))
+    builder(
+        SyslogPolicy(
+            intersight_api_key_id=intersight_api_key_id,
+            intersight_api_key=intersight_api_key,
+            policy_name=policy_name,
+            policy_description=policy_description,
+            organization=organization,
+            intersight_base_url=intersight_base_url,
+            tags=tags,
+            preconfigured_api_client=preconfigured_api_client,
+            ucs_server_profile_name=ucs_server_profile_name,
+            ucs_domain_profile_name=ucs_domain_profile_name,
+            syslog_local_logging_minimum_severity_to_report=syslog_local_logging_minimum_severity_to_report,
+            syslog_remote_logging_server_list=syslog_remote_logging_server_list
+            ))
 
 
 def main():
@@ -1400,6 +1438,7 @@ def main():
         intersight_base_url=intersight_base_url,
         tags=syslog_policy_tags,
         preconfigured_api_client=main_intersight_api_client,
+        ucs_server_profile_name=ucs_server_profile_name,
         ucs_domain_profile_name=ucs_domain_profile_name
         )
 
