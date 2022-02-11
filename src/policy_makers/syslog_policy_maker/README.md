@@ -15,7 +15,7 @@
 
 - Configure more than the two Syslog remote logging server options available through the Intersight GUI.
 
-- Automatically attach the Syslog Policy to a UCS Domain Profile if desired, during the Syslog Policy configuration.
+- Automatically attach the Syslog Policy to a UCS Server and/or UCS Domain Profile if desired, during the Syslog Policy configuration.
 
 - Quickly restore Syslog Policy configurations as part of your on-prem Intersight backup solution.
 
