@@ -46,6 +46,7 @@
 - [Fibre Channel QoS Policy Maker](./src/policy_makers/fibre_channel_qos_policy_maker) - Make a UCS fibre channel QoS policy.
 - [IMC Access Policy Maker](./src/policy_makers/imc_access_policy_maker) - Make a UCS IMC access policy.
 - [iSCSI Adapter Policy Maker](./src/policy_makers/iscsi_adapter_policy_maker) - Make a UCS iSCSI adapter policy.
+- [iSCSI Boot Policy Maker](./src/policy_makers/iscsi_boot_policy_maker) - Make a UCS iSCSI boot policy.
 - [iSCSI Static Target Policy Maker](./src/policy_makers/iscsi_static_target_policy_maker) - Make a UCS iSCSI static target policy.
 - [Local User Policy Maker](./src/policy_makers/local_user_policy_maker) - Make a UCS local user policy.
 - [SNMP Policy Maker](./src/policy_makers/snmp_policy_maker) - Make a UCS SNMP policy.
