@@ -57,6 +57,7 @@
 - [IP Pool Maker](./src/pool_makers/ip_pool_maker) - Make a UCS IP pool.
 - [IQN Pool Maker](./src/pool_makers/iqn_pool_maker) - Make a UCS IQN pool.
 - [MAC Pool Maker](./src/pool_makers/mac_pool_maker) - Make a UCS MAC pool.
+- [Resource Pool Maker](./src/pool_makers/resource_pool_maker) - Make a UCS resource pool.
 - [UUID Pool Maker](./src/pool_makers/uuid_pool_maker) - Make a UCS UUID pool.
 - [WWNN Pool Maker](./src/pool_makers/wwnn_pool_maker) - Make a UCS WWNN pool.
 - [WWPN Pool Maker](./src/pool_makers/wwpn_pool_maker) - Make a UCS WWPN pool.
