@@ -39,6 +39,7 @@
 - [BIOS Policy Maker](./src/policy_makers/bios_policy_maker) - Make a UCS BIOS policy.
 - [Boot Order Policy Maker](./src/policy_makers/boot_order_policy_maker) - Make a UCS boot order policy.
 - [Certificate Management Policy Maker](./src/policy_makers/cert_mgmt_policy_maker) - Make a UCS certificate management policy.
+- [Ethernet Adapter Policy Maker](./src/policy_makers/ethernet_adapter_policy_maker) - Make a UCS ethernet adapter policy.
 - [Ethernet Network Control Policy Maker](./src/policy_makers/ethernet_network_control_policy_maker) - Make a UCS ethernet network control policy.
 - [Ethernet Network Group Policy Maker](./src/policy_makers/ethernet_network_group_policy_maker) - Make a UCS ethernet network group policy.
 - [Ethernet QoS Policy Maker](./src/policy_makers/ethernet_qos_policy_maker) - Make a UCS ethernet QoS policy.
@@ -50,7 +51,7 @@
 - [iSCSI Boot Policy Maker](./src/policy_makers/iscsi_boot_policy_maker) - Make a UCS iSCSI boot policy.
 - [iSCSI Static Target Policy Maker](./src/policy_makers/iscsi_static_target_policy_maker) - Make a UCS iSCSI static target policy.
 - [Local User Policy Maker](./src/policy_makers/local_user_policy_maker) - Make a UCS local user policy.
-- [Serial Over LAN Policy Maker](./src/policy_makers/serial_over_lan_policy_maker) - Make a UCS Serial over LAN policy.
+- [Serial Over LAN Policy Maker](./src/policy_makers/serial_over_lan_policy_maker) - Make a UCS serial over LAN policy.
 - [SNMP Policy Maker](./src/policy_makers/snmp_policy_maker) - Make a UCS SNMP policy.
 - [Syslog Policy Maker](./src/policy_makers/syslog_policy_maker) - Make a UCS syslog policy.
 - [Virtual KVM Policy Maker](./src/policy_makers/virtual_kvm_policy_maker) - Make a UCS virtual KVM policy.
