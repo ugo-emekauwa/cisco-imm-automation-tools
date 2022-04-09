@@ -14,7 +14,7 @@
 
 ## Build and Deployment Tools
 - [UCS Domain Deployment Tool](./src/deployment_tools/ucs_domain_deployment_tool) - Build, assign and deploy a UCS domain profile with all policies in minutes.
-- [UCS FI Claim Handler](./src/deployment_tools/ucs_fi_claim_handler) - Automatically claim multiple UCS IMM fabric interconnect clusters to an Intersight account.
+- [UCS FI Claim Handler](./src/deployment_tools/ucs_fi_claim_handler) - Claim one or more UCS IMM fabric interconnect clusters to an Intersight account.
 - [UCS Server Deployment Tool](./src/deployment_tools/ucs_server_deployment_tool) - Coming soon!!!
 
 ## Policy Makers
