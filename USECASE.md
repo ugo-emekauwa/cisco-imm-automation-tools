@@ -6,7 +6,7 @@
 </p>  
 <br>
 <p>
-  Cisco IMM Automation Tools is a suite of software for automating the build and deployment of Cisco UCS Pools, Policies, and Profiles on Cisco Intersight Infrastructure Services for UCS X-Series hardware and previous generation UCS systems. The automation of UCS under Intersight Managed Mode is simplified and requires minimal programming knowledge, enabling users to setup and run quickly.
+  Cisco IMM Automation Tools automates the build and deployment of Cisco UCS devices, policies, pools and profiles on Cisco Intersight Infrastructure Services for UCS X-Series hardware and previous generation UCS systems. The automation of UCS under Intersight Managed Mode is simplified and requires minimal programming knowledge, enabling users to setup and run quickly.
 </p>
 <br>
 
@@ -14,6 +14,7 @@
 
 ## Build and Deployment Tools
 - [UCS Domain Deployment Tool](./src/deployment_tools/ucs_domain_deployment_tool) - Build, assign and deploy a UCS domain profile with all policies in minutes.
+- [UCS FI Claim Handler](./src/deployment_tools/ucs_fi_claim_handler) - Claim one or more UCS IMM fabric interconnect clusters to an Intersight account.
 - [UCS Server Deployment Tool](./src/deployment_tools/ucs_server_deployment_tool) - Coming soon!!!
 
 ## Policy Makers
