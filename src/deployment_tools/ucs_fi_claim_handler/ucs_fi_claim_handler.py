@@ -1,5 +1,5 @@
 """
-UCS FI Claim Handler for Cisco Intersight, v2.0
+UCS FI Claim Handler for Cisco Intersight, v2.1
 Author: Ugo Emekauwa
 Contact: uemekauw@cisco.com, uemekauwa@gmail.com
 Summary: The UCS FI Claim Handler for Cisco Intersight automates the
@@ -76,6 +76,7 @@ import intersight
 import re
 import requests
 import urllib3
+import time
 
 # Suppress InsecureRequestWarning error messages
 urllib3.disable_warnings()
@@ -212,31 +213,34 @@ def test_intersight_api_service(intersight_api_key_id,
         sys.exit(0)
 
 
-# Establish function to retrieve all instances of a particular Intersight API object type
-def get_intersight_objects(intersight_api_key_id,
-                           intersight_api_key,
-                           intersight_api_path,
-                           object_type="object",
-                           intersight_base_url="https://www.intersight.com/api/v1",
-                           preconfigured_api_client=None
-                           ):
-    """This is a function to perform an HTTP GET on all objects under an
-    available Intersight API type.
+# Establish function to retrieve the MOID of a specific Intersight API object by name
+def intersight_object_moid_retriever(intersight_api_key_id,
+                                     intersight_api_key,
+                                     object_name,
+                                     intersight_api_path,
+                                     object_type="object",
+                                     organization="default",
+                                     intersight_base_url="https://www.intersight.com/api/v1",
+                                     preconfigured_api_client=None
+                                     ):
+    """This is a function to retrieve the MOID of Intersight objects
+    using the Intersight API.
 
     Args:
         intersight_api_key_id (str):
             The ID of the Intersight API key.
         intersight_api_key (str):
             The system file path of the Intersight API key.
+        object_name (str):
+            The name of the Intersight object.
         intersight_api_path (str):
-            The path to the targeted Intersight API object type. For example,
-            to specify the Intersight API type for adapter configuration
-            policies, enter "adapter/ConfigPolicies". More API types can be
-            found in the Intersight API reference library at
-            https://intersight.com/apidocs/introduction/overview/.
+            The Intersight API path of the Intersight object.
         object_type (str):
             Optional; The type of Intersight object. The default value is
             "object".
+        organization (str):
+            Optional; The Intersight organization of the Intersight object.
+            The default value is "default".
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
             is "https://www.intersight.com/api/v1". This value typically only
@@ -250,8 +254,7 @@ def get_intersight_objects(intersight_api_key_id,
             arguments.
 
     Returns:
-        A dictionary containing all objects of the specified API type. If the
-        API type is inaccessible, an implicit value of None will be returned.
+        A string of the MOID for the provided Intersight object.
         
     Raises:
         Exception:
@@ -266,6 +269,30 @@ def get_intersight_objects(intersight_api_key_id,
                                     )
     else:
         api_client = preconfigured_api_client
+    try:
+        # Retrieve the Intersight Account name
+        api_client.call_api(resource_path="/iam/Accounts",
+                            method="GET",
+                            auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                            )
+        response = api_client.last_response.data
+        iam_account = json.loads(response)
+        if api_client.last_response.status != 200:
+            print("The provided Intersight account information could not be "
+                  "accessed.")
+            print("Exiting due to the Intersight account being unavailable.\n")
+            print("Please verify that the correct API Key ID and API Key have "
+                  "been entered, then re-attempt execution.\n")
+            sys.exit(0)
+        else:
+            intersight_account_name = iam_account["Results"][0]["Name"]
+    except Exception:
+        print("\nA configuration error has occurred!\n")
+        print("Unable to access the Intersight API.")
+        print("Exiting due to the Intersight API being unavailable.\n")
+        print("Please verify that the correct API Key ID and API Key have "
+              "been entered, then re-attempt execution.\n")
+        sys.exit(0)
     # Retrieving the provided object from Intersight...
     full_intersight_api_path = f"/{intersight_api_path}"
     try:
@@ -276,11 +303,10 @@ def get_intersight_objects(intersight_api_key_id,
         response = api_client.last_response.data
         intersight_objects = json.loads(response)
         # The Intersight API resource path has been accessed successfully.
-        return intersight_objects
     except Exception:
         print("\nA configuration error has occurred!\n")
-        print(f"There was an issue retrieving the requested {object_type} "
-              "instances from Intersight.")
+        print("There was an issue retrieving the "
+              f"{object_type} from Intersight.")
         print("Unable to access the provided Intersight API resource path "
               f"'{intersight_api_path}'.")
         print("Please review and resolve any error messages, then re-attempt "
@@ -288,6 +314,293 @@ def get_intersight_objects(intersight_api_key_id,
         print("Exception Message: ")
         traceback.print_exc()
         sys.exit(0)
+
+    if intersight_objects.get("Results"):
+        for intersight_object in intersight_objects.get("Results"):
+            if intersight_object.get("Organization"):
+                provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
+                                                                              intersight_api_key=None,
+                                                                              object_name=organization,
+                                                                              intersight_api_path="organization/Organizations",
+                                                                              object_type="Organization",
+                                                                              preconfigured_api_client=api_client
+                                                                              )
+                if intersight_object.get("Organization", {}).get("Moid") == provided_organization_moid:
+                    if intersight_object.get("Name") == object_name:
+                        intersight_object_moid = intersight_object.get("Moid")
+                        # The provided object and MOID has been identified and retrieved.
+                        return intersight_object_moid
+            else:
+                if intersight_object.get("Name") == object_name:
+                    intersight_object_moid = intersight_object.get("Moid")
+                    # The provided object and MOID has been identified and retrieved.
+                    return intersight_object_moid
+        else:
+            print("\nA configuration error has occurred!\n")
+            print(f"The provided {object_type} named '{object_name}' was not "
+                  "found.")
+            print("Please check the Intersight Account named "
+                  f"{intersight_account_name}.")
+            print("Verify through the API or GUI that the needed "
+                  f"{object_type} is present.")
+            print(f"If the needed {object_type} is missing, please create it.")
+            print("Once the issue has been resolved, re-attempt execution.\n")
+            sys.exit(0)
+    else:
+        print("\nA configuration error has occurred!\n")
+        print(f"The provided {object_type} named '{object_name}' was not "
+              "found.")
+        print(f"No requested {object_type} instance is currently available in "
+              f"the Intersight account named {intersight_account_name}.")
+        print("Please check the Intersight Account named "
+              f"{intersight_account_name}.")
+        print(f"Verify through the API or GUI that the needed {object_type} "
+              "is present.")
+        print(f"If the needed {object_type} is missing, please create it.")
+        print("Once the issue has been resolved, re-attempt execution.\n")
+        sys.exit(0)
+
+
+# Establish function to request login to UCS FI Device Console
+def _request_ucs_fi_device_console_login(
+    ucs_fi_device_console_ip,
+    ucs_fi_device_console_username,
+    ucs_fi_device_console_password
+    ):
+    """This is a function to request an HTTP response for a login to a UCS
+    Fabric Interconnect Device Console under Intersight Managed Mode (IMM).
+
+    Args:
+        ucs_fi_device_console_ip (str):
+            The IP address of a UCS Fabric Interconnect under Intersight
+            Managed Mode (IMM).
+        ucs_fi_device_console_username (str):
+            The admin username of a UCS Fabric Interconnect under Intersight
+            Managed Mode (IMM).
+        ucs_fi_device_console_password (str):
+            The admin password of a UCS Fabric Interconnect under Intersight
+            Managed Mode (IMM).
+
+    Returns:
+        A Response class instance for the UCS Fabric Interconnect Device
+        Console login HTTP request.
+
+    Raises:
+        Exception:
+            An exception occurred due to an issue with the UCS Fabric
+            Interconnect login HTTP request.
+    """
+    # Login to UCS FI Device Console
+    ucs_fi_device_console_headers = {
+        "Content-Type": "application/json"
+        }
+    ucs_fi_device_console_url = f"https://{ucs_fi_device_console_ip}/Login"
+    ucs_fi_device_console_post_body = {
+        "User": ucs_fi_device_console_username,
+        "Password": ucs_fi_device_console_password
+        }
+    try:
+        ucs_fi_device_console_login_request = requests.post(
+            ucs_fi_device_console_url,
+            headers=ucs_fi_device_console_headers,
+            data=json.dumps(ucs_fi_device_console_post_body),
+            verify=False
+            )
+        return ucs_fi_device_console_login_request
+    except Exception as exception_message:
+        print("\nA configuration error has occurred!\n")
+        print(f"Unable to login to the UCS FI Device Console for "
+              f"{ucs_fi_device_console_ip}.\n")
+        print("Exception Message: ")
+        print(exception_message)
+         
+
+# Establish function to request the UCS IMM FI Device Connector Claim Code
+def _request_ucs_fi_device_connector_claim_code(
+    ucs_fi_device_console_ip,
+    ucs_fi_device_console_login
+    ):
+    """"This is a function to request an HTTP response for a Claim Code to a
+    UCS Fabric Interconnect under Intersight Managed Mode (IMM).
+
+    Args:
+        ucs_fi_device_console_ip (str):
+            The IP address of a UCS Fabric Interconnect under Intersight
+            Managed Mode (IMM).
+        ucs_fi_device_console_login (Response):
+            A Response class instance of a UCS Fabric Interconnect Device
+            Console login HTTP request.
+
+    Returns:
+        A Response class instance for the UCS Fabric Interconnect Claim Code
+        HTTP request.
+
+    Raises:
+        Exception:
+            An exception occurred due to an issue with the UCS Fabric
+            Interconnect Claim Code HTTP request.
+    """
+    # Obtain Claim Code
+    ucs_fi_device_connector_headers = {
+        "Accept-Language": "application/json"
+        }
+    ucs_fi_device_connector_claim_code_url = f"https://{ucs_fi_device_console_ip}/connector/SecurityTokens"
+    try:
+        ucs_fi_device_connector_claim_code_request = requests.get(
+            ucs_fi_device_connector_claim_code_url,
+            cookies=ucs_fi_device_console_login.cookies,
+            headers=ucs_fi_device_connector_headers,
+            verify=False
+            ) 
+        return ucs_fi_device_connector_claim_code_request
+    except Exception as exception_message:
+        print("\nA configuration error has occurred!\n")
+        print("Unable to request the Device Connector Claim Code "
+              f"of {ucs_fi_device_console_ip}.\n")
+        print("Exception Message: ")
+        print(exception_message)
+
+
+# Establish function to request a refresh of the UCS IMM FI Device Connector
+def _request_ucs_fi_device_connector_refresh(
+    ucs_fi_device_console_ip,
+    ucs_fi_device_console_login
+    ):
+    """"This is a function to request an HTTP response for refreshing the
+    Device Connector of a UCS Fabric Interconnect under Intersight Managed
+    Mode (IMM).
+
+    Args:
+        ucs_fi_device_console_ip (str):
+            The IP address of a UCS Fabric Interconnect under Intersight
+            Managed Mode (IMM).
+        ucs_fi_device_console_login (Response):
+            A Response class instance of a UCS Fabric Interconnect Device
+            Console login HTTP request.
+
+    Returns:
+        A Response class instance for the UCS Fabric Interconnect Device
+        Connector refresh HTTP request.
+
+    Raises:
+        Exception:
+            An exception occurred due to an issue with the UCS Fabric
+            Interconnect Device Connector refresh HTTP request.
+    """
+    # Refresh the Device Connector
+    ucs_fi_device_connector_headers = {
+        "Content-Type": "application/json"
+        }
+    ucs_fi_device_connector_refresh_url = f"https://{ucs_fi_device_console_ip}/connector/Connect"
+    ucs_fi_device_connector_post_body = {}
+    try:
+        ucs_fi_device_connector_refresh_request = requests.post(
+            ucs_fi_device_connector_refresh_url,
+            cookies=ucs_fi_device_console_login.cookies,
+            headers=ucs_fi_device_connector_headers,
+            data=json.dumps(ucs_fi_device_connector_post_body),
+            verify=False
+            ) 
+        return ucs_fi_device_connector_refresh_request
+    except Exception as exception_message:
+        print("\nA configuration error has occurred!\n")
+        print("Unable to request the Device Connector refresh "
+              f"of {ucs_fi_device_console_ip}.\n")
+        print("Exception Message: ")
+        print(exception_message)
+
+
+# Establish function to request UCS IMM FI Device Connector Device ID
+def _request_ucs_fi_device_connector_device_id(
+    ucs_fi_device_console_ip,
+    ucs_fi_device_console_login
+    ):
+    """"This is a function to request an HTTP response for the Device ID
+    of a UCS Fabric Interconnect under Intersight Managed Mode (IMM).
+
+    Args:
+        ucs_fi_device_console_ip (str):
+            The IP address of a UCS Fabric Interconnect under Intersight
+            Managed Mode (IMM).
+        ucs_fi_device_console_login (Response):
+            A Response class instance of a UCS Fabric Interconnect Device
+            Console login HTTP request.
+
+    Returns:
+        A Response class instance for the UCS Fabric Interconnect Device ID
+        HTTP request.
+
+    Raises:
+        Exception:
+            An exception occurred due to an issue with the UCS Fabric
+            Interconnect Device ID HTTP request.
+    """
+    # Obtain Device ID
+    ucs_fi_device_connector_headers = {
+        "Accept-Language": "application/json"
+        }
+    ucs_fi_device_connector_device_id_url = f"https://{ucs_fi_device_console_ip}/connector/DeviceIdentifiers"
+    try:
+        ucs_fi_device_connector_device_id_request = requests.get(
+            ucs_fi_device_connector_device_id_url,
+            cookies=ucs_fi_device_console_login.cookies,
+            headers=ucs_fi_device_connector_headers,
+            verify=False
+            ) 
+        return ucs_fi_device_connector_device_id_request
+    except Exception as exception_message:
+        print("\nA configuration error has occurred!\n")
+        print("Unable to obtain the Device ID for the Device Connector "
+              f"of {ucs_fi_device_console_ip}.\n")
+        print("Exception Message: ")
+        print(exception_message)            
+
+
+# Establish function to request UCS IMM FI Device Connector System Information
+def _request_ucs_fi_device_connector_system_info(
+    ucs_fi_device_console_ip,
+    ucs_fi_device_console_login
+    ):
+    """"This is a function to request an HTTP response for the System
+    Information of a UCS Fabric Interconnect under Intersight Managed Mode
+    (IMM).
+
+    Args:
+        ucs_fi_device_console_ip (str):
+            The IP address of a UCS Fabric Interconnect under Intersight
+            Managed Mode (IMM).
+        ucs_fi_device_console_login (Response):
+            A Response class instance of a UCS Fabric Interconnect Device
+            Console login HTTP request.
+
+    Returns:
+        A Response class instance for the UCS Fabric Interconnect System Information
+        HTTP request.
+
+    Raises:
+        Exception:
+            An exception occurred due to an issue with the UCS Fabric
+            Interconnect System Information HTTP request.
+    """
+    # Obtain System Information
+    ucs_fi_device_connector_headers = {
+        "Accept-Language": "application/json"
+        }
+    ucs_fi_device_connector_system_info_url = f"https://{ucs_fi_device_console_ip}/connector/Systems"
+    try:
+        ucs_fi_device_connector_system_info_request = requests.get(
+            ucs_fi_device_connector_system_info_url,
+            cookies=ucs_fi_device_console_login.cookies,
+            headers=ucs_fi_device_connector_headers,
+            verify=False
+            ) 
+        return ucs_fi_device_connector_system_info_request
+    except Exception as exception_message:
+        print("\nA configuration error has occurred!\n")
+        print("Unable to obtain the System Information for the Device "
+              f"Connector of {ucs_fi_device_console_ip}.\n")
+        print("Exception Message: ")
+        print(exception_message)            
 
 
 # Establish function to login to UCS FI Device Console
@@ -321,25 +634,20 @@ def obtain_ucs_fi_device_console_login_cookie(
             An exception occurred due to an issue with accessing the provided
             UCS Fabric Interconnect.
     """
-    # Login to UCS FI Device Console
-    ucs_fi_device_console_headers = {"Content-Type": "application/json"}
-    ucs_fi_device_console_url = f"https://{ucs_fi_device_console_ip}/Login"
-    ucs_fi_device_console_post_body = {
-        "User": ucs_fi_device_console_username,
-        "Password": ucs_fi_device_console_password
-        }
-    print("Attempting login to the UCS FI Device Console for "
-          f"{ucs_fi_device_console_ip}...")
     try:
-        ucs_fi_device_console_login = requests.post(
-            ucs_fi_device_console_url,
-            headers=ucs_fi_device_console_headers,
-            data=json.dumps(ucs_fi_device_console_post_body),
-            verify=False
+        # Login to UCS FI Device Console
+        print("\nAttempting login to the UCS FI Device Console for "
+              f"{ucs_fi_device_console_ip}...")
+        ucs_fi_device_console_login = _request_ucs_fi_device_console_login(
+            ucs_fi_device_console_ip,
+            ucs_fi_device_console_username,
+            ucs_fi_device_console_password
             )
         if ucs_fi_device_console_login.status_code == 200:
             print("Login to the UCS FI Device Console for "
                   f"{ucs_fi_device_console_ip} was successful.\n")
+            print("The login cookie for the Device Console of "
+                  f"{ucs_fi_device_console_ip} has been retrieved.")
             return ucs_fi_device_console_login.cookies
         else:
             print("\nA configuration error has occurred!\n")
@@ -347,12 +655,12 @@ def obtain_ucs_fi_device_console_login_cookie(
                   f"{ucs_fi_device_console_ip}.\n")
             print("Exception Message: ")
             print(ucs_fi_device_console_login.json())
-    except Exception as exception_message:
+    except Exception:
         print("\nA configuration error has occurred!\n")
         print(f"Unable to login to the UCS FI Device Console for "
               f"{ucs_fi_device_console_ip}.\n")
         print("Exception Message: ")
-        print(exception_message)
+        traceback.print_exc()
          
 
 # Establish function to obtain UCS IMM FI Device Connector Device ID
@@ -384,69 +692,49 @@ def obtain_ucs_fi_device_connector_device_id(
             An exception occurred due to an issue with accessing the provided
             UCS Fabric Interconnect.
     """
-    # Login to UCS FI Device Console
-    ucs_fi_device_console_headers = {"Content-Type": "application/json"}
-    ucs_fi_device_console_url = f"https://{ucs_fi_device_console_ip}/Login"
-    ucs_fi_device_console_post_body = {
-        "User": ucs_fi_device_console_username,
-        "Password": ucs_fi_device_console_password
-        }
-    print("Attempting login to the UCS FI Device Console for "
-          f"{ucs_fi_device_console_ip}...")
     try:
-        ucs_fi_device_console_login = requests.post(
-            ucs_fi_device_console_url,
-            headers=ucs_fi_device_console_headers,
-            data=json.dumps(ucs_fi_device_console_post_body),
-            verify=False
+        # Login to UCS FI Device Console
+        print("\nAttempting login to the UCS FI Device Console for "
+              f"{ucs_fi_device_console_ip}...")
+        ucs_fi_device_console_login = _request_ucs_fi_device_console_login(
+            ucs_fi_device_console_ip,
+            ucs_fi_device_console_username,
+            ucs_fi_device_console_password
             )
         if ucs_fi_device_console_login.status_code == 200:
             print("Login to the UCS FI Device Console for "
                   f"{ucs_fi_device_console_ip} was successful.\n")
             # Obtain Device ID
-            ucs_fi_device_connector_headers = {
-                "Accept-Language": "application/json",
-                }
-            ucs_fi_device_connector_device_id_url = f"https://{ucs_fi_device_console_ip}/connector/DeviceIdentifiers"
             print("Attempting to obtain the UCS FI Device Connector Device "
                   "ID...")
-            try:
-                get_ucs_fi_device_connector_device_id = requests.get(
-                    ucs_fi_device_connector_device_id_url,
-                    cookies=ucs_fi_device_console_login.cookies,
-                    headers=ucs_fi_device_connector_headers,
-                    verify=False
-                    ) 
-                if get_ucs_fi_device_connector_device_id.status_code == 200:
-                    ucs_fi_device_connector_device_id_list = get_ucs_fi_device_connector_device_id.json()
-                    ucs_fi_device_connector_device_id = ucs_fi_device_connector_device_id_list[0]["Id"]
-                    print("The Device ID for the Device Connector of "
-                          f"{ucs_fi_device_console_ip} has been retrieved.")
-                    return ucs_fi_device_connector_device_id
-                else:
-                    print("\nA configuration error has occurred!\n")
-                    print("Unable to obtain the Device ID for the Device "
-                          f"Connector of {ucs_fi_device_console_ip}.\n")
-                    print("Exception Message: ")
-                    print(get_ucs_fi_device_connector_device_id.json())
-            except Exception as exception_message:
+            get_ucs_fi_device_connector_device_id = _request_ucs_fi_device_connector_device_id(
+                ucs_fi_device_console_ip,
+                ucs_fi_device_console_login
+                ) 
+            if get_ucs_fi_device_connector_device_id.status_code == 200:
+                ucs_fi_device_connector_device_id_list = get_ucs_fi_device_connector_device_id.json()
+                ucs_fi_device_connector_device_id = ucs_fi_device_connector_device_id_list[0]["Id"]
+                print("The Device ID for the Device Connector of "
+                      f"{ucs_fi_device_console_ip} has been retrieved.")
+                return ucs_fi_device_connector_device_id
+            else:
                 print("\nA configuration error has occurred!\n")
-                print("Unable to obtain the Device ID for the Device Connector "
-                      f"of {ucs_fi_device_console_ip}.\n")
+                print("Unable to obtain the Device ID for the Device "
+                      f"Connector of {ucs_fi_device_console_ip}.\n")
                 print("Exception Message: ")
-                print(exception_message)            
+                print(get_ucs_fi_device_connector_device_id.json())            
         else:
             print("\nA configuration error has occurred!\n")
             print("Unable to login to the UCS FI Device Console for "
                   f"{ucs_fi_device_console_ip}.\n")
             print("Exception Message: ")
             print(ucs_fi_device_console_login.json())
-    except Exception as exception_message:
+    except Exception:
         print("\nA configuration error has occurred!\n")
-        print("Unable to login to the UCS FI Device Console for "
-              f"{ucs_fi_device_console_ip}.\n")
+        print("Unable to obtain the Device ID for the Device Connector "
+              f"of {ucs_fi_device_console_ip}.\n")
         print("Exception Message: ")
-        print(exception_message)
+        traceback.print_exc()
 
 
 # Establish function to obtain UCS IMM FI Device Connector Claim Code
@@ -478,69 +766,82 @@ def obtain_ucs_fi_device_connector_claim_code(
             An exception occurred due to an issue with accessing the provided
             UCS Fabric Interconnect.
     """
-    # Login to UCS FI Device Console
-    ucs_fi_device_console_headers = {"Content-Type": "application/json"}
-    ucs_fi_device_console_url = f"https://{ucs_fi_device_console_ip}/Login"
-    ucs_fi_device_console_post_body = {
-        "User": ucs_fi_device_console_username,
-        "Password": ucs_fi_device_console_password
-        }
-    print("Attempting login to the UCS FI Device Console for "
-          f"{ucs_fi_device_console_ip}...")
     try:
-        ucs_fi_device_console_login = requests.post(
-            ucs_fi_device_console_url,
-            headers=ucs_fi_device_console_headers,
-            data=json.dumps(ucs_fi_device_console_post_body),
-            verify=False
+        # Login to UCS FI Device Console
+        print("\nAttempting login to the UCS FI Device Console for "
+              f"{ucs_fi_device_console_ip}...")
+        ucs_fi_device_console_login = _request_ucs_fi_device_console_login(
+            ucs_fi_device_console_ip,
+            ucs_fi_device_console_username,
+            ucs_fi_device_console_password
             )
         if ucs_fi_device_console_login.status_code == 200:
             print("Login to the UCS FI Device Console for "
                   f"{ucs_fi_device_console_ip} was successful.\n")
             # Obtain Claim Code
-            ucs_fi_device_connector_headers = {
-                "Accept-Language": "application/json",
-                }
-            ucs_fi_device_connector_claim_code_url = f"https://{ucs_fi_device_console_ip}/connector/SecurityTokens"
             print("Attempting to obtain the UCS FI Device Connector Claim "
                   "Code...")
-            try:
-                get_ucs_fi_device_connector_claim_code = requests.get(
-                    ucs_fi_device_connector_claim_code_url,
-                    cookies=ucs_fi_device_console_login.cookies,
-                    headers=ucs_fi_device_connector_headers,
-                    verify=False
-                    ) 
-                if get_ucs_fi_device_connector_claim_code.status_code == 200:
-                    ucs_fi_device_connector_claim_code_list = get_ucs_fi_device_connector_claim_code.json()
-                    ucs_fi_device_connector_claim_code = ucs_fi_device_connector_claim_code_list[0]["Token"]
-                    print("The Claim Code for the Device Connector of "
-                          f"{ucs_fi_device_console_ip} has been retrieved.")
-                    return ucs_fi_device_connector_claim_code
-                else:
-                    print("\nA configuration error has occurred!\n")
-                    print("Unable to obtain the Claim Code for the Device "
-                          f"Connector of {ucs_fi_device_console_ip}.\n")
-                    print("Exception Message: ")
-                    print(get_ucs_fi_device_connector_claim_code.json())
-            except Exception as exception_message:
+            get_ucs_fi_device_connector_claim_code = _request_ucs_fi_device_connector_claim_code(
+                ucs_fi_device_console_ip,
+                ucs_fi_device_console_login
+                ) 
+            if get_ucs_fi_device_connector_claim_code.status_code == 200:
+                ucs_fi_device_connector_claim_code_list = get_ucs_fi_device_connector_claim_code.json()
+                ucs_fi_device_connector_claim_code = ucs_fi_device_connector_claim_code_list[0]["Token"]
+                print("The Claim Code for the Device Connector of "
+                      f"{ucs_fi_device_console_ip} has been retrieved.")
+                return ucs_fi_device_connector_claim_code
+            else:
                 print("\nA configuration error has occurred!\n")
                 print("Unable to obtain the Claim Code for the Device "
                       f"Connector of {ucs_fi_device_console_ip}.\n")
                 print("Exception Message: ")
-                print(exception_message)            
+                print(get_ucs_fi_device_connector_claim_code.json())
+                print("A second attempt will be made to obtain Claim "
+                      "Code by refreshing the Device Connector...")
+                print("Refreshing the Device Connector...")
+                # Refresh the Device Connector
+                print("Attempting to refresh the UCS FI Device Connector...")
+                device_connector_refresh = _request_ucs_fi_device_connector_refresh(
+                    ucs_fi_device_console_ip,
+                    ucs_fi_device_console_login
+                    )
+                # Pause to allow Device Connector refresh
+                time.sleep(5)
+                if device_connector_refresh.status_code == 200:
+                    # Obtain Claim Code
+                    print("Attempting to obtain the UCS FI Device Connector Claim "
+                          "Code...")
+                    get_ucs_fi_device_connector_claim_code_second_attempt = _request_ucs_fi_device_connector_claim_code(
+                        ucs_fi_device_console_ip,
+                        ucs_fi_device_console_login
+                        ) 
+                    if get_ucs_fi_device_connector_claim_code_second_attempt.status_code == 200:
+                        ucs_fi_device_connector_claim_code_list = get_ucs_fi_device_connector_claim_code_second_attempt.json()
+                        ucs_fi_device_connector_claim_code = ucs_fi_device_connector_claim_code_list[0]["Token"]
+                        print("The Claim Code for the Device Connector of "
+                              f"{ucs_fi_device_console_ip} has been "
+                              "retrieved.")
+                        return ucs_fi_device_connector_claim_code
+                    else:
+                        print("\nA configuration error has occurred!\n")
+                        print("Unable to obtain the Claim Code for the "
+                              "Device Connector of "
+                              f"{ucs_fi_device_console_ip}.\n")
+                        print("Exception Message: ")
+                        print(get_ucs_fi_device_connector_claim_code_second_attempt.json())                
         else:
             print("\nA configuration error has occurred!\n")
             print("Unable to login to the UCS FI Device Console for "
                   f"{ucs_fi_device_console_ip}.\n")
             print("Exception Message: ")
             print(ucs_fi_device_console_login.json())
-    except Exception as exception_message:
+    except Exception:
         print("\nA configuration error has occurred!\n")
-        print("Unable to login to the UCS FI Device Console for "
-              f"{ucs_fi_device_console_ip}.\n")
+        print("Unable to obtain the Claim Code for the Device "
+              f"Connector of {ucs_fi_device_console_ip}.\n")
         print("Exception Message: ")
-        print(exception_message)
+        traceback.print_exc()
 
 
 # Establish function to obtain UCS IMM FI Device Connector System Information
@@ -572,68 +873,48 @@ def obtain_ucs_fi_device_connector_system_info(
             An exception occurred due to an issue with accessing the provided
             UCS Fabric Interconnect.
     """
-    # Login to UCS FI Device Console
-    ucs_fi_device_console_headers = {"Content-Type": "application/json"}
-    ucs_fi_device_console_url = f"https://{ucs_fi_device_console_ip}/Login"
-    ucs_fi_device_console_post_body = {
-        "User": ucs_fi_device_console_username,
-        "Password": ucs_fi_device_console_password
-        }
-    print("Attempting login to the UCS FI Device Console for "
-          f"{ucs_fi_device_console_ip}...")
     try:
-        ucs_fi_device_console_login = requests.post(
-            ucs_fi_device_console_url,
-            headers=ucs_fi_device_console_headers,
-            data=json.dumps(ucs_fi_device_console_post_body),
-            verify=False
+        # Login to UCS FI Device Console
+        print("\nAttempting login to the UCS FI Device Console for "
+              f"{ucs_fi_device_console_ip}...")
+        ucs_fi_device_console_login = _request_ucs_fi_device_console_login(
+            ucs_fi_device_console_ip,
+            ucs_fi_device_console_username,
+            ucs_fi_device_console_password
             )
         if ucs_fi_device_console_login.status_code == 200:
             print("Login to the UCS FI Device Console for "
                   f"{ucs_fi_device_console_ip} was successful.\n")
             # Obtain System Information
-            ucs_fi_device_connector_headers = {
-                "Accept-Language": "application/json",
-                }
-            ucs_fi_device_connector_system_info_url = f"https://{ucs_fi_device_console_ip}/connector/Systems"
-            print("Attempting to obtain the UCS FI Device Connector system "
-                  "information...")
-            try:
-                get_ucs_fi_device_connector_system_info = requests.get(
-                    ucs_fi_device_connector_system_info_url,
-                    cookies=ucs_fi_device_console_login.cookies,
-                    headers=ucs_fi_device_connector_headers,
-                    verify=False
-                    ) 
-                if get_ucs_fi_device_connector_system_info.status_code == 200:
-                    ucs_fi_device_connector_system_info_list = get_ucs_fi_device_connector_system_info.json()
-                    print("The system information for the Device Connector of "
-                          f"{ucs_fi_device_console_ip} has been retrieved.")
-                    return ucs_fi_device_connector_system_info_list
-                else:
-                    print("\nA configuration error has occurred!\n")
-                    print("Unable to obtain the system information for the "
-                          f"Device Connector of {ucs_fi_device_console_ip}.\n")
-                    print("Exception Message: ")
-                    print(get_ucs_fi_device_connector_system_info.json())
-            except Exception as exception_message:
+            print("Attempting to obtain the UCS FI Device Connector System "
+                  "Information...")
+            get_ucs_fi_device_connector_system_info = _request_ucs_fi_device_connector_system_info(
+                ucs_fi_device_console_ip,
+                ucs_fi_device_console_login
+                ) 
+            if get_ucs_fi_device_connector_system_info.status_code == 200:
+                ucs_fi_device_connector_system_info_list = get_ucs_fi_device_connector_system_info.json()
+                print("The system information for the Device Connector of "
+                      f"{ucs_fi_device_console_ip} has been retrieved.")
+                return ucs_fi_device_connector_system_info_list
+            else:
                 print("\nA configuration error has occurred!\n")
-                print("Unable to obtain the system information for the Device "
-                      f"Connector of {ucs_fi_device_console_ip}.\n")
+                print("Unable to obtain the system information for the "
+                      f"Device Connector of {ucs_fi_device_console_ip}.\n")
                 print("Exception Message: ")
-                print(exception_message)            
+                print(get_ucs_fi_device_connector_system_info.json())
         else:
             print("\nA configuration error has occurred!\n")
             print(f"Unable to login to the UCS FI Device Console for "
                   f"{ucs_fi_device_console_ip}.\n")
             print("Exception Message: ")
             print(ucs_fi_device_console_login.json())
-    except Exception as exception_message:
+    except Exception:
         print("\nA configuration error has occurred!\n")
-        print("Unable to login to the UCS FI Device Console for "
-              f"{ucs_fi_device_console_ip}.\n")
+        print("Unable to obtain the system information for the Device "
+              f"Connector of {ucs_fi_device_console_ip}.\n")
         print("Exception Message: ")
-        print(exception_message)
+        traceback.print_exc()
 
 
 # Establish device claim specific classes and functions
@@ -859,55 +1140,100 @@ def main():
     # Cycle through provided UCS FI Device Console IP list and claim devices
     if ucs_fi_device_console_ip_list:
         for ucs_fi_device_console_ip in ucs_fi_device_console_ip_list:
-            # Login to UCS FI Device Console
-            ucs_fi_device_console_headers = {"Content-Type": "application/json"}
-            ucs_fi_device_console_url = f"https://{ucs_fi_device_console_ip}/Login"
-            ucs_fi_device_console_post_body = {
-                "User": ucs_fi_device_console_username,
-                "Password": ucs_fi_device_console_password
-                }
-            print("\nAttempting login to the UCS FI Device Console for "
-                  f"{ucs_fi_device_console_ip}...")
             try:
-                ucs_fi_device_console_login = requests.post(
-                    ucs_fi_device_console_url,
-                    headers=ucs_fi_device_console_headers,
-                    data=json.dumps(ucs_fi_device_console_post_body),
-                    verify=False
+                # Login to UCS FI Device Console
+                print("\nAttempting login to the UCS FI Device Console for "
+                      f"{ucs_fi_device_console_ip}...")
+                ucs_fi_device_console_login = _request_ucs_fi_device_console_login(
+                    ucs_fi_device_console_ip,
+                    ucs_fi_device_console_username,
+                    ucs_fi_device_console_password
                     )
                 if ucs_fi_device_console_login.status_code == 200:
                     print("Login to the UCS FI Device Console for "
                           f"{ucs_fi_device_console_ip} was successful.")
                     # Obtain Claim Code
-                    ucs_fi_device_connector_headers = {
-                        "Accept-Language": "application/json",
-                        }
-                    ucs_fi_device_connector_claim_code_url = f"https://{ucs_fi_device_console_ip}/connector/SecurityTokens"
-                    print("Attempting to obtain the UCS FI Device Connector "
-                          "Claim Code...")
-                    try:
-                        get_ucs_fi_device_connector_claim_code = requests.get(
-                            ucs_fi_device_connector_claim_code_url,
-                            cookies=ucs_fi_device_console_login.cookies,
-                            headers=ucs_fi_device_connector_headers,
-                            verify=False
+                    print("Attempting to obtain the UCS FI Device Connector Claim "
+                          "Code...")
+                    get_ucs_fi_device_connector_claim_code = _request_ucs_fi_device_connector_claim_code(
+                        ucs_fi_device_console_ip,
+                        ucs_fi_device_console_login
+                        ) 
+                    if get_ucs_fi_device_connector_claim_code.status_code == 200:
+                        ucs_fi_device_connector_claim_code_list = get_ucs_fi_device_connector_claim_code.json()
+                        ucs_fi_device_connector_claim_code = ucs_fi_device_connector_claim_code_list[0]["Token"]
+                        print("The Claim Code for the Device Connector of "
+                              f"{ucs_fi_device_console_ip} has been "
+                              "retrieved.")
+                        # Obtain Device ID
+                        print("Attempting to obtain the UCS FI Device Connector Device "
+                              "ID...")
+                        get_ucs_fi_device_connector_device_id = _request_ucs_fi_device_connector_device_id(
+                            ucs_fi_device_console_ip,
+                            ucs_fi_device_console_login
                             ) 
-                        if get_ucs_fi_device_connector_claim_code.status_code == 200:
-                            ucs_fi_device_connector_claim_code_list = get_ucs_fi_device_connector_claim_code.json()
-                            ucs_fi_device_connector_claim_code = ucs_fi_device_connector_claim_code_list[0]["Token"]
-                            print("The Claim Code for the Device Connector of "
-                                  f"{ucs_fi_device_console_ip} has been "
-                                  "retrieved.")
-                            # Obtain Device ID
-                            ucs_fi_device_connector_device_id_url = f"https://{ucs_fi_device_console_ip}/connector/DeviceIdentifiers"
-                            print("Attempting to obtain the UCS FI Device "
-                                  "Connector Device ID...")
-                            try:
-                                get_ucs_fi_device_connector_device_id = requests.get(
-                                    ucs_fi_device_connector_device_id_url,
-                                    cookies=ucs_fi_device_console_login.cookies,
-                                    headers=ucs_fi_device_connector_headers,
-                                    verify=False
+                        if get_ucs_fi_device_connector_device_id.status_code == 200:
+                            ucs_fi_device_connector_device_id_list = get_ucs_fi_device_connector_device_id.json()
+                            ucs_fi_device_connector_device_id = ucs_fi_device_connector_device_id_list[0]["Id"]
+                            print("The Device ID for the Device "
+                                  "Connector of "
+                                  f"{ucs_fi_device_console_ip} has "
+                                  "been retrieved.")
+                            # Claim the device in Intersight
+                            intersight_device_claimer(
+                                intersight_api_key_id=None,
+                                intersight_api_key=None,
+                                device_id=ucs_fi_device_connector_device_id,
+                                claim_code=ucs_fi_device_connector_claim_code,
+                                intersight_base_url=intersight_base_url,
+                                preconfigured_api_client=main_intersight_api_client
+                                )                      
+                        else:
+                            print("\nA configuration error has "
+                                  "occurred!\n")
+                            print("Unable to obtain the Device ID for "
+                                  "the Device Connector of "
+                                  f"{ucs_fi_device_console_ip}.\n")
+                            print("Exception Message: ")
+                            print(get_ucs_fi_device_connector_device_id.json())        
+                    else:
+                        print("\nA configuration error has occurred!\n")
+                        print("Unable to obtain the Claim Code for the "
+                              "Device Connector of "
+                              f"{ucs_fi_device_console_ip}.\n")
+                        print("Exception Message: ")
+                        print(get_ucs_fi_device_connector_claim_code.json())
+                        print("\nA second attempt will be made to obtain Claim "
+                              "Code by refreshing the Device Connector...")
+                        print("Refreshing the Device Connector...")
+                        # Refresh the Device Connector
+                        print("Attempting to refresh the UCS FI Device Connector...")
+                        device_connector_refresh = _request_ucs_fi_device_connector_refresh(
+                            ucs_fi_device_console_ip,
+                            ucs_fi_device_console_login
+                            )
+                        # Pause to allow Device Connector refresh
+                        time.sleep(5)
+                        if device_connector_refresh.status_code == 200:
+                            # Obtain Claim Code
+                            print("Attempting to obtain the UCS FI Device Connector Claim "
+                                  "Code...")
+                            get_ucs_fi_device_connector_claim_code_second_attempt = _request_ucs_fi_device_connector_claim_code(
+                                ucs_fi_device_console_ip,
+                                ucs_fi_device_console_login
+                                ) 
+                            if get_ucs_fi_device_connector_claim_code_second_attempt.status_code == 200:
+                                ucs_fi_device_connector_claim_code_list = get_ucs_fi_device_connector_claim_code_second_attempt.json()
+                                ucs_fi_device_connector_claim_code = ucs_fi_device_connector_claim_code_list[0]["Token"]
+                                print("The Claim Code for the Device Connector of "
+                                      f"{ucs_fi_device_console_ip} has been "
+                                      "retrieved.")
+                                # Obtain Device ID
+                                print("Attempting to obtain the UCS FI Device Connector Device "
+                                      "ID...")
+                                get_ucs_fi_device_connector_device_id = _request_ucs_fi_device_connector_device_id(
+                                    ucs_fi_device_console_ip,
+                                    ucs_fi_device_console_login
                                     ) 
                                 if get_ucs_fi_device_connector_device_id.status_code == 200:
                                     ucs_fi_device_connector_device_id_list = get_ucs_fi_device_connector_device_id.json()
@@ -932,39 +1258,32 @@ def main():
                                           "the Device Connector of "
                                           f"{ucs_fi_device_console_ip}.\n")
                                     print("Exception Message: ")
-                                    print(get_ucs_fi_device_connector_device_id.json())
-                            except Exception as exception_message:
+                                    print(get_ucs_fi_device_connector_device_id.json())        
+                            else:
                                 print("\nA configuration error has occurred!\n")
-                                print("Unable to obtain the Device ID for the "
+                                print("Unable to obtain the Claim Code for the "
                                       "Device Connector of "
                                       f"{ucs_fi_device_console_ip}.\n")
                                 print("Exception Message: ")
-                                print(exception_message)        
+                                print(get_ucs_fi_device_connector_claim_code_second_attempt.json())                        
                         else:
                             print("\nA configuration error has occurred!\n")
-                            print("Unable to obtain the Claim Code for the "
-                                  "Device Connector of "
+                            print("Unable to refresh the Device Connector for "
                                   f"{ucs_fi_device_console_ip}.\n")
                             print("Exception Message: ")
-                            print(get_ucs_fi_device_connector_claim_code.json())
-                    except Exception as exception_message:
-                        print("\nA configuration error has occurred!\n")
-                        print("Unable to obtain the Claim Code for the Device "
-                              f"Connector of {ucs_fi_device_console_ip}.\n")
-                        print("Exception Message: ")
-                        print(exception_message)                
+                            print(device_connector_refresh.json())
                 else:
                     print("\nA configuration error has occurred!\n")
                     print("Unable to login to the UCS FI Device Console for "
                           f"{ucs_fi_device_console_ip}.\n")
                     print("Exception Message: ")
                     print(ucs_fi_device_console_login.json())
-            except Exception as exception_message:
+            except Exception:
                 print("\nA configuration error has occurred!\n")
-                print("Unable to login to the UCS FI Device Console for "
+                print("There was an issue claiming the device at "
                       f"{ucs_fi_device_console_ip}.\n")
                 print("Exception Message: ")
-                print(exception_message)
+                traceback.print_exc()
     else:
         print("\nThere are no UCS Fabric Interconnects to claim to Intersight.")
         print("There were no IP addresses provided.")
