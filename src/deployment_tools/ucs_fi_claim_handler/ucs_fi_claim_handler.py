@@ -1,10 +1,12 @@
 """
-UCS FI Claim Handler for Cisco Intersight, v2.1
+UCS FI Claim Handler for Cisco Intersight, v2.2
 Author: Ugo Emekauwa
 Contact: uemekauw@cisco.com, uemekauwa@gmail.com
 Summary: The UCS FI Claim Handler for Cisco Intersight automates the
-        claiming of UCS Fabric Interconnect clusters in Intersight Managed Mode.
-Credits: Brian Morrissey and David Soper for providing the UCS FI Device Console URLs.
+         claiming of UCS Fabric Interconnect clusters in Intersight Managed
+         Mode.
+Credits: Brian Morrissey and David Soper for providing the UCS FI Device
+         Console URLs.
 GitHub Repository: https://github.com/ugo-emekauwa/cisco-imm-automation-tools
 """
 
@@ -556,13 +558,13 @@ def _request_ucs_fi_device_connector_device_id(
         print(exception_message)            
 
 
-# Establish function to request UCS IMM FI Device Connector System Information
+# Establish function to request UCS IMM FI Device Connector system information
 def _request_ucs_fi_device_connector_system_info(
     ucs_fi_device_console_ip,
     ucs_fi_device_console_login
     ):
-    """"This is a function to request an HTTP response for the System
-    Information of a UCS Fabric Interconnect under Intersight Managed Mode
+    """"This is a function to request an HTTP response for the system
+    information of a UCS Fabric Interconnect under Intersight Managed Mode
     (IMM).
 
     Args:
@@ -574,15 +576,15 @@ def _request_ucs_fi_device_connector_system_info(
             Console login HTTP request.
 
     Returns:
-        A Response class instance for the UCS Fabric Interconnect System Information
-        HTTP request.
+        A Response class instance for the UCS Fabric Interconnect system
+        information HTTP request.
 
     Raises:
         Exception:
             An exception occurred due to an issue with the UCS Fabric
-            Interconnect System Information HTTP request.
+            Interconnect system information HTTP request.
     """
-    # Obtain System Information
+    # Obtain system information
     ucs_fi_device_connector_headers = {
         "Accept-Language": "application/json"
         }
@@ -597,7 +599,7 @@ def _request_ucs_fi_device_connector_system_info(
         return ucs_fi_device_connector_system_info_request
     except Exception as exception_message:
         print("\nA configuration error has occurred!\n")
-        print("Unable to obtain the System Information for the Device "
+        print("Unable to obtain the system information for the Device "
               f"Connector of {ucs_fi_device_console_ip}.\n")
         print("Exception Message: ")
         print(exception_message)            
@@ -810,8 +812,8 @@ def obtain_ucs_fi_device_connector_claim_code(
                 time.sleep(5)
                 if device_connector_refresh.status_code == 200:
                     # Obtain Claim Code
-                    print("Attempting to obtain the UCS FI Device Connector Claim "
-                          "Code...")
+                    print("Attempting to obtain the UCS FI Device Connector "
+                          "Claim Code...")
                     get_ucs_fi_device_connector_claim_code_second_attempt = _request_ucs_fi_device_connector_claim_code(
                         ucs_fi_device_console_ip,
                         ucs_fi_device_console_login
@@ -829,7 +831,13 @@ def obtain_ucs_fi_device_connector_claim_code(
                               "Device Connector of "
                               f"{ucs_fi_device_console_ip}.\n")
                         print("Exception Message: ")
-                        print(get_ucs_fi_device_connector_claim_code_second_attempt.json())                
+                        print(get_ucs_fi_device_connector_claim_code_second_attempt.json())
+                else:
+                    print("\nA configuration error has occurred!\n")
+                    print("Unable to refresh the Device Connector for "
+                          f"{ucs_fi_device_console_ip}.\n")
+                    print("Exception Message: ")
+                    print(device_connector_refresh.json())                        
         else:
             print("\nA configuration error has occurred!\n")
             print("Unable to login to the UCS FI Device Console for "
@@ -844,7 +852,7 @@ def obtain_ucs_fi_device_connector_claim_code(
         traceback.print_exc()
 
 
-# Establish function to obtain UCS IMM FI Device Connector System Information
+# Establish function to obtain UCS IMM FI Device Connector system information
 def obtain_ucs_fi_device_connector_system_info(
     ucs_fi_device_console_ip,
     ucs_fi_device_console_username,
@@ -885,9 +893,9 @@ def obtain_ucs_fi_device_connector_system_info(
         if ucs_fi_device_console_login.status_code == 200:
             print("Login to the UCS FI Device Console for "
                   f"{ucs_fi_device_console_ip} was successful.\n")
-            # Obtain System Information
-            print("Attempting to obtain the UCS FI Device Connector System "
-                  "Information...")
+            # Obtain system information
+            print("Attempting to obtain the UCS FI Device Connector system "
+                  "information...")
             get_ucs_fi_device_connector_system_info = _request_ucs_fi_device_connector_system_info(
                 ucs_fi_device_console_ip,
                 ucs_fi_device_console_login
@@ -1153,8 +1161,8 @@ def main():
                     print("Login to the UCS FI Device Console for "
                           f"{ucs_fi_device_console_ip} was successful.")
                     # Obtain Claim Code
-                    print("Attempting to obtain the UCS FI Device Connector Claim "
-                          "Code...")
+                    print("Attempting to obtain the UCS FI Device Connector "
+                          "Claim Code...")
                     get_ucs_fi_device_connector_claim_code = _request_ucs_fi_device_connector_claim_code(
                         ucs_fi_device_console_ip,
                         ucs_fi_device_console_login
@@ -1166,8 +1174,8 @@ def main():
                               f"{ucs_fi_device_console_ip} has been "
                               "retrieved.")
                         # Obtain Device ID
-                        print("Attempting to obtain the UCS FI Device Connector Device "
-                              "ID...")
+                        print("Attempting to obtain the UCS FI Device "
+                              "Connector Device ID...")
                         get_ucs_fi_device_connector_device_id = _request_ucs_fi_device_connector_device_id(
                             ucs_fi_device_console_ip,
                             ucs_fi_device_console_login
@@ -1207,7 +1215,8 @@ def main():
                               "Code by refreshing the Device Connector...")
                         print("Refreshing the Device Connector...")
                         # Refresh the Device Connector
-                        print("Attempting to refresh the UCS FI Device Connector...")
+                        print("Attempting to refresh the UCS FI Device "
+                              "Connector...")
                         device_connector_refresh = _request_ucs_fi_device_connector_refresh(
                             ucs_fi_device_console_ip,
                             ucs_fi_device_console_login
@@ -1216,8 +1225,8 @@ def main():
                         time.sleep(5)
                         if device_connector_refresh.status_code == 200:
                             # Obtain Claim Code
-                            print("Attempting to obtain the UCS FI Device Connector Claim "
-                                  "Code...")
+                            print("Attempting to obtain the UCS FI Device "
+                                  "Connector Claim Code...")
                             get_ucs_fi_device_connector_claim_code_second_attempt = _request_ucs_fi_device_connector_claim_code(
                                 ucs_fi_device_console_ip,
                                 ucs_fi_device_console_login
@@ -1225,12 +1234,12 @@ def main():
                             if get_ucs_fi_device_connector_claim_code_second_attempt.status_code == 200:
                                 ucs_fi_device_connector_claim_code_list = get_ucs_fi_device_connector_claim_code_second_attempt.json()
                                 ucs_fi_device_connector_claim_code = ucs_fi_device_connector_claim_code_list[0]["Token"]
-                                print("The Claim Code for the Device Connector of "
-                                      f"{ucs_fi_device_console_ip} has been "
+                                print("The Claim Code for the Device Connector "
+                                      f"of {ucs_fi_device_console_ip} has been "
                                       "retrieved.")
                                 # Obtain Device ID
-                                print("Attempting to obtain the UCS FI Device Connector Device "
-                                      "ID...")
+                                print("Attempting to obtain the UCS FI Device "
+                                      "Connector Device ID...")
                                 get_ucs_fi_device_connector_device_id = _request_ucs_fi_device_connector_device_id(
                                     ucs_fi_device_console_ip,
                                     ucs_fi_device_console_login
