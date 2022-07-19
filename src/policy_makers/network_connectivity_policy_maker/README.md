@@ -124,8 +124,8 @@
 ## Where to Demo
 The Network Connectivity Policy Maker can be demoed on Cisco dCloud in the following content:
 
-1. [**_Cisco Intersight Mode with UCS X-Series v1 - Instant Demo_**](https://dcloud2-rtp.cisco.com/content/instantdemo/cisco-intersight-mode-with-ucs-x-series-v1-instant-demo-2)
-2. **_Cisco Intersight Mode with UCS X-Series Lab v1 - Scheduled Demo/Sandbox_** - Coming soon!
+1. [**_Cisco Intersight with UCS X-Series Demo_**](https://dcloud2-rtp.cisco.com/content/instantdemo/cisco-intersight-mode-with-ucs-x-series-v1-instant-demo-2)
+2. [**_Cisco Intersight with UCS X-Series Lab_**](https://dcloud2.cisco.com/demo/cisco-intersight-management-with-x-series-lab-v1)
 
 dCloud is available at [https://dcloud.cisco.com](https://dcloud.cisco.com), where Cisco product demonstrations and labs can be found in the Catalog.
 
