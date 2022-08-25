@@ -564,7 +564,7 @@ custom_default_link_aggregation_policy_name = ""
 #############################################################################################################################
 
 
-# Suppress InsecureRequestWarning
+# Suppress InsecureRequestWarning error messages
 urllib3.disable_warnings()
 
 # Function to get Intersight API client as specified in the Intersight Python SDK documentation for OpenAPI 3.x
