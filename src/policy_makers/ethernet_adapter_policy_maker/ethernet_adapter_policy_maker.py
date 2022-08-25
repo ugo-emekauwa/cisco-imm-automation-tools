@@ -133,6 +133,7 @@ roce_version = 1        # Options: 1 - 2
 
 # Intersight Base URL Setting (Change only if using the Intersight Virtual Appliance)
 intersight_base_url = "https://www.intersight.com/api/v1"
+url_certificate_verification = True
 
 ####### Finish Configuration Settings - The required value entries are complete. #######
 
@@ -147,12 +148,17 @@ import json
 import copy
 import intersight
 import re
+import urllib3
+
+# Suppress InsecureRequestWarning error messages
+urllib3.disable_warnings()
 
 # Function to get Intersight API client as specified in the Intersight Python SDK documentation for OpenAPI 3.x
-## Modified to align with overall formatting and try/except blocks added for additional error handling
+## Modified to align with overall formatting, try/except blocks added for additional error handling, certificate verification option added
 def get_api_client(api_key_id,
                    api_secret_file,
-                   endpoint="https://intersight.com"
+                   endpoint="https://intersight.com",
+                   url_certificate_verification=True
                    ):
     try:
         with open(api_secret_file, 'r') as f:
@@ -186,6 +192,9 @@ def get_api_client(api_key_id,
                     ]
                 )
             )
+
+        if not url_certificate_verification:
+            configuration.verify_ssl = False
     except Exception:
         print("\nA configuration error has occurred!\n")
         print("Unable to access the Intersight API Key.")
@@ -1620,7 +1629,8 @@ def main():
     # Establish Intersight SDK for Python API client instance
     main_intersight_api_client = get_api_client(api_key_id=key_id,
                                                 api_secret_file=key,
-                                                endpoint=intersight_base_url
+                                                endpoint=intersight_base_url,
+                                                url_certificate_verification=url_certificate_verification
                                                 )
     
     # Starting the Policy Maker for Cisco Intersight
