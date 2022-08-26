@@ -75,6 +75,7 @@ Cisco IMM Automation Tools can be demoed on Cisco dCloud in the following conten
 
 1. [Cisco Intersight with UCS X-Series Demo](https://dcloud2-rtp.cisco.com/content/instantdemo/cisco-intersight-mode-with-ucs-x-series-v1-instant-demo-2)
 2. [Cisco Intersight with UCS X-Series Lab](https://dcloud2.cisco.com/demo/cisco-intersight-management-with-x-series-lab-v1)
+3. Cisco Intersight with UCS B-Series Lab - Coming soon!
 
 dCloud is available at [https://dcloud.cisco.com](https://dcloud.cisco.com), where Cisco product demonstrations and labs can be found in the Catalog.
 
