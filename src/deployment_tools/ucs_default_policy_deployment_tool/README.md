@@ -13,7 +13,7 @@
 ## Features
 - Automatically build your own set of default UCS Policies for Intersight configured to your exact specification. Anything that can be done through the Intersight GUI can be done here and more!
 
-- UCS Default Policy Deployment Tool will build the following UCS Policies in one go:
+- The UCS Default Policy Deployment Tool will build the following UCS Policies in one go:
     - BIOS Policy
     - Boot Order Policy
     - Certificate Management Policy
