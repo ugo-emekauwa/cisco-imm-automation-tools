@@ -25,7 +25,6 @@
     - Fibre Channel Network Policy
     - Fibre Channel QoS Policy
     - Flow Control Policy
-    - IMC Access Policy
     - IPMI Over LAN Policy
     - iSCSI Adapter Policy
     - Link Aggregation Policy
