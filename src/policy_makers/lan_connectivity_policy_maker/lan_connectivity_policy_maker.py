@@ -148,7 +148,7 @@ iqn_static_identifier = ""      # If the iqn_assignment_type variable is set to 
 ##        ]
 ##
 ##
-## -- Create two vNICs named vnic0 and vnic1 in manual placement mode with corresponding manual placement settings, a pin group, static MAC addresses, CDN user defined names, a VMQ connection type and VMMQ enabled:
+## -- Create two vNICs named vnic0 and vnic1 in manual placement mode with corresponding manual placement settings, a pin group, static MAC addresses, CDN user defined names, a VMQ connection type and VMMQ enabled.
 ##    Policies provided in the separate default variables are automatically applied:
 ##
 ##    vnic_placement_mode = "Manual"
@@ -188,7 +188,7 @@ iqn_static_identifier = ""      # If the iqn_assignment_type variable is set to 
 ##        ]
 ##
 ##
-## -- Create two vNICs named vnic0 and vnic1 in auto placement mode with a VMQ connection type and no VMMQ:
+## -- Create two vNICs named vnic0 and vnic1 in auto placement mode with a VMQ connection type and no VMMQ.
 ##    Policies and Pools provided in the separate default variables are automatically applied where applicable:
 ##
 ##    vnic_placement_mode = "Auto"
