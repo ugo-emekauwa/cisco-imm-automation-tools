@@ -55,6 +55,7 @@
 - [iSCSI Static Target Policy Maker](./src/policy_makers/iscsi_static_target_policy_maker) - Make a UCS iSCSI static target policy.
 - [LAN Connectivity Policy Maker](./src/policy_makers/lan_connectivity_policy_maker) - Make a UCS LAN connectivity policy.
 - [Local User Policy Maker](./src/policy_makers/local_user_policy_maker) - Make a UCS local user policy.
+- [SAN Connectivity Policy Maker](./src/policy_makers/san_connectivity_policy_maker) - Make a UCS SAN connectivity policy.
 - [Serial Over LAN Policy Maker](./src/policy_makers/serial_over_lan_policy_maker) - Make a UCS serial over LAN policy.
 - [SNMP Policy Maker](./src/policy_makers/snmp_policy_maker) - Make a UCS SNMP policy.
 - [Syslog Policy Maker](./src/policy_makers/syslog_policy_maker) - Make a UCS syslog policy.
