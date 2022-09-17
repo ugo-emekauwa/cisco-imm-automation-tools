@@ -96,12 +96,29 @@ iqn_static_identifier = ""      # If the iqn_assignment_type variable is set to 
 ##        ]
 ##
 ##
+## -- Bulk create twenty vNICs named vnic0-19 using the "Vnics" key in auto placement mode with the minimum required dictionary keys for default settings.
+##    When using the "Vnics" key, the "Name" key becomes a prefix for the vNIC name value.
+##    Policies and Pools provided in the separate default variables are automatically applied:
+##
+##    vnic_placement_mode = "Auto"
+##    vnic_list = [
+##        {"Name": "vnic",
+##         "Vnics": "0-9",
+##         "Switch ID": "A"
+##         },
+##        {"Name": "vnic",
+##         "Vnics": "10-19",
+##         "Switch ID": "B"
+##         }
+##        ]
+##
+##
 ## -- Create two vNICs named vnic0 and vnic1 in auto placement mode with failover enabled, and a usNIC connection type, and Policies/Pools directly specified that override any provided default Policies/Pools:
 ##
 ##    vnic_placement_mode = "Auto"
 ##    vnic_list = [
 ##        {"Name": "vnic0",
-##         "MAC Address Type": "POOL",
+##         "MAC Address Type": "Pool",
 ##         "MAC Address Pool": "MAC-Pool-2",
 ##         "Switch ID": "A",
 ##         "Failover": True,
@@ -115,7 +132,7 @@ iqn_static_identifier = ""      # If the iqn_assignment_type variable is set to 
 ##         "Class of Service": 5
 ##         },
 ##        {"Name": "vnic1",
-##         "MAC Address Type": "POOL",
+##         "MAC Address Type": "Pool",
 ##         "MAC Address Pool": "MAC-Pool-2",
 ##         "Switch ID": "B",
 ##         "Failover": True,
@@ -132,6 +149,7 @@ iqn_static_identifier = ""      # If the iqn_assignment_type variable is set to 
 ##
 ##
 ## -- Create two vNICs named vnic0 and vnic1 in manual placement mode with corresponding manual placement settings, a pin group, static MAC addresses, CDN user defined names, a VMQ connection type and VMMQ enabled:
+##    Policies provided in the separate default variables are automatically applied:
 ##
 ##    vnic_placement_mode = "Manual"
 ##    vnic_list = [
@@ -171,6 +189,7 @@ iqn_static_identifier = ""      # If the iqn_assignment_type variable is set to 
 ##
 ##
 ## -- Create two vNICs named vnic0 and vnic1 in auto placement mode with a VMQ connection type and no VMMQ:
+##    Policies and Pools provided in the separate default variables are automatically applied where applicable:
 ##
 ##    vnic_placement_mode = "Auto"
 ##    vnic_list = [
