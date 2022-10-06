@@ -98,6 +98,9 @@ url_certificate_verification = True
 # UCS Server Profile Attachment Settings
 ucs_server_profile_name = ""
 
+# UCS Chassis Profile Attachment Settings
+ucs_chassis_profile_name = ""
+
 # UCS Domain Profile Attachment Settings
 ucs_domain_profile_name = ""
 
@@ -955,13 +958,13 @@ class UcsPolicy:
         self._post_intersight_object()
 
 
-class DirectlyAttachedUcsServerAndDomainPolicy(UcsPolicy):
-    """This class is used to configure a UCS Server and/or UCS Domain Policy in
-    Intersight that is logically directly attached to UCS Servers through
-    UCS Server Profiles and/or UCS Fabric Interconnects through UCS Domain
-    Profiles.
+class DirectlyAttachedUcsServerChassisAndDomainPolicy(UcsPolicy):
+    """This class is used to configure a UCS Server, UCS Chassis and/or
+    UCS Domain Policy in Intersight that is logically directly attached to UCS
+    Servers through UCS Server Profiles, UCS Chassis through UCS Chassis
+    Profiles and/or UCS Fabric Interconnects through UCS Domain Profiles.
     """
-    object_type = "Directly Attached UCS Server and Domain Policy"
+    object_type = "Directly Attached UCS Server, Chassis and Domain Policy"
     intersight_api_path = None
 
     def __init__(self,
@@ -974,6 +977,7 @@ class DirectlyAttachedUcsServerAndDomainPolicy(UcsPolicy):
                  tags=None,
                  preconfigured_api_client=None,
                  ucs_server_profile_name="",
+                 ucs_chassis_profile_name="",
                  ucs_domain_profile_name="",
                  fabric_interconnect="AB"
                  ):
@@ -987,6 +991,7 @@ class DirectlyAttachedUcsServerAndDomainPolicy(UcsPolicy):
                          preconfigured_api_client
                          )
         self.ucs_server_profile_name = ucs_server_profile_name
+        self.ucs_chassis_profile_name = ucs_chassis_profile_name
         self.ucs_domain_profile_name = ucs_domain_profile_name
         self.fabric_interconnect = fabric_interconnect
 
@@ -1002,13 +1007,14 @@ class DirectlyAttachedUcsServerAndDomainPolicy(UcsPolicy):
             f"{self.tags}, "
             f"{self.api_client}, "
             f"'{self.ucs_server_profile_name}', "
+            f"'{self.ucs_chassis_profile_name}', "
             f"'{self.ucs_domain_profile_name}', "
             f"'{self.fabric_interconnect}')"
             )
 
-    def _attach_ucs_server_and_domain_profiles(self):
-        """This is a function to attach an Intersight UCS Server Profile and/or
-        UCS Domain Profile to an Intersight Policy.
+    def _attach_ucs_server_chassis_and_domain_profiles(self):
+        """This is a function to attach an Intersight UCS Server, UCS Chassis
+        and/or UCS Domain Profile to an Intersight Policy.
 
         Returns:
             A dictionary for the API body of the policy object to be posted on
@@ -1033,6 +1039,24 @@ class DirectlyAttachedUcsServerAndDomainPolicy(UcsPolicy):
             self.intersight_api_body["Profiles"].append(
                 {"Moid": ucs_server_profile_moid,
                  "ObjectType": "server.Profile"}
+                )
+        # Attach UCS Chassis Profile
+        if self.ucs_chassis_profile_name:
+            print("Attaching the UCS Chassis Profile named "
+                  f"{self.ucs_chassis_profile_name}...")
+            # Get UCS Chassis Profile MOID
+            ucs_chassis_profile_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
+                                                                        intersight_api_key=None,
+                                                                        object_name=self.ucs_chassis_profile_name,
+                                                                        intersight_api_path="chassis/Profiles",
+                                                                        object_type="UCS Chassis Profile",
+                                                                        organization=self.organization,
+                                                                        preconfigured_api_client=self.api_client
+                                                                        )
+            # Update the API body with the appropriate Chassis Profile MOID
+            self.intersight_api_body["Profiles"].append(
+                {"Moid": ucs_chassis_profile_moid,
+                 "ObjectType": "chassis.Profile"}
                 )
         # Attach UCS Domain Profile
         if self.ucs_domain_profile_name:
@@ -1120,13 +1144,13 @@ class DirectlyAttachedUcsServerAndDomainPolicy(UcsPolicy):
         self._update_api_body_subobject_attributes()
         # Update the API body with individual mapped object attributes
         self._update_api_body_mapped_object_attributes()
-        # Update the API body with a UCS Server and/or Domain Profile attached, if specified
-        self._attach_ucs_server_and_domain_profiles()
+        # Update the API body with a UCS Server, UCS Chassis and/or UCS Domain Profile attached, if specified
+        self._attach_ucs_server_chassis_and_domain_profiles()
         # POST the API body to Intersight
         self._post_intersight_object()
 
 
-class SnmpPolicy(DirectlyAttachedUcsServerAndDomainPolicy):
+class SnmpPolicy(DirectlyAttachedUcsServerChassisAndDomainPolicy):
     """This class is used to configure a SNMP Policy in Intersight.
     """
     object_type = "SNMP Policy"
@@ -1344,6 +1368,7 @@ class SnmpPolicy(DirectlyAttachedUcsServerAndDomainPolicy):
                          tags,
                          preconfigured_api_client,
                          ucs_server_profile_name,
+                         ucs_chassis_profile_name,
                          ucs_domain_profile_name,
                          fabric_interconnect="AB"
                          )
@@ -1392,6 +1417,7 @@ class SnmpPolicy(DirectlyAttachedUcsServerAndDomainPolicy):
             f"{self.tags}, "
             f"{self.api_client}, "
             f"'{self.ucs_server_profile_name}', "
+            f"'{self.ucs_chassis_profile_name}', "
             f"'{self.ucs_domain_profile_name}', "
             f"{self.enable_snmp}, "
             f"{self.snmp_v2c_features}, "
@@ -1429,6 +1455,7 @@ def snmp_policy_maker(intersight_api_key_id,
                       tags=None,
                       preconfigured_api_client=None,
                       ucs_server_profile_name="",
+                      ucs_chassis_profile_name="",
                       ucs_domain_profile_name=""
                       ):
     """This is a function used to make a SNMP Policy on Cisco Intersight.
@@ -1537,6 +1564,9 @@ def snmp_policy_maker(intersight_api_key_id,
         ucs_server_profile_name (str):
             Optional; The UCS Server Profile the policy should be attached to.
             The default value is an empty string ("").
+        ucs_chassis_profile_name (str):
+            Optional; The UCS Chassis Profile the policy should be attached to.
+            The default value is an empty string ("").
         ucs_domain_profile_name (str):
             Optional; The UCS Domain Profile the policy should be attached to.
             The default value is an empty string ("").
@@ -1577,6 +1607,7 @@ def snmp_policy_maker(intersight_api_key_id,
             tags=tags,
             preconfigured_api_client=preconfigured_api_client,
             ucs_server_profile_name=ucs_server_profile_name,
+            ucs_chassis_profile_name=ucs_chassis_profile_name,
             ucs_domain_profile_name=ucs_domain_profile_name,
             enable_snmp=enable_snmp,
             snmp_v2c_features=snmp_v2c_features,
@@ -1638,6 +1669,7 @@ def main():
         tags=snmp_policy_tags,
         preconfigured_api_client=main_intersight_api_client,
         ucs_server_profile_name=ucs_server_profile_name,
+        ucs_chassis_profile_name=ucs_chassis_profile_name,
         ucs_domain_profile_name=ucs_domain_profile_name
         )
 
