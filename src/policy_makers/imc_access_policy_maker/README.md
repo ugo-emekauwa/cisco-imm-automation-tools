@@ -13,7 +13,7 @@
 ## Features
 - Automatically build an Intersight IMC Access Policy to your exact specification. Anything that can be done through the Intersight GUI can be done here and more!
 
-- Automatically attach the IMC Access Policy to a UCS Server or Chassis Profile if desired, during the IMC Access Policy configuration.
+- Automatically attach the IMC Access Policy to a UCS Server and/or UCS Chassis Profile if desired, during the IMC Access Policy configuration.
 
 - Quickly restore IMC Access Policy configurations as part of your on-prem Intersight backup solution.
 
