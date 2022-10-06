@@ -20,6 +20,12 @@
 
 ## Policy Makers
 
+###### For UCS Chassis
+- [IMC Access Policy Maker](./src/policy_makers/imc_access_policy_maker) - Make a UCS IMC access policy.
+- [Power Policy Maker](./src/policy_makers/power_policy_maker) - Make a UCS power policy.
+- [SNMP Policy Maker](./src/policy_makers/snmp_policy_maker) - Make a UCS SNMP policy.
+- [Thermal Policy Maker](./src/policy_makers/thermal_policy_maker) - Make a UCS thermal policy.
+
 ###### For UCS Domains
 - [Ethernet Network Control Policy Maker](./src/policy_makers/ethernet_network_control_policy_maker) - Make a UCS ethernet network control policy.
 - [Ethernet Network Group Policy Maker](./src/policy_makers/ethernet_network_group_policy_maker) - Make a UCS ethernet network group policy.
