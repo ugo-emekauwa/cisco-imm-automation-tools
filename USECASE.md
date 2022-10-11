@@ -68,6 +68,7 @@
 - [SNMP Policy Maker](./src/policy_makers/snmp_policy_maker) - Make a UCS SNMP policy.
 - [Syslog Policy Maker](./src/policy_makers/syslog_policy_maker) - Make a UCS syslog policy.
 - [Virtual KVM Policy Maker](./src/policy_makers/virtual_kvm_policy_maker) - Make a UCS virtual KVM policy.
+- [Virtual Media Policy Maker](./src/policy_makers/virtual_media_policy_maker) - Make a UCS virtual media policy.
 
 ## Pool Makers
 - [IP Pool Maker](./src/pool_makers/ip_pool_maker) - Make a UCS IP pool.
