@@ -333,7 +333,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                 provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                               intersight_api_key=None,
                                                                               object_name=organization,
-                                                                              intersight_api_path="organization/Organizations",
+                                                                              intersight_api_path="organization/Organizations?$top=1000",
                                                                               object_type="Organization",
                                                                               preconfigured_api_client=api_client
                                                                               )
@@ -641,7 +641,7 @@ def advanced_intersight_object_moid_retriever(intersight_api_key_id,
                 provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                               intersight_api_key=None,
                                                                               object_name=organization,
-                                                                              intersight_api_path="organization/Organizations",
+                                                                              intersight_api_path="organization/Organizations?$top=1000",
                                                                               object_type="Organization",
                                                                               preconfigured_api_client=api_client
                                                                               )
@@ -929,7 +929,7 @@ class UcsDomainProfile:
         ucs_domain_profile_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                 intersight_api_key=None,
                                                                                 object_name=self.ucs_domain_profile_organization,
-                                                                                intersight_api_path="organization/Organizations",
+                                                                                intersight_api_path="organization/Organizations?$top=1000",
                                                                                 object_type="Organization",
                                                                                 preconfigured_api_client=self.api_client
                                                                                 )
@@ -962,9 +962,9 @@ class SwitchProfile(UcsDomainProfile):
     """This class serves as a base class for configuring Switch Profiles.
     """
     object_type = "Switch Profile"
-    intersight_api_path = "fabric/SwitchProfiles"
+    intersight_api_path = "fabric/SwitchProfiles?$top=1000"
     cluster_profile_type = "UCS Domain Profile"
-    cluster_profile_intersight_api_path = "fabric/SwitchClusterProfiles"
+    cluster_profile_intersight_api_path = "fabric/SwitchClusterProfiles?$top=1000"
     attributes_that_require_special_handling = None
     
     def __init__(self,
@@ -1359,7 +1359,7 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
     ucs_domain_profile_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                intersight_api_key=None,
                                                                object_name=ucs_domain_profile_name,
-                                                               intersight_api_path="fabric/SwitchClusterProfiles",
+                                                               intersight_api_path="fabric/SwitchClusterProfiles?$top=1000",
                                                                object_type="UCS Domain Profile",
                                                                organization=ucs_domain_profile_organization,
                                                                preconfigured_api_client=api_client
@@ -1367,7 +1367,7 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
     # Get UCS Domain Profile object dictionary attributes
     ucs_domain_profile_object = get_single_intersight_object(intersight_api_key_id=None,
                                                              intersight_api_key=None,
-                                                             intersight_api_path="fabric/SwitchClusterProfiles",
+                                                             intersight_api_path="fabric/SwitchClusterProfiles?$top=1000",
                                                              object_moid=ucs_domain_profile_moid,
                                                              object_type="UCS Domain Profile",
                                                              preconfigured_api_client=api_client
