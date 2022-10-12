@@ -1409,7 +1409,7 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
         # Find provided Intersight Target
         retrieved_intersight_targets = get_intersight_objects(intersight_api_key_id=None,
                                                               intersight_api_key=None,
-                                                              intersight_api_path="asset/Targets",
+                                                              intersight_api_path="asset/Targets?$top=1000",
                                                               object_type="Target",
                                                               preconfigured_api_client=api_client
                                                               )
