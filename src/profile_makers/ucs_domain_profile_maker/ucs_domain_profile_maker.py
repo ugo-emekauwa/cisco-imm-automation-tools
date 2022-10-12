@@ -1367,7 +1367,7 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
     # Get UCS Domain Profile object dictionary attributes
     ucs_domain_profile_object = get_single_intersight_object(intersight_api_key_id=None,
                                                              intersight_api_key=None,
-                                                             intersight_api_path="fabric/SwitchClusterProfiles?$top=1000",
+                                                             intersight_api_path="fabric/SwitchClusterProfiles",
                                                              object_moid=ucs_domain_profile_moid,
                                                              object_type="UCS Domain Profile",
                                                              preconfigured_api_client=api_client
