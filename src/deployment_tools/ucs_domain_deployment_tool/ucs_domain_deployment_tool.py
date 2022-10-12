@@ -2726,7 +2726,7 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
         # Find provided Intersight Target
         retrieved_intersight_targets = get_intersight_objects(intersight_api_key_id=None,
                                                               intersight_api_key=None,
-                                                              intersight_api_path="asset/Targets",
+                                                              intersight_api_path="asset/Targets?$top=1000",
                                                               object_type="Target",
                                                               preconfigured_api_client=api_client
                                                               )
@@ -2828,7 +2828,7 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
         matching_network_elements_list = []
         retrieved_intersight_network_elements = get_intersight_objects(intersight_api_key_id=None,
                                                                        intersight_api_key=None,
-                                                                       intersight_api_path="network/Elements",
+                                                                       intersight_api_path="network/Elements?$top=1000",
                                                                        object_type="Fabric Interconnect",
                                                                        preconfigured_api_client=api_client
                                                                        )
