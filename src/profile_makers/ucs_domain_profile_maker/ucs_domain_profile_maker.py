@@ -878,7 +878,7 @@ class UcsDomainProfile:
                     existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                        intersight_api_key=None,
                                                                                        object_name=existing_intersight_object_name,
-                                                                                       intersight_api_path=self.intersight_api_path,
+                                                                                       intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                        object_type=self.object_type,
                                                                                        preconfigured_api_client=self.api_client
                                                                                        )
@@ -962,9 +962,9 @@ class SwitchProfile(UcsDomainProfile):
     """This class serves as a base class for configuring Switch Profiles.
     """
     object_type = "Switch Profile"
-    intersight_api_path = "fabric/SwitchProfiles?$top=1000"
+    intersight_api_path = "fabric/SwitchProfiles"
     cluster_profile_type = "UCS Domain Profile"
-    cluster_profile_intersight_api_path = "fabric/SwitchClusterProfiles?$top=1000"
+    cluster_profile_intersight_api_path = "fabric/SwitchClusterProfiles"
     attributes_that_require_special_handling = None
     
     def __init__(self,
@@ -1111,7 +1111,7 @@ class SwitchProfile(UcsDomainProfile):
         ucs_domain_profile_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                    intersight_api_key=None,
                                                                    object_name=self.ucs_domain_profile_name,
-                                                                   intersight_api_path=self.cluster_profile_intersight_api_path,
+                                                                   intersight_api_path=f"{self.cluster_profile_intersight_api_path}?$top=1000",
                                                                    object_type=self.cluster_profile_type,
                                                                    organization=self.ucs_domain_profile_organization,
                                                                    preconfigured_api_client=self.api_client
