@@ -1409,68 +1409,29 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
         # Find provided Intersight Target
         retrieved_intersight_targets = get_intersight_objects(intersight_api_key_id=None,
                                                               intersight_api_key=None,
-                                                              intersight_api_path="asset/Targets?$top=1000",
+                                                              intersight_api_path=f"asset/Targets?$top=1000&$filter=TargetType%20eq%20%27UCSFIISM%27",
                                                               object_type="Target",
                                                               preconfigured_api_client=api_client
                                                               )
         if retrieved_intersight_targets.get("Results"):
+            matching_intersight_target = None
             for intersight_target in retrieved_intersight_targets.get("Results"):
+                target_id = intersight_target.get("TargetId", [])
+                target_name = intersight_target.get("Name", "")
+                target_ip_address = intersight_target.get("IpAddress", [])
                 for target_identifier in provided_target_identifiers:
-                    for target_identifier_type in ("TargetId", "Name", "IpAddress"):
-                        if target_identifier in intersight_target.get(target_identifier_type):
-                            if intersight_target.get("TargetType") == "UCSFIISM":
-                                matching_intersight_target = intersight_target
-                                break
-                            else:
-                                print("\nA configuration error has occurred!\n")
-                                print("There was an issue assigning the UCS "
-                                      "Domain Profile to an Intersight Target.")
-                                print("The Intersight Target with the provided "
-                                      "identifier of "
-                                      f"'{target_assignment_identifier}' "
-                                      "was found, but is not supported with "
-                                      "Intersight UCS Domain Profiles.")
-                                print("Please provide a supported Intersight "
-                                      "Target.")
-                                print("Once the issue has been resolved, "
-                                      "re-attempt execution.\n")
-                                sys.exit(0)
-                    else:
-                        print("\nA configuration error has occurred!\n")
-                        print("There was an issue assigning the UCS Domain "
-                              "Profile to an Intersight Target.")
-                        print("The Intersight Target with the provided "
-                              f"identifier of '{target_assignment_identifier}' "
-                              "was not found.")
-                        print("Please check the Intersight Account named "
-                              f"{intersight_account_name}.")
-                        print("Verify through the API or GUI that the needed "
-                              "Intersight Target is present.")
-                        print("If the needed Intersight Target is missing, "
-                              "please register it.")
-                        print("Once the issue has been resolved, "
-                              "re-attempt execution.\n")
-                        sys.exit(0)
+                    if any(
+                        target_identifier in
+                        target_attribute for target_attribute in [
+                            target_id,
+                            target_name,
+                            target_ip_address
+                            ]
+                        ):
+                        matching_intersight_target = intersight_target
+                        break
+                if matching_intersight_target:
                     break
-                else:
-                    print("\nA configuration error has occurred!\n")
-                    print("There was an issue assigning the UCS Domain "
-                          "Profile to an Intersight Target.")
-                    print("Please check the value provided for the "
-                          "Intersight Target identifier.")
-                    print("The Intersight Target with the provided "
-                          f"identifier of '{target_assignment_identifier}' "
-                          "was not found.")
-                    print("Please check the Intersight Account named "
-                          f"{intersight_account_name}.")
-                    print("Verify through the API or GUI that the needed "
-                          "Intersight Target is present.")
-                    print("If the needed Intersight Target is missing, "
-                          "please register it.")
-                    print("Once the issue has been resolved, re-attempt "
-                          "execution.\n")
-                    sys.exit(0)                           
-                break
             else:
                 print("\nA configuration error has occurred!\n")
                 print("There was an issue assigning the UCS Domain Profile to "
