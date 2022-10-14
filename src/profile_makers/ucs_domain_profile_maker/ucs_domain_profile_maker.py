@@ -1416,16 +1416,19 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
         if retrieved_intersight_targets.get("Results"):
             matching_intersight_target = None
             for intersight_target in retrieved_intersight_targets.get("Results"):
-                target_id = intersight_target.get("TargetId", [])
                 target_name = intersight_target.get("Name", "")
-                target_ip_address = intersight_target.get("IpAddress", [])
+                target_id_list = intersight_target.get("TargetId", [])
+                target_ip_address_list = intersight_target.get("IpAddress", [])
                 for target_identifier in provided_target_identifiers:
-                    if any(
+                    if target_identifier == target_name:
+                        matching_intersight_target = intersight_target
+                        break
+                    elif any(
                         target_identifier in
-                        target_attribute for target_attribute in [
-                            target_id,
-                            target_name,
-                            target_ip_address
+                        target_attribute_list for
+                        target_attribute_list in [
+                            target_id_list,
+                            target_ip_address_list
                             ]
                         ):
                         matching_intersight_target = intersight_target
