@@ -66,6 +66,7 @@
 - [SD Card Policy Maker](./src/policy_makers/sd_card_policy_maker) - Make a UCS SD card policy.
 - [Serial Over LAN Policy Maker](./src/policy_makers/serial_over_lan_policy_maker) - Make a UCS serial over LAN policy.
 - [SNMP Policy Maker](./src/policy_makers/snmp_policy_maker) - Make a UCS SNMP policy.
+- [Storage Policy Maker](./src/policy_makers/storage_policy_maker) - Make a UCS storage policy.
 - [Syslog Policy Maker](./src/policy_makers/syslog_policy_maker) - Make a UCS syslog policy.
 - [Virtual KVM Policy Maker](./src/policy_makers/virtual_kvm_policy_maker) - Make a UCS virtual KVM policy.
 - [Virtual Media Policy Maker](./src/policy_makers/virtual_media_policy_maker) - Make a UCS virtual media policy.
