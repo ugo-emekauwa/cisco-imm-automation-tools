@@ -2845,7 +2845,7 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
                   "it.")
             print("Once the issue has been resolved, re-attempt execution.\n")
             sys.exit(0)
-        # Assign Service Profile to Fabric Interconnect A
+        # Assign Switch Profile to Fabric Interconnect A
         print("Assigning the underlying Switch Profile for Fabric "
               "Interconnect A...")
         fabric_interconnect_a_network_element_moid = fabric_interconnect_a_network_element.get("Moid")
@@ -2857,7 +2857,7 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
             switch_profile_api_body=fabric_interconnect_a_switch_profile_assignment_api_body,
             switch_profile_fabric_id="A"
             )
-        # Assign Service Profile to Fabric Interconnect B
+        # Assign Switch Profile to Fabric Interconnect B
         print("Assigning the underlying Switch Profile for Fabric "
               "Interconnect B...")
         fabric_interconnect_b_network_element_moid = fabric_interconnect_b_network_element.get("Moid")
@@ -2873,7 +2873,7 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
     if deploy_ucs_domain_profile:
         print("\nDeploying the UCS Domain Profile named "
               f"{ucs_domain_profile_name}...")
-        # Deploy Service Profile to Fabric Interconnect A
+        # Deploy Switch Profile to Fabric Interconnect A
         print("Deploying the underlying Switch Profile for Fabric "
               "Interconnect A...")
         fabric_interconnect_a_switch_profile_deployment_api_body = {
@@ -2884,7 +2884,7 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
             switch_profile_api_body=fabric_interconnect_a_switch_profile_deployment_api_body,
             switch_profile_fabric_id="A"
             )
-        # Deploy Service Profile to Fabric Interconnect B
+        # Deploy Switch Profile to Fabric Interconnect B
         print("Deploying the underlying Switch Profile for Fabric "
               "Interconnect B...")
         fabric_interconnect_b_switch_profile_deployment_api_body = {
