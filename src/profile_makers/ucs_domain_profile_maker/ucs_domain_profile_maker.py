@@ -63,8 +63,8 @@ ucs_domain_profile_tags = {"Org": "IT", "Dept": "DevOps"}  # Empty the ucs_domai
 ## For the Target ID (Serial Numbers) or Target IP Address which are listed as pairs in the Intersight GUI, for convenience, one entry from the pair can also be provided.
 ## Here is an example using one entry in the Target ID (Serial Numbers) pair : target_assignment_identifier = "FXO17840D7U"
 ## Here is an example using one entry in the Target IP Address pair: target_assignment_identifier = "192.168.0.11"
-target_assignment_identifier = ""
 assign_ucs_domain_profile = False
+target_assignment_identifier = ""
 
 # Intersight Base URL Setting (Change only if using the Intersight Virtual Appliance)
 intersight_base_url = "https://www.intersight.com/api/v1"
@@ -1256,7 +1256,7 @@ def assign_and_deploy_ucs_domain_profile(intersight_api_key_id,
             Optional; This argument enables or disables the option to assign
             the provided UCS Domain Profile to the provided Intersight Target.
             The default value is True.
-        assign_ucs_domain_profile (bool):
+        deploy_ucs_domain_profile (bool):
             Optional; This argument enables or disables the option to deploy
             the provided UCS Domain Profile to the provided Intersight Target
             or a previously assigned Intersight Target.
