@@ -84,6 +84,7 @@
 ## Base Profile Makers
 - [Base UCS Chassis Profile Maker](./src/profile_makers/ucs_chassis_profile_maker) - Make and assign a base UCS chassis profile without the policies.
 - [Base UCS Domain Profile Maker](./src/profile_makers/ucs_domain_profile_maker) - Make and assign a base UCS domain profile without the policies.
+- [Base UCS Server Profile Maker](./src/profile_makers/ucs_server_profile_maker) - Make and assign a base UCS server profile without the policies.
 
 ## Demonstrations and Learning Labs
 Cisco IMM Automation Tools can be demoed on Cisco dCloud in the following content:
