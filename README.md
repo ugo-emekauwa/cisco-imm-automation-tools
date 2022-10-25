@@ -81,10 +81,11 @@
 - [WWNN Pool Maker](./src/pool_makers/wwnn_pool_maker) - Make a UCS WWNN pool.
 - [WWPN Pool Maker](./src/pool_makers/wwpn_pool_maker) - Make a UCS WWPN pool.
 
-## Base Profile Makers
+## Base Profile and Template Makers
 - [Base UCS Chassis Profile Maker](./src/profile_makers/ucs_chassis_profile_maker) - Make and assign a base UCS chassis profile without the policies.
 - [Base UCS Domain Profile Maker](./src/profile_makers/ucs_domain_profile_maker) - Make and assign a base UCS domain profile without the policies.
 - [Base UCS Server Profile Maker](./src/profile_makers/ucs_server_profile_maker) - Make and assign a base UCS server profile without the policies.
+- [Base UCS Server Profile Template Maker](./src/profile_makers/ucs_server_profile_template_maker) - Make a base UCS server profile template without the policies.
 
 ## Demonstrations and Learning Labs
 Cisco IMM Automation Tools can be demoed on Cisco dCloud in the following content:
