@@ -366,7 +366,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                 provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                               intersight_api_key=None,
                                                                               object_name=organization,
-                                                                              intersight_api_path="organization/Organizations",
+                                                                              intersight_api_path="organization/Organizations?$top=1000",
                                                                               object_type="Organization",
                                                                               preconfigured_api_client=api_client
                                                                               )
@@ -657,7 +657,7 @@ class UcsPolicy:
                     existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                        intersight_api_key=None,
                                                                                        object_name=existing_intersight_object_name,
-                                                                                       intersight_api_path=self.intersight_api_path,
+                                                                                       intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                        object_type=self.object_type,
                                                                                        preconfigured_api_client=self.api_client
                                                                                        )
@@ -708,7 +708,7 @@ class UcsPolicy:
         policy_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                     intersight_api_key=None,
                                                                     object_name=self.organization,
-                                                                    intersight_api_path="organization/Organizations",
+                                                                    intersight_api_path="organization/Organizations?$top=1000",
                                                                     object_type="Organization",
                                                                     preconfigured_api_client=self.api_client
                                                                     )
@@ -1030,7 +1030,7 @@ class DirectlyAttachedUcsServerChassisAndDomainPolicy(UcsPolicy):
             ucs_server_profile_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                        intersight_api_key=None,
                                                                        object_name=self.ucs_server_profile_name,
-                                                                       intersight_api_path="server/Profiles",
+                                                                       intersight_api_path="server/Profiles?$top=1000",
                                                                        object_type="UCS Server Profile",
                                                                        organization=self.organization,
                                                                        preconfigured_api_client=self.api_client
@@ -1048,7 +1048,7 @@ class DirectlyAttachedUcsServerChassisAndDomainPolicy(UcsPolicy):
             ucs_chassis_profile_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                         intersight_api_key=None,
                                                                         object_name=self.ucs_chassis_profile_name,
-                                                                        intersight_api_path="chassis/Profiles",
+                                                                        intersight_api_path="chassis/Profiles?$top=1000",
                                                                         object_type="UCS Chassis Profile",
                                                                         organization=self.organization,
                                                                         preconfigured_api_client=self.api_client
@@ -1066,7 +1066,7 @@ class DirectlyAttachedUcsServerChassisAndDomainPolicy(UcsPolicy):
             ucs_domain_profile_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                        intersight_api_key=None,
                                                                        object_name=self.ucs_domain_profile_name,
-                                                                       intersight_api_path="fabric/SwitchClusterProfiles",
+                                                                       intersight_api_path="fabric/SwitchClusterProfiles?$top=1000",
                                                                        object_type="UCS Domain Profile",
                                                                        organization=self.organization,
                                                                        preconfigured_api_client=self.api_client
@@ -1345,6 +1345,7 @@ class SnmpPolicy(DirectlyAttachedUcsServerChassisAndDomainPolicy):
                  tags=None,
                  preconfigured_api_client=None,
                  ucs_server_profile_name="",
+                 ucs_chassis_profile_name="",
                  ucs_domain_profile_name="",
                  enable_snmp=True,
                  snmp_v2c_features=True,
