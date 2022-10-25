@@ -2518,7 +2518,7 @@ def san_connectivity_policy_maker(
             Optional; The pre-existing WWNN pool to be used if the WWNN
             address type has been set to "Pool". The default value is None.
         wwnn_static_address (str):
-            Optional; The WWNN static identifier to be used if the WWNN
+            Optional; The WWNN static address to be used if the WWNN
             address type has been set to "Static". The default value is an
             empty string ("").
         vhba_placement_mode (str):
