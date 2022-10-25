@@ -74,6 +74,11 @@ ucs_server_form_factor = "Blade"        # Options: "Blade", "Rack"
 ## Leave the resource_pool_name variable as an empty string ("") if using the specific individual Server assignment option in the previous section.
 resource_pool_name = ""
 
+# Compute Configuration
+uuid_assignment_type = "Pool"       # Options: "Pool", "Static", "None"
+uuid_pool = ""       # If the uuid_assignment_type variable is set to "Pool", provide a string value e.g. "UUID-Pool-1" for the uuid_pool variable
+uuid_static_address = ""        # If the uuid_assignment_type variable is set to "Static", provide a string value e.g. "F733776E-1ED8-11E2-0000-000000000001" for the uuid_static_address variable
+
 # Profile Default Settings (Change only if needed)
 ucs_server_type = "FI-Attached"     # Options: "FI-Attached", "Standalone"
 
@@ -807,6 +812,21 @@ class UcsServerProfile:
     object_type = "UCS Server Profile"
     intersight_api_path = "server/Profiles"
     object_variable_value_maps = [
+        {"VariableName": "uuid_assignment_type",
+         "Description": "UUID Assignment Type",
+         "AttributeName": "UuidAddressType",
+         "Values": [
+             {"FrontEndValue": "Pool",
+              "BackEndValue": "POOL"
+              },
+             {"FrontEndValue": "Static",
+              "BackEndValue": "STATIC"
+              },
+             {"FrontEndValue": "None",
+              "BackEndValue": "NONE"
+              }
+             ]
+         },
         {"VariableName": "ucs_server_type",
          "Description": "UCS Server Type (Target Platform)",
          "AttributeName": "TargetPlatform",
@@ -830,7 +850,10 @@ class UcsServerProfile:
                  intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
-                 ucs_server_type="FI-Attached"
+                 ucs_server_type="FI-Attached",
+                 uuid_assignment_type="Pool",
+                 uuid_pool="",
+                 uuid_static_address=""
                  ):
         self.intersight_api_key_id = intersight_api_key_id
         self.intersight_api_key = intersight_api_key
@@ -850,6 +873,9 @@ class UcsServerProfile:
         else:
             self.api_client = preconfigured_api_client
         self.ucs_server_type = ucs_server_type
+        self.uuid_assignment_type = uuid_assignment_type
+        self.uuid_pool = uuid_pool
+        self.uuid_static_address = uuid_static_address
         self.intersight_api_body = {
             "Name": self.ucs_server_profile_name,
             "Description": self.ucs_server_profile_description,
@@ -866,7 +892,10 @@ class UcsServerProfile:
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
             f"{self.api_client}, "
-            f"'{self.ucs_server_type}')"
+            f"'{self.ucs_server_type}', "
+            f"'{self.uuid_assignment_type}', "
+            f"'{self.uuid_pool}', "
+            f"'{self.uuid_static_address}')"
             )
 
     def __str__(self):
@@ -1066,6 +1095,25 @@ class UcsServerProfile:
         self._update_api_body_general_attributes()
         # Update the API body with individual mapped object attributes
         self._update_api_body_mapped_object_attributes()
+        # Update the API body with any provided UUID Pool
+        if self.uuid_pool and self.intersight_api_body["UuidAddressType"] == "POOL":
+            uuid_pool_moid = intersight_object_moid_retriever(
+                intersight_api_key_id=None,
+                intersight_api_key=None,
+                object_name=self.uuid_pool,
+                intersight_api_path="uuidpool/Pools?$top=1000",
+                object_type="UUID Pool",
+                preconfigured_api_client=self.api_client
+                )
+            self.intersight_api_body["UuidPool"] = {
+                "Moid": uuid_pool_moid
+                }
+        elif self.uuid_static_address and self.intersight_api_body["UuidAddressType"] == "STATIC":
+            self.intersight_api_body["StaticUuidAddress"] = self.uuid_static_address
+        else:
+            self.intersight_api_body["UuidAddressType"] = "NONE"
+            self.intersight_api_body["UuidPool"] = None
+            self.intersight_api_body["StaticUuidAddress"] = ""
         # POST the API body to Intersight
         self._post_intersight_object()
 
@@ -1074,6 +1122,9 @@ def ucs_server_profile_maker(
     intersight_api_key_id,
     intersight_api_key,
     ucs_server_profile_name,
+    uuid_pool="",
+    uuid_assignment_type="Pool",
+    uuid_static_address="",
     ucs_server_type="FI-Attached",
     ucs_server_profile_description="",
     ucs_server_profile_organization="default",
@@ -1090,6 +1141,17 @@ def ucs_server_profile_maker(
             The system file path of the Intersight API key.
         ucs_server_profile_name (str):
             The name of the UCS Server Profile to be created.
+        uuid_pool (str):
+            The name of the pre-existing UUID Pool to be used by the UCS Server
+            Profile if the UUID assignment type has been set to "Pool". The
+            default value is an empty string ("").
+        uuid_assignment_type (str):
+            Optional; The UUID assignment type. The accepted values are "Pool",
+            "Static", and "None". The default value is "Pool".
+        uuid_static_address (str):
+            Optional; The UUID static address to be used if the UUID
+            assignment type has been set to "Static". The default value is an
+            empty string ("").
         ucs_server_type (str):
             Optional; The desired UCS Server type (Target Platform) of the UCS
             Server Profile. The accepted values are "FI-Attached" or
@@ -1151,7 +1213,10 @@ def ucs_server_profile_maker(
             intersight_base_url=intersight_base_url,
             tags=tags,
             preconfigured_api_client=preconfigured_api_client,
-            ucs_server_type=ucs_server_type
+            ucs_server_type=ucs_server_type,
+            uuid_assignment_type=uuid_assignment_type,
+            uuid_pool=uuid_pool,
+            uuid_static_address=uuid_static_address
             ))
 
 
@@ -1534,6 +1599,9 @@ def main():
         intersight_api_key_id=None,
         intersight_api_key=None,
         ucs_server_profile_name=ucs_server_profile_name,
+        uuid_pool=uuid_pool,
+        uuid_assignment_type=uuid_assignment_type,
+        uuid_static_address=uuid_static_address,
         ucs_server_type=ucs_server_type,
         ucs_server_profile_description=ucs_server_profile_description,
         ucs_server_profile_organization=ucs_server_profile_organization,
