@@ -33,11 +33,13 @@
     - Multicast Policy
     - Network Connectivity Policy
     - NTP Policy
+    - Power Policy
     - Serial Over LAN Policy
     - SNMP Policy
     - Switch Control Policy
     - Syslog Policy
     - System QoS Policy
+    - Thermal Policy
     - Virtual KVM Policy
 
 - Quickly restore UCS Policy configurations as part of your on-prem Intersight backup solution.
