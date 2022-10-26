@@ -13,7 +13,7 @@
 [![published](https://static.production.devnetcloud.com/codeexchange/assets/images/devnet-published.svg)](https://developer.cisco.com/codeexchange/github/repo/ugo-emekauwa/cisco-imm-automation-tools)
 
 ## Build and Deployment Tools
-- [UCS Default Policy Deployment Tool](./src/deployment_tools/ucs_default_policy_deployment_tool) - Quickly deploy your own set of 25 default UCS policies.
+- [UCS Default Policy Deployment Tool](./src/deployment_tools/ucs_default_policy_deployment_tool) - Quickly deploy your own set of 27 default UCS policies.
 - [UCS Domain Deployment Tool](./src/deployment_tools/ucs_domain_deployment_tool) - Build, assign and deploy a UCS domain profile with all policies in minutes.
 - [UCS FI Claim Handler](./src/deployment_tools/ucs_fi_claim_handler) - Claim one or more UCS IMM fabric interconnect clusters to an Intersight account.
 - [UCS Server Deployment Tool](./src/deployment_tools/ucs_server_deployment_tool) - Coming soon!!!
