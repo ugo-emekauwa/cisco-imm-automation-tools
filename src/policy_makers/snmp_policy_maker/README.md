@@ -15,7 +15,7 @@
 
 - Set additional SNMP authentication types, privacy types, and security levels not available through the Intersight GUI, but only through the Intersight API.
 
-- Automatically attach the SNMP Policy to a UCS Server, UCS Chassis and/or UCS Domain Profile if desired, during the SNMP Policy configuration.
+- Automatically attach the SNMP Policy to one or more UCS Server, UCS Chassis and/or UCS Domain Profiles if desired, during the SNMP Policy configuration.
 
 - Quickly restore SNMP Policy configurations as part of your on-prem Intersight backup solution.
 
