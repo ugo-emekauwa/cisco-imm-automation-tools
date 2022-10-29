@@ -95,13 +95,13 @@ snmp_trap_destinations_list = [
 intersight_base_url = "https://www.intersight.com/api/v1"
 url_certificate_verification = True
 
-# UCS Server Profile Attachment Settings
+# UCS Server Profile Attachment Settings (If providing more than one UCS Server Profile, additional entries should be comma-separated)
 ucs_server_profile_names = ""
 
-# UCS Chassis Profile Attachment Settings
+# UCS Chassis Profile Attachment Settings (If providing more than one UCS Chassis Profile, additional entries should be comma-separated)
 ucs_chassis_profile_names = ""
 
-# UCS Domain Profile Attachment Settings
+# UCS Domain Profile Attachment Settings (If providing more than one UCS Domain Profile, additional entries should be comma-separated)
 ucs_domain_profile_names = ""
 
 ####### Finish Configuration Settings - The required value entries are complete. #######
