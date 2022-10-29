@@ -62,7 +62,7 @@ fan_control_mode = "Balanced"       # Options: "Balanced", "Low Power", "High Po
 intersight_base_url = "https://www.intersight.com/api/v1"
 url_certificate_verification = True
 
-# UCS Chassis Profile Attachment Settings
+# UCS Chassis Profile Attachment Settings (If providing more than one UCS Chassis Profile, additional entries should be comma-separated)
 ucs_chassis_profile_names = ""
 
 ####### Finish Configuration Settings - The required value entries are complete. #######
