@@ -13,7 +13,7 @@
 ## Features
 - Automatically build an Intersight Thermal Policy to your exact specification. Anything that can be done through the Intersight GUI can be done here and more!
 
-- Automatically attach the Thermal Policy to a UCS Chassis Profile if desired, during the Thermal Policy configuration.
+- Automatically attach the Thermal Policy to one or more UCS Chassis Profiles if desired, during the Thermal Policy configuration.
 
 - Quickly restore Thermal Policy configurations as part of your on-prem Intersight backup solution.
 
