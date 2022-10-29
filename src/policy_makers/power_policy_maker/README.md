@@ -13,7 +13,7 @@
 ## Features
 - Automatically build an Intersight Power Policy to your exact specification. Anything that can be done through the Intersight GUI can be done here and more!
 
-- Automatically attach the Power Policy to a UCS Server and/or UCS Chassis Profile if desired, during the Power Policy configuration.
+- Automatically attach the Power Policy to one or more UCS Server and/or UCS Chassis Profiles if desired, during the Power Policy configuration.
 
 - Quickly restore Power Policy configurations as part of your on-prem Intersight backup solution.
 
