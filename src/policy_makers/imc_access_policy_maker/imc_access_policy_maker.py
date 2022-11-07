@@ -58,7 +58,7 @@ imc_access_policy_tags = {"Org": "IT", "Dept": "DevOps"}  # Empty the imc_access
 ## NOTE - A pre-existing IP Pool must be provided when configuring in-band of out-of-band IMC Access.
 ## A default IP Pool can be provided using the default_in_band_ip_pool_name or default_out_of_band_ip_pool_name variables below.
 enable_in_band_configuration = True
-in_band_vlan_id = 4        # Options: 4 - 4093
+in_band_vlan_id = 5        # Options: 4 - 4093
 enable_in_band_ipv4_configuration = True
 enable_in_band_ipv6_configuration = False
 default_in_band_ip_pool_name = "IP-Pool-1"
