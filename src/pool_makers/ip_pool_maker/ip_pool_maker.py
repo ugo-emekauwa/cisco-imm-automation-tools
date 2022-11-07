@@ -341,7 +341,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                 provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                               intersight_api_key=None,
                                                                               object_name=organization,
-                                                                              intersight_api_path="organization/Organizations",
+                                                                              intersight_api_path="organization/Organizations?$top=1000",
                                                                               object_type="Organization",
                                                                               preconfigured_api_client=api_client
                                                                               )
@@ -539,7 +539,7 @@ class IpPool:
                     existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                        intersight_api_key=None,
                                                                                        object_name=existing_intersight_object_name,
-                                                                                       intersight_api_path=self.intersight_api_path,
+                                                                                       intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                        object_type=self.object_type,
                                                                                        preconfigured_api_client=self.api_client
                                                                                        )
@@ -590,7 +590,7 @@ class IpPool:
         pool_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                     intersight_api_key=None,
                                                                     object_name=self.organization,
-                                                                    intersight_api_path="organization/Organizations",
+                                                                    intersight_api_path="organization/Organizations?$top=1000",
                                                                     object_type="Organization",
                                                                     preconfigured_api_client=self.api_client
                                                                     )
@@ -891,28 +891,29 @@ class IpPool:
         self._post_intersight_object()
 
 
-def ip_pool_maker(intersight_api_key_id,
-                  intersight_api_key,
-                  pool_name,
-                  configure_ipv4_pool,
-                  ipv4_netmask,
-                  ipv4_gateway,
-                  ipv4_primary_dns,
-                  ipv4_secondary_dns,
-                  ipv4_blocks_list,
-                  configure_ipv6_pool=False,
-                  ipv6_prefix=0,
-                  ipv6_gateway="",
-                  ipv6_primary_dns="",
-                  ipv6_secondary_dns="",
-                  ipv6_blocks_list=None,
-                  pool_description="",
-                  pool_assignment_order="default",
-                  organization="default",
-                  intersight_base_url="https://www.intersight.com/api/v1",
-                  tags=None,
-                  preconfigured_api_client=None
-                  ):
+def ip_pool_maker(
+    intersight_api_key_id,
+    intersight_api_key,
+    pool_name,
+    configure_ipv4_pool,
+    ipv4_netmask,
+    ipv4_gateway,
+    ipv4_primary_dns,
+    ipv4_secondary_dns,
+    ipv4_blocks_list,
+    configure_ipv6_pool=False,
+    ipv6_prefix=0,
+    ipv6_gateway="",
+    ipv6_primary_dns="",
+    ipv6_secondary_dns="",
+    ipv6_blocks_list=None,
+    pool_description="",
+    pool_assignment_order="default",
+    organization="default",
+    intersight_base_url="https://www.intersight.com/api/v1",
+    tags=None,
+    preconfigured_api_client=None
+    ):
     """This is a function used to make an IP Pool on Cisco Intersight.
 
     Args:
@@ -1024,28 +1025,30 @@ def ip_pool_maker(intersight_api_key_id,
             traceback.print_exc()
 
     # Define and create IP Pool object in Intersight
-    builder(IpPool(intersight_api_key_id=intersight_api_key_id,
-                   intersight_api_key=intersight_api_key,
-                   pool_name=pool_name,
-                   configure_ipv4_pool=configure_ipv4_pool,
-                   ipv4_netmask=ipv4_netmask,
-                   ipv4_gateway=ipv4_gateway,
-                   ipv4_primary_dns=ipv4_primary_dns,
-                   ipv4_secondary_dns=ipv4_secondary_dns,
-                   ipv4_blocks_list=ipv4_blocks_list,
-                   configure_ipv6_pool=configure_ipv6_pool,
-                   ipv6_prefix=ipv6_prefix,
-                   ipv6_gateway=ipv6_gateway,
-                   ipv6_primary_dns=ipv6_primary_dns,
-                   ipv6_secondary_dns=ipv6_secondary_dns,
-                   ipv6_blocks_list=ipv6_blocks_list,
-                   pool_description=pool_description,
-                   pool_assignment_order=pool_assignment_order,
-                   organization=organization,
-                   intersight_base_url=intersight_base_url,
-                   tags=tags,
-                   preconfigured_api_client=preconfigured_api_client
-                   ))
+    builder(
+        IpPool(
+            intersight_api_key_id=intersight_api_key_id,
+            intersight_api_key=intersight_api_key,
+            pool_name=pool_name,
+            configure_ipv4_pool=configure_ipv4_pool,
+            ipv4_netmask=ipv4_netmask,
+            ipv4_gateway=ipv4_gateway,
+            ipv4_primary_dns=ipv4_primary_dns,
+            ipv4_secondary_dns=ipv4_secondary_dns,
+            ipv4_blocks_list=ipv4_blocks_list,
+            configure_ipv6_pool=configure_ipv6_pool,
+            ipv6_prefix=ipv6_prefix,
+            ipv6_gateway=ipv6_gateway,
+            ipv6_primary_dns=ipv6_primary_dns,
+            ipv6_secondary_dns=ipv6_secondary_dns,
+            ipv6_blocks_list=ipv6_blocks_list,
+            pool_description=pool_description,
+            pool_assignment_order=pool_assignment_order,
+            organization=organization,
+            intersight_base_url=intersight_base_url,
+            tags=tags,
+            preconfigured_api_client=preconfigured_api_client
+            ))
 
 
 def main():
