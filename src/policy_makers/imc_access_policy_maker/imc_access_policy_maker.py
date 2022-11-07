@@ -1192,7 +1192,7 @@ class ImcAccessPolicy(DirectlyAttachedUcsServerAndChassisPolicy):
                 },
             "AddressType": {
                 "EnableIpV4": self.enable_in_band_ipv4_configuration,
-                "EnableIpV6": self.enable_out_of_band_configuration
+                "EnableIpV6": self.enable_in_band_ipv6_configuration
                 },
             "InbandVlan": self.in_band_vlan_id
             }
