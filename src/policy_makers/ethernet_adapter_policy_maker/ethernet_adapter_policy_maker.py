@@ -397,7 +397,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                 provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                               intersight_api_key=None,
                                                                               object_name=organization,
-                                                                              intersight_api_path="organization/Organizations",
+                                                                              intersight_api_path="organization/Organizations?$top=1000",
                                                                               object_type="Organization",
                                                                               preconfigured_api_client=api_client
                                                                               )
@@ -551,7 +551,7 @@ def intersight_object_backup(intersight_api_key_id,
                     provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                   intersight_api_key=None,
                                                                                   object_name=organization,
-                                                                                  intersight_api_path="organization/Organizations",
+                                                                                  intersight_api_path="organization/Organizations?$top=1000",
                                                                                   object_type="Organization",
                                                                                   preconfigured_api_client=api_client
                                                                                   )
@@ -730,7 +730,7 @@ class UcsPolicy:
                     existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                        intersight_api_key=None,
                                                                                        object_name=existing_intersight_object_name,
-                                                                                       intersight_api_path=self.intersight_api_path,
+                                                                                       intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                        object_type=self.object_type,
                                                                                        preconfigured_api_client=self.api_client
                                                                                        )
@@ -781,7 +781,7 @@ class UcsPolicy:
         policy_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                     intersight_api_key=None,
                                                                     object_name=self.organization,
-                                                                    intersight_api_path="organization/Organizations",
+                                                                    intersight_api_path="organization/Organizations?$top=1000",
                                                                     object_type="Organization",
                                                                     preconfigured_api_client=self.api_client
                                                                     )
@@ -1252,7 +1252,7 @@ class EthernetAdapterPolicy(UcsPolicy):
                     "UplinkFailbackTimeout",
                     "VxlanSettings"
                     ],
-                intersight_api_path=f"vnic/EthAdapterPolicies?$filter=SharedScope%20eq%20%27shared%27",
+                intersight_api_path=f"vnic/EthAdapterPolicies?$top=1000&$filter=SharedScope%20eq%20%27shared%27",
                 object_type="Ethernet Adapter Default Configuration",
                 organization=None,
                 preconfigured_api_client=self.api_client
