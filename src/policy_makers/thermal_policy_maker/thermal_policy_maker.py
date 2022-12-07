@@ -1180,7 +1180,6 @@ class ThermalPolicy(DirectlyAttachedUcsChassisPolicy):
             )
 
 
-# Establish function to make Policy
 def thermal_policy_maker(
     intersight_api_key_id,
     intersight_api_key,
