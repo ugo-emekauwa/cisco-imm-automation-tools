@@ -328,7 +328,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                 provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                               intersight_api_key=None,
                                                                               object_name=organization,
-                                                                              intersight_api_path="organization/Organizations",
+                                                                              intersight_api_path="organization/Organizations?$top=1000",
                                                                               object_type="Organization",
                                                                               preconfigured_api_client=api_client
                                                                               )
@@ -460,7 +460,7 @@ class UcsPolicy:
                     existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                        intersight_api_key=None,
                                                                                        object_name=existing_intersight_object_name,
-                                                                                       intersight_api_path=self.intersight_api_path,
+                                                                                       intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                        object_type=self.object_type,
                                                                                        preconfigured_api_client=self.api_client
                                                                                        )
@@ -511,7 +511,7 @@ class UcsPolicy:
         policy_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                     intersight_api_key=None,
                                                                     object_name=self.organization,
-                                                                    intersight_api_path="organization/Organizations",
+                                                                    intersight_api_path="organization/Organizations?$top=1000",
                                                                     object_type="Organization",
                                                                     preconfigured_api_client=self.api_client
                                                                     )
@@ -829,21 +829,22 @@ class EthernetQosPolicy(UcsPolicy):
             )
 
 
-def ethernet_qos_policy_maker(intersight_api_key_id,
-                              intersight_api_key,
-                              policy_name,
-                              ethernet_qos_mtu_in_bytes=1500,
-                              ethernet_qos_rate_limit_in_mbps=0,
-                              ethernet_qos_cos=3,
-                              ethernet_qos_burst=1024,
-                              ethernet_qos_priority="Best Effort",
-                              ethernet_qos_enable_trust_host_cos=False,
-                              policy_description="",
-                              organization="default",
-                              intersight_base_url="https://www.intersight.com/api/v1",
-                              tags=None,
-                              preconfigured_api_client=None
-                              ):
+def ethernet_qos_policy_maker(
+    intersight_api_key_id,
+    intersight_api_key,
+    policy_name,
+    ethernet_qos_mtu_in_bytes=1500,
+    ethernet_qos_rate_limit_in_mbps=0,
+    ethernet_qos_cos=3,
+    ethernet_qos_burst=1024,
+    ethernet_qos_priority="Best Effort",
+    ethernet_qos_enable_trust_host_cos=False,
+    policy_description="",
+    organization="default",
+    intersight_base_url="https://www.intersight.com/api/v1",
+    tags=None,
+    preconfigured_api_client=None
+    ):
     """This is a function used to make an Ethernet QoS Policy on Cisco
     Intersight.
 
@@ -907,21 +908,23 @@ def ethernet_qos_policy_maker(intersight_api_key_id,
             traceback.print_exc()
 
     # Define and create Ethernet QoS Policy object in Intersight
-    builder(EthernetQosPolicy(intersight_api_key_id=intersight_api_key_id,
-                              intersight_api_key=intersight_api_key,
-                              policy_name=policy_name,
-                              policy_description=policy_description,
-                              organization=organization,
-                              intersight_base_url=intersight_base_url,
-                              tags=tags,
-                              preconfigured_api_client=preconfigured_api_client,
-                              ethernet_qos_mtu_in_bytes=ethernet_qos_mtu_in_bytes,
-                              ethernet_qos_rate_limit_in_mbps=ethernet_qos_rate_limit_in_mbps,
-                              ethernet_qos_cos=ethernet_qos_cos,
-                              ethernet_qos_burst=ethernet_qos_burst,
-                              ethernet_qos_priority=ethernet_qos_priority,
-                              ethernet_qos_enable_trust_host_cos=ethernet_qos_enable_trust_host_cos
-                              ))
+    builder(
+        EthernetQosPolicy(
+            intersight_api_key_id=intersight_api_key_id,
+            intersight_api_key=intersight_api_key,
+            policy_name=policy_name,
+            policy_description=policy_description,
+            organization=organization,
+            intersight_base_url=intersight_base_url,
+            tags=tags,
+            preconfigured_api_client=preconfigured_api_client,
+            ethernet_qos_mtu_in_bytes=ethernet_qos_mtu_in_bytes,
+            ethernet_qos_rate_limit_in_mbps=ethernet_qos_rate_limit_in_mbps,
+            ethernet_qos_cos=ethernet_qos_cos,
+            ethernet_qos_burst=ethernet_qos_burst,
+            ethernet_qos_priority=ethernet_qos_priority,
+            ethernet_qos_enable_trust_host_cos=ethernet_qos_enable_trust_host_cos
+            ))
 
 
 def main():
