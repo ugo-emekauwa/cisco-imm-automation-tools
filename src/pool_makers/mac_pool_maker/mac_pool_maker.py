@@ -330,7 +330,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                 provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                               intersight_api_key=None,
                                                                               object_name=organization,
-                                                                              intersight_api_path="organization/Organizations",
+                                                                              intersight_api_path="organization/Organizations?$top=1000",
                                                                               object_type="Organization",
                                                                               preconfigured_api_client=api_client
                                                                               )
@@ -466,7 +466,7 @@ class UcsPool:
                     existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                        intersight_api_key=None,
                                                                                        object_name=existing_intersight_object_name,
-                                                                                       intersight_api_path=self.intersight_api_path,
+                                                                                       intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                        object_type=self.object_type,
                                                                                        preconfigured_api_client=self.api_client
                                                                                        )
@@ -517,7 +517,7 @@ class UcsPool:
         pool_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                     intersight_api_key=None,
                                                                     object_name=self.organization,
-                                                                    intersight_api_path="organization/Organizations",
+                                                                    intersight_api_path="organization/Organizations?$top=1000",
                                                                     object_type="Organization",
                                                                     preconfigured_api_client=self.api_client
                                                                     )
@@ -862,17 +862,18 @@ class MacPool(UcsPool):
             )
 
 
-def mac_pool_maker(intersight_api_key_id,
-                   intersight_api_key,
-                   pool_name,
-                   mac_blocks_list=None,
-                   pool_description="",
-                   pool_assignment_order="default",
-                   organization="default",
-                   intersight_base_url="https://www.intersight.com/api/v1",
-                   tags=None,
-                   preconfigured_api_client=None
-                   ):
+def mac_pool_maker(
+    intersight_api_key_id,
+    intersight_api_key,
+    pool_name,
+    mac_blocks_list=None,
+    pool_description="",
+    pool_assignment_order="default",
+    organization="default",
+    intersight_base_url="https://www.intersight.com/api/v1",
+    tags=None,
+    preconfigured_api_client=None
+    ):
     """This is a function used to make a MAC Pool on Cisco Intersight.
 
     Args:
@@ -949,17 +950,19 @@ def mac_pool_maker(intersight_api_key_id,
             traceback.print_exc()
 
     # Define and create MAC Pool object in Intersight
-    builder(MacPool(intersight_api_key_id=intersight_api_key_id,
-                    intersight_api_key=intersight_api_key,
-                    pool_name=pool_name,
-                    pool_description=pool_description,
-                    pool_assignment_order=pool_assignment_order,
-                    organization=organization,
-                    intersight_base_url=intersight_base_url,
-                    tags=tags,
-                    preconfigured_api_client=preconfigured_api_client,
-                    mac_blocks_list=mac_blocks_list
-                    ))
+    builder(
+        MacPool(
+            intersight_api_key_id=intersight_api_key_id,
+            intersight_api_key=intersight_api_key,
+            pool_name=pool_name,
+            pool_description=pool_description,
+            pool_assignment_order=pool_assignment_order,
+            organization=organization,
+            intersight_base_url=intersight_base_url,
+            tags=tags,
+            preconfigured_api_client=preconfigured_api_client,
+            mac_blocks_list=mac_blocks_list
+            ))
 
 
 def main():
