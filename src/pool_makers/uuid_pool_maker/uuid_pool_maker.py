@@ -331,7 +331,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                 provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                               intersight_api_key=None,
                                                                               object_name=organization,
-                                                                              intersight_api_path="organization/Organizations",
+                                                                              intersight_api_path="organization/Organizations?$top=1000",
                                                                               object_type="Organization",
                                                                               preconfigured_api_client=api_client
                                                                               )
@@ -467,7 +467,7 @@ class UcsPool:
                     existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                        intersight_api_key=None,
                                                                                        object_name=existing_intersight_object_name,
-                                                                                       intersight_api_path=self.intersight_api_path,
+                                                                                       intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                        object_type=self.object_type,
                                                                                        preconfigured_api_client=self.api_client
                                                                                        )
@@ -518,7 +518,7 @@ class UcsPool:
         pool_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                     intersight_api_key=None,
                                                                     object_name=self.organization,
-                                                                    intersight_api_path="organization/Organizations",
+                                                                    intersight_api_path="organization/Organizations?$top=1000",
                                                                     object_type="Organization",
                                                                     preconfigured_api_client=self.api_client
                                                                     )
