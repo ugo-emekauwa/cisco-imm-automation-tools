@@ -124,7 +124,13 @@
 ## Where to Demo
 The UCS FI Claim Handler is utilized on Cisco dCloud in the following content:
 
-1. [**_Cisco Intersight with UCS X-Series Lab_**](https://dcloud2.cisco.com/demo/cisco-intersight-management-with-x-series-lab-v1)
+1. [Cisco Intersight with UCS X-Series Lab](https://dcloud2.cisco.com/demo/cisco-intersight-management-with-x-series-lab-v1)
+![Cisco UCS X-Series Lab Topology](../../../src/assets/Cisco_UCS_X-Series_Lab_Topology.png "Cisco UCS X-Series Lab Topology")
+
+Additional related demo content includes:
+
+2. [Cisco Intersight with UCS X-Series Demo](https://dcloud2-rtp.cisco.com/content/instantdemo/cisco-intersight-mode-with-ucs-x-series-v1-instant-demo-2)
+![Cisco UCS X-Series Demo Topology](../../../src/assets/Cisco_UCS_X-Series_Demo_Topology.png "Cisco UCS X-Series Demo Topology")
 
 dCloud is available at [https://dcloud.cisco.com](https://dcloud.cisco.com), where Cisco product demonstrations and labs can be found in the Catalog.
 
