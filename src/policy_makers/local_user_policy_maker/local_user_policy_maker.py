@@ -69,11 +69,6 @@ local_users_list = [
      "Role": "admin"
      },
     {"Enable": True,
-     "Username": "testuser",
-     "Password": "C1sco12345",
-     "Role": "user"
-     },
-    {"Enable": True,
      "Username": "readonlyuser",
      "Password": "C1sco12345",
      "Role": "readonly"
@@ -84,8 +79,9 @@ local_users_list = [
 intersight_base_url = "https://www.intersight.com/api/v1"
 url_certificate_verification = True
 
-# UCS Domain Profile Attachment Settings
-ucs_server_profile_name = ""
+# UCS Server Profile Attachment Settings (If providing more than one UCS Server Profile and/or UCS Server Profile Template, additional entries should be comma-separated)
+ucs_server_profile_names = ""
+ucs_server_profile_template_names = ""
 
 ####### Finish Configuration Settings - The required value entries are complete. #######
 
@@ -100,6 +96,7 @@ import json
 import copy
 import intersight
 import re
+import ast
 import urllib3
 
 # Suppress InsecureRequestWarning error messages
@@ -349,7 +346,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                 provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                               intersight_api_key=None,
                                                                               object_name=organization,
-                                                                              intersight_api_path="organization/Organizations",
+                                                                              intersight_api_path="organization/Organizations?$top=1000",
                                                                               object_type="Organization",
                                                                               preconfigured_api_client=api_client
                                                                               )
@@ -657,7 +654,7 @@ def advanced_intersight_object_moid_retriever(intersight_api_key_id,
                 provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                               intersight_api_key=None,
                                                                               object_name=organization,
-                                                                              intersight_api_path="organization/Organizations",
+                                                                              intersight_api_path="organization/Organizations?$top=1000",
                                                                               object_type="Organization",
                                                                               preconfigured_api_client=api_client
                                                                               )
@@ -707,6 +704,102 @@ def advanced_intersight_object_moid_retriever(intersight_api_key_id,
         print(f"If the needed {object_type} is missing, please create it.")
         print(f"Once the issue has been resolved, re-attempt execution.\n")
         sys.exit(0)
+
+
+# Establish function to convert a list of strings in string type format to list type format.
+def string_to_list_maker(string_list,
+                         remove_duplicate_elements_in_list=True
+                         ):
+    """This function converts a list of strings in string type format to list
+    type format. The provided string should contain commas, semicolons, or
+    spaces as the separator between strings. For each string in the list,
+    leading and rear spaces will be removed. Duplicate strings in the list are
+    removed by default.
+
+    Args:
+        string_list (str):
+            A string containing an element or range of elements.
+
+        remove_duplicate_elements_in_list (bool):
+            Optional; A setting to determine whether duplicate elements are
+            removed from the provided string list. The default value is True.
+
+    Returns:
+        A list of elements.   
+    """
+    def string_to_list_separator(string_list,
+                                 separator
+                                 ):
+        """This function converts a list of elements in string type format to
+        list type format using the provided separator. For each element in the
+        list, leading and rear spaces are removed.
+
+        Args:
+            string_list (str):
+                A string containing an element or range of elements.
+
+            separator (str):
+                The character to identify where elements in the
+                list should be separated (e.g., a comma, semicolon,
+                hyphen, etc.).
+
+        Returns:
+            A list of separated elements that have been stripped of any spaces.   
+        """
+        fully_stripped_list = []
+        # Split string by provided separator and create list of separated elements.
+        split_list = string_list.split(separator)
+        for element in split_list:
+            if element:
+                # Remove leading spaces from elements in list.
+                lstripped_element = element.lstrip()
+                # Remove rear spaces from elements in list.
+                rstripped_element = lstripped_element.rstrip()
+                # Populate new list with fully stripped elements.
+                fully_stripped_list.append(rstripped_element)
+        return fully_stripped_list
+
+    def list_to_list_separator(provided_list,
+                               separator
+                               ):
+        """This function converts a list of elements in list type format to
+        list type format using the provided separator. For each element in the
+        list, leading and rear spaces are removed.
+
+        Args:
+            provided_list (list): A list of elements to be separated.
+
+            separator (str): The character to identify where elements in the
+                list should be separated (e.g., a comma, semicolon,
+                hyphen, etc.).
+
+        Returns:
+            A list of separated elements that have been stripped of any spaces.        
+        """
+        new_list = []
+        # Split list by provided separator and create new list of separated elements.
+        for element in provided_list:
+            if separator in element:
+                split_provided_list = string_to_list_separator(element, separator)
+                new_list.extend(split_provided_list)
+            else:
+                new_list.append(element)
+        return new_list
+    
+    staged_list = []
+    # Split provided list by spaces.
+    space_split_list = string_to_list_separator(string_list, " ")
+    # Split provided list by commas.
+    post_comma_split_list = list_to_list_separator(space_split_list, ",")
+    # Split provided list by semicolons.
+    post_semicolon_split_list = list_to_list_separator(post_comma_split_list, ";")
+    # Split provided list by hyphens.
+    for post_semicolon_split_string_set in post_semicolon_split_list:
+        staged_list.append(post_semicolon_split_string_set)
+    # Remove duplicates from list if enabled.
+    if remove_duplicate_elements_in_list:
+        final_list = list(set(staged_list))
+    return final_list
 
 
 # Establish Maker specific classes and functions
@@ -801,7 +894,7 @@ class UcsPolicy:
                     existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                        intersight_api_key=None,
                                                                                        object_name=existing_intersight_object_name,
-                                                                                       intersight_api_path=self.intersight_api_path,
+                                                                                       intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                        object_type=self.object_type,
                                                                                        preconfigured_api_client=self.api_client
                                                                                        )
@@ -852,7 +945,7 @@ class UcsPolicy:
         policy_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                     intersight_api_key=None,
                                                                     object_name=self.organization,
-                                                                    intersight_api_path="organization/Organizations",
+                                                                    intersight_api_path="organization/Organizations?$top=1000",
                                                                     object_type="Organization",
                                                                     preconfigured_api_client=self.api_client
                                                                     )
@@ -1104,8 +1197,8 @@ class UcsPolicy:
 
 class DirectlyAttachedUcsServerPolicy(UcsPolicy):
     """This class is used to configure a UCS Server Policy in Intersight that
-    is logically directly attached to UCS Servers through UCS
-    Server Profiles.
+    is logically directly attached to UCS Servers through UCS Server Profiles
+    and/or UCS Server Profile Templates.
     """
     object_type = "Directly Attached UCS Server Policy"
     intersight_api_path = None
@@ -1119,7 +1212,8 @@ class DirectlyAttachedUcsServerPolicy(UcsPolicy):
                  intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
-                 ucs_server_profile_name=""
+                 ucs_server_profile_names="",
+                 ucs_server_profile_template_names=""
                  ):
         super().__init__(intersight_api_key_id,
                          intersight_api_key,
@@ -1130,7 +1224,8 @@ class DirectlyAttachedUcsServerPolicy(UcsPolicy):
                          tags,
                          preconfigured_api_client
                          )
-        self.ucs_server_profile_name = ucs_server_profile_name
+        self.ucs_server_profile_names = ucs_server_profile_names
+        self.ucs_server_profile_template_names = ucs_server_profile_template_names
 
     def __repr__(self):
         return (
@@ -1143,35 +1238,60 @@ class DirectlyAttachedUcsServerPolicy(UcsPolicy):
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
             f"{self.api_client}, "
-            f"'{self.ucs_server_profile_name}')"
+            f"'{self.ucs_server_profile_names}', "
+            f"'{self.ucs_server_profile_template_names}')"
             )
 
     def _attach_ucs_server_profile(self):
-        """This is a function to attach an Intersight UCS Server Profile to an
-        Intersight Policy.
+        """This is a function to attach Intersight UCS Server Profiles and/or
+        UCS Server Profile Templates to an Intersight Policy.
 
         Returns:
             A dictionary for the API body of the policy object to be posted on
             Intersight.    
         """
+        # Update the API body with the Profiles key
+        self.intersight_api_body["Profiles"] = []        
         # Attach UCS Server Profile
-        if self.ucs_server_profile_name:
-            print("Attaching the UCS Server Profile named "
-                  f"{self.ucs_server_profile_name}...")
-            # Get UCS Server Profile MOID
-            ucs_server_profile_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
-                                                                       intersight_api_key=None,
-                                                                       object_name=self.ucs_server_profile_name,
-                                                                       intersight_api_path="server/Profiles",
-                                                                       object_type="UCS Server Profile",
-                                                                       organization=self.organization,
-                                                                       preconfigured_api_client=self.api_client
-                                                                       )
-            # Update the API body with the appropriate Server Profile MOID
-            self.intersight_api_body["Profiles"] = [
-                {"Moid": ucs_server_profile_moid,
-                 "ObjectType": "server.Profile"}
-                ]
+        if self.ucs_server_profile_names:
+            provided_ucs_server_profile_list = string_to_list_maker(self.ucs_server_profile_names)
+            for provided_ucs_server_profile in provided_ucs_server_profile_list:
+                print("Attaching the UCS Server Profile named "
+                      f"{provided_ucs_server_profile}...")
+                # Get UCS Server Profile MOID
+                ucs_server_profile_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
+                                                                           intersight_api_key=None,
+                                                                           object_name=provided_ucs_server_profile,
+                                                                           intersight_api_path="server/Profiles?$top=1000",
+                                                                           object_type="UCS Server Profile",
+                                                                           organization=self.organization,
+                                                                           preconfigured_api_client=self.api_client
+                                                                           )
+                # Update the API body with the appropriate Server Profile MOID
+                self.intersight_api_body["Profiles"].append(
+                    {"Moid": ucs_server_profile_moid,
+                     "ObjectType": "server.Profile"}
+                    )
+        # Attach UCS Server Profile Templates
+        if self.ucs_server_profile_template_names:
+            provided_ucs_server_profile_template_list = string_to_list_maker(self.ucs_server_profile_template_names)
+            for provided_ucs_server_profile_template in provided_ucs_server_profile_template_list:
+                print("Attaching the UCS Server Profile Template named "
+                      f"{provided_ucs_server_profile_template}...")
+                # Get UCS Server Profile MOID
+                ucs_server_profile_template_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
+                                                                                    intersight_api_key=None,
+                                                                                    object_name=provided_ucs_server_profile_template,
+                                                                                    intersight_api_path="server/ProfileTemplates?$top=1000",
+                                                                                    object_type="UCS Server Profile Template",
+                                                                                    organization=self.organization,
+                                                                                    preconfigured_api_client=self.api_client
+                                                                                    )
+                # Update the API body with the appropriate Server Profile MOID
+                self.intersight_api_body["Profiles"].append(
+                    {"Moid": ucs_server_profile_template_moid,
+                     "ObjectType": "server.ProfileTemplate"}
+                    )
 
     def object_maker(self):
         """This function makes the targeted policy object.
@@ -1205,7 +1325,8 @@ class LocalUserPolicy(DirectlyAttachedUcsServerPolicy):
                  intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
-                 ucs_server_profile_name="",
+                 ucs_server_profile_names="",
+                 ucs_server_profile_template_names="",
                  enforce_strong_password=True,
                  enable_password_expiry=False,
                  password_expiry_duration=90,
@@ -1222,7 +1343,8 @@ class LocalUserPolicy(DirectlyAttachedUcsServerPolicy):
                          intersight_base_url,
                          tags,
                          preconfigured_api_client,
-                         ucs_server_profile_name
+                         ucs_server_profile_names,
+                         ucs_server_profile_template_names
                          )
         self.enforce_strong_password = enforce_strong_password
         self.enable_password_expiry = enable_password_expiry
@@ -1256,7 +1378,8 @@ class LocalUserPolicy(DirectlyAttachedUcsServerPolicy):
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
             f"{self.api_client}, "
-            f"'{self.ucs_server_profile_name}', "
+            f"'{self.ucs_server_profile_names}', "
+            f"'{self.ucs_server_profile_template_names}', "
             f"{self.enforce_strong_password}, "
             f"{self.enable_password_expiry}, "
             f"{self.password_expiry_duration}, "
@@ -1336,7 +1459,8 @@ class LocalUser:
 
     def _post_intersight_local_user(self,
                                     local_user_name,
-                                    body
+                                    body,
+                                    moid=None
                                     ):
         """This is a function to configure an Intersight Local User object by
         performing a POST through the Intersight API.
@@ -1345,6 +1469,9 @@ class LocalUser:
                 The name of the local user to be posted on Intersight.
             body (dict):
                 The body of the object to be posted on Intersight.
+            moid (str):
+                Optional; The Intersight MOID of the object to be posted
+                on Intersight. The default value is None.
         
         Returns:
             A string with a statement indicating whether the POST method
@@ -1355,17 +1482,25 @@ class LocalUser:
                 An exception occurred while performing the API call.
                 The status code or error message will be specified.
         """
-        full_intersight_api_path = f"/{self.intersight_api_path}"
+        if moid:
+            full_intersight_api_path = f"/{self.intersight_api_path}/{moid}"
+        else:        
+            full_intersight_api_path = f"/{self.intersight_api_path}"
         try:
             self.api_client.call_api(resource_path=full_intersight_api_path,
                                      method="POST",
                                      body=body,
                                      auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
                                      )
-            print(f"The configuration of the {self.object_type} "
-                  f"for {local_user_name} has completed.")
+            if moid:
+                print(f"The configuration of {self.object_type} "
+                      f"{local_user_name} has been updated.")
+            else:            
+                print(f"The configuration of the {self.object_type} "
+                      f"for {local_user_name} has completed.")
             return "The POST method was successful."
         except intersight.exceptions.ApiException as error:
+            error_body_dictionary = ast.literal_eval(error.body)
             if error.status == 409:
                 print(f"The targeted {self.object_type} for "
                       f"{local_user_name} appears to already exist.")
@@ -1375,7 +1510,7 @@ class LocalUser:
                     existing_intersight_local_user_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                            intersight_api_key=None,
                                                                                            object_name=local_user_name,
-                                                                                           intersight_api_path=self.intersight_api_path,
+                                                                                           intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                            object_type=self.object_type,
                                                                                            preconfigured_api_client=self.api_client
                                                                                            )
@@ -1399,6 +1534,14 @@ class LocalUser:
                     print("Exception Message: ")
                     traceback.print_exc()
                     return "The POST method failed."
+            elif (
+                error.status == 400
+                and
+                error_body_dictionary.get("messageId") == "cannot_modify_endpoint_user"
+                ):
+                print(f"The requested Local User Account {local_user_name} "
+                      "already exists and cannot be modified.")
+                return "The POST method failed."                
             else:
                 print("\nA configuration error has occurred!\n")
                 print(f"Unable to configure the {self.object_type} "
@@ -1409,9 +1552,15 @@ class LocalUser:
                 return "The POST method failed."
         except Exception:
             print("\nA configuration error has occurred!\n")
-            print(f"Unable to configure the {self.object_type} for "
-                  f"{local_user_name} under the Intersight API resource path "
-                  f"'{full_intersight_api_path}'.\n")
+            if moid:
+                print(f"Unable to update {self.object_type} "
+                      f"{local_user_name} under the "
+                      "Intersight API resource path "
+                      f"'{full_intersight_api_path}'.\n")
+            else:                
+                print(f"Unable to configure the {self.object_type} for "
+                      f"{local_user_name} under the Intersight API resource "
+                      f"path '{full_intersight_api_path}'.\n")
             print("Exception Message: ")
             traceback.print_exc()
             return "The POST method failed."
@@ -1528,7 +1677,7 @@ class LocalUser:
             policy_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                         intersight_api_key=None,
                                                                         object_name=self.organization,
-                                                                        intersight_api_path="organization/Organizations",
+                                                                        intersight_api_path="organization/Organizations?$top=1000",
                                                                         object_type="Organization",
                                                                         preconfigured_api_client=self.api_client
                                                                         )
@@ -1637,7 +1786,7 @@ class LocalUserRole(LocalUser):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.api_client}, "
-            f"'{self.ucs_server_profile_name}', "
+            f"'{self.ucs_server_profile_names}', "
             f"{self.local_users_list}, "
             f"'{self.policy_name}')"
             )
@@ -1700,7 +1849,7 @@ class LocalUserRole(LocalUser):
                     existing_intersight_local_user_role_moid = advanced_intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                                          intersight_api_key=None,
                                                                                                          object_attributes=existing_intersight_local_user_role_attributes,
-                                                                                                         intersight_api_path=self.intersight_api_path,
+                                                                                                         intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                                          object_type=self.object_type,
                                                                                                          organization=self.organization,
                                                                                                          preconfigured_api_client=self.api_client
@@ -1763,7 +1912,7 @@ class LocalUserRole(LocalUser):
             policy_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                            intersight_api_key=None,
                                                            object_name=self.policy_name,
-                                                           intersight_api_path=self.policy_intersight_api_path,
+                                                           intersight_api_path=f"{self.policy_intersight_api_path}?$top=1000",
                                                            object_type=self.policy_type,
                                                            organization=self.organization,
                                                            preconfigured_api_client=self.api_client
@@ -1785,7 +1934,7 @@ class LocalUserRole(LocalUser):
                 local_user_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                    intersight_api_key=None,
                                                                    object_name=staged_local_user_dictionary["EndPointUser"],
-                                                                   intersight_api_path="iam/EndPointUsers",
+                                                                   intersight_api_path="iam/EndPointUsers?$top=1000",
                                                                    object_type="Local User",
                                                                    organization=self.organization,
                                                                    preconfigured_api_client=self.api_client
@@ -1798,7 +1947,7 @@ class LocalUserRole(LocalUser):
                                                                                      "Name": staged_local_user_dictionary["EndPointRole"],
                                                                                      "Type": "IMC"
                                                                                      },
-                                                                                 intersight_api_path="iam/EndPointRoles",
+                                                                                 intersight_api_path="iam/EndPointRoles?$top=1000",
                                                                                  object_type="Local User End Point Role",
                                                                                  organization=self.organization,
                                                                                  preconfigured_api_client=self.api_client
@@ -1814,24 +1963,26 @@ class LocalUserRole(LocalUser):
                     )
 
 
-def local_user_policy_maker(intersight_api_key_id,
-                            intersight_api_key,
-                            policy_name,
-                            enforce_strong_password=True,
-                            enable_password_expiry=False,
-                            password_expiry_duration=90,
-                            password_expiry_notification_period=15,
-                            password_expiry_grace_period=0,
-                            password_history=5,
-                            always_send_user_password=False,
-                            local_users_list=None,
-                            policy_description="",
-                            organization="default",
-                            intersight_base_url="https://www.intersight.com/api/v1",
-                            tags=None,
-                            preconfigured_api_client=None,
-                            ucs_server_profile_name=""
-                            ):
+def local_user_policy_maker(
+    intersight_api_key_id,
+    intersight_api_key,
+    policy_name,
+    enforce_strong_password=True,
+    enable_password_expiry=False,
+    password_expiry_duration=90,
+    password_expiry_notification_period=15,
+    password_expiry_grace_period=0,
+    password_history=5,
+    always_send_user_password=False,
+    local_users_list=None,
+    policy_description="",
+    organization="default",
+    intersight_base_url="https://www.intersight.com/api/v1",
+    tags=None,
+    preconfigured_api_client=None,
+    ucs_server_profile_names="",
+    ucs_server_profile_template_names=""
+    ):
     """This is a function used to make a Local User Policy on Cisco Intersight.
 
     Args:
@@ -1907,9 +2058,16 @@ def local_user_policy_maker(intersight_api_key_id,
             is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
-        ucs_server_profile_name (str):
-            Optional; The UCS Server Profile the policy should be attached to.
-            The default value is an empty string ("").
+        ucs_server_profile_names (str):
+            Optional; The UCS Server Profiles the policy should be attached
+            to. If providing more than one UCS Server Profile, additional 
+            entries should be comma-separated. The default value is an empty
+            string ("").
+        ucs_server_profile_template_names (str):
+            Optional; The UCS Server Profile Templates the policy should be
+            attached to. If providing more than one UCS Server Profile Template,
+            additional entries should be comma-separated. The default value is
+            an empty string ("").
     """
     def builder(target_object):
         """This is a function used to build the objects that are components of
@@ -1946,7 +2104,8 @@ def local_user_policy_maker(intersight_api_key_id,
             intersight_base_url=intersight_base_url,
             tags=tags,
             preconfigured_api_client=preconfigured_api_client,
-            ucs_server_profile_name=ucs_server_profile_name,
+            ucs_server_profile_names=ucs_server_profile_names,
+            ucs_server_profile_template_names=ucs_server_profile_template_names,
             enforce_strong_password=enforce_strong_password,
             enable_password_expiry=enable_password_expiry,
             password_expiry_duration=password_expiry_duration,
@@ -2020,7 +2179,8 @@ def main():
         intersight_base_url=intersight_base_url,
         tags=local_user_policy_tags,
         preconfigured_api_client=main_intersight_api_client,
-        ucs_server_profile_name=ucs_server_profile_name
+        ucs_server_profile_names=ucs_server_profile_names,
+        ucs_server_profile_template_names=ucs_server_profile_template_names
         )
 
     # Policy Maker completion
