@@ -328,7 +328,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                 provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                               intersight_api_key=None,
                                                                               object_name=organization,
-                                                                              intersight_api_path="organization/Organizations",
+                                                                              intersight_api_path="organization/Organizations?$top=1000",
                                                                               object_type="Organization",
                                                                               preconfigured_api_client=api_client
                                                                               )
@@ -460,7 +460,7 @@ class UcsPolicy:
                     existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                        intersight_api_key=None,
                                                                                        object_name=existing_intersight_object_name,
-                                                                                       intersight_api_path=self.intersight_api_path,
+                                                                                       intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                        object_type=self.object_type,
                                                                                        preconfigured_api_client=self.api_client
                                                                                        )
@@ -511,7 +511,7 @@ class UcsPolicy:
         policy_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                     intersight_api_key=None,
                                                                     object_name=self.organization,
-                                                                    intersight_api_path="organization/Organizations",
+                                                                    intersight_api_path="organization/Organizations?$top=1000",
                                                                     object_type="Organization",
                                                                     preconfigured_api_client=self.api_client
                                                                     )
@@ -867,21 +867,22 @@ class EthernetNetworkControlPolicy(UcsPolicy):
             )
 
 
-def ethernet_network_control_policy_maker(intersight_api_key_id,
-                                          intersight_api_key,
-                                          policy_name,
-                                          enable_cdp=False,
-                                          mac_register_mode="Only Native VLAN",
-                                          action_on_uplink_fail="Link Down",
-                                          mac_forging="Allow",
-                                          lldp_enable_transmit=False,
-                                          lldp_enable_receive=False,
-                                          policy_description="",
-                                          organization="default",
-                                          intersight_base_url="https://www.intersight.com/api/v1",
-                                          tags=None,
-                                          preconfigured_api_client=None
-                                          ):
+def ethernet_network_control_policy_maker(
+    intersight_api_key_id,
+    intersight_api_key,
+    policy_name,
+    enable_cdp=False,
+    mac_register_mode="Only Native VLAN",
+    action_on_uplink_fail="Link Down",
+    mac_forging="Allow",
+    lldp_enable_transmit=False,
+    lldp_enable_receive=False,
+    policy_description="",
+    organization="default",
+    intersight_base_url="https://www.intersight.com/api/v1",
+    tags=None,
+    preconfigured_api_client=None
+    ):
     """This is a function used to make an Ethernet Network Control Policy on
     Cisco Intersight.
 
@@ -964,21 +965,23 @@ def ethernet_network_control_policy_maker(intersight_api_key_id,
             traceback.print_exc()
 
     # Define and create Ethernet Network Control Policy object in Intersight
-    builder(EthernetNetworkControlPolicy(intersight_api_key_id=intersight_api_key_id,
-                                         intersight_api_key=intersight_api_key,
-                                         policy_name=policy_name,
-                                         policy_description=policy_description,
-                                         organization=organization,
-                                         intersight_base_url=intersight_base_url,
-                                         tags=tags,
-                                         preconfigured_api_client=preconfigured_api_client,
-                                         enable_cdp=enable_cdp,
-                                         mac_register_mode=mac_register_mode,
-                                         action_on_uplink_fail=action_on_uplink_fail,
-                                         mac_forging=mac_forging,
-                                         lldp_enable_transmit=lldp_enable_transmit,
-                                         lldp_enable_receive=lldp_enable_receive
-                                         ))
+    builder(
+        EthernetNetworkControlPolicy(
+            intersight_api_key_id=intersight_api_key_id,
+            intersight_api_key=intersight_api_key,
+            policy_name=policy_name,
+            policy_description=policy_description,
+            organization=organization,
+            intersight_base_url=intersight_base_url,
+            tags=tags,
+            preconfigured_api_client=preconfigured_api_client,
+            enable_cdp=enable_cdp,
+            mac_register_mode=mac_register_mode,
+            action_on_uplink_fail=action_on_uplink_fail,
+            mac_forging=mac_forging,
+            lldp_enable_transmit=lldp_enable_transmit,
+            lldp_enable_receive=lldp_enable_receive
+            ))
 
 
 def main():
