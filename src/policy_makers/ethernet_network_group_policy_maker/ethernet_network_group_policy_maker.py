@@ -327,7 +327,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                 provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                               intersight_api_key=None,
                                                                               object_name=organization,
-                                                                              intersight_api_path="organization/Organizations",
+                                                                              intersight_api_path="organization/Organizations?$top=1000",
                                                                               object_type="Organization",
                                                                               preconfigured_api_client=api_client
                                                                               )
@@ -459,7 +459,7 @@ class UcsPolicy:
                     existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                        intersight_api_key=None,
                                                                                        object_name=existing_intersight_object_name,
-                                                                                       intersight_api_path=self.intersight_api_path,
+                                                                                       intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                        object_type=self.object_type,
                                                                                        preconfigured_api_client=self.api_client
                                                                                        )
@@ -510,7 +510,7 @@ class UcsPolicy:
         policy_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                     intersight_api_key=None,
                                                                     object_name=self.organization,
-                                                                    intersight_api_path="organization/Organizations",
+                                                                    intersight_api_path="organization/Organizations?$top=1000",
                                                                     object_type="Organization",
                                                                     preconfigured_api_client=self.api_client
                                                                     )
@@ -814,17 +814,18 @@ class EthernetNetworkGroupPolicy(UcsPolicy):
             )
 
 
-def ethernet_network_group_policy_maker(intersight_api_key_id,
-                                        intersight_api_key,
-                                        policy_name,
-                                        allowed_vlans="1",
-                                        native_vlan=1,
-                                        policy_description="",
-                                        organization="default",
-                                        intersight_base_url="https://www.intersight.com/api/v1",
-                                        tags=None,
-                                        preconfigured_api_client=None
-                                        ):
+def ethernet_network_group_policy_maker(
+    intersight_api_key_id,
+    intersight_api_key,
+    policy_name,
+    allowed_vlans="1",
+    native_vlan=1,
+    policy_description="",
+    organization="default",
+    intersight_base_url="https://www.intersight.com/api/v1",
+    tags=None,
+    preconfigured_api_client=None
+    ):
     """This is a function used to make an Ethernet Network Group Policy on Cisco
     Intersight.
 
@@ -892,17 +893,19 @@ def ethernet_network_group_policy_maker(intersight_api_key_id,
             traceback.print_exc()
 
     # Define and create Ethernet Network Group Policy object in Intersight
-    builder(EthernetNetworkGroupPolicy(intersight_api_key_id=intersight_api_key_id,
-                                       intersight_api_key=intersight_api_key,
-                                       policy_name=policy_name,
-                                       policy_description=policy_description,
-                                       organization=organization,
-                                       intersight_base_url=intersight_base_url,
-                                       tags=tags,
-                                       preconfigured_api_client=preconfigured_api_client,
-                                       allowed_vlans=allowed_vlans,
-                                       native_vlan=native_vlan
-                                       ))
+    builder(
+        EthernetNetworkGroupPolicy(
+            intersight_api_key_id=intersight_api_key_id,
+            intersight_api_key=intersight_api_key,
+            policy_name=policy_name,
+            policy_description=policy_description,
+            organization=organization,
+            intersight_base_url=intersight_base_url,
+            tags=tags,
+            preconfigured_api_client=preconfigured_api_client,
+            allowed_vlans=allowed_vlans,
+            native_vlan=native_vlan
+            ))
 
 
 def main():
