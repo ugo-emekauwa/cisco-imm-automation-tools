@@ -68,8 +68,9 @@ power_allocation_in_watts = 0       # Options: 0 - 65535
 intersight_base_url = "https://www.intersight.com/api/v1"
 url_certificate_verification = True
 
-# UCS Server Profile Attachment Settings (If providing more than one UCS Server Profile, additional entries should be comma-separated)
+# UCS Server Profile Attachment Settings (If providing more than one UCS Server Profile and/or UCS Server Profile Template, additional entries should be comma-separated)
 ucs_server_profile_names = ""
+ucs_server_profile_template_names = ""
 
 # UCS Chassis Profile Attachment Settings (If providing more than one UCS Chassis Profile, additional entries should be comma-separated)
 ucs_chassis_profile_names = ""
@@ -1027,7 +1028,8 @@ class UcsPolicy:
 class DirectlyAttachedUcsServerAndChassisPolicy(UcsPolicy):
     """This class is used to configure a UCS Server and/or UCS Chassis Policy
     in Intersight that is logically directly attached to UCS Servers through
-    UCS Server Profiles and/or UCS Chassis through UCS Chassis Profiles.
+    UCS Server Profiles and/or UCS Server Profile Templates, and/or UCS Chassis
+    through UCS Chassis Profiles.
     """
     object_type = "Directly Attached UCS Server and Chassis Policy"
     intersight_api_path = None
@@ -1042,6 +1044,7 @@ class DirectlyAttachedUcsServerAndChassisPolicy(UcsPolicy):
                  tags=None,
                  preconfigured_api_client=None,
                  ucs_server_profile_names="",
+                 ucs_server_profile_template_names="",
                  ucs_chassis_profile_names=""
                  ):
         super().__init__(intersight_api_key_id,
@@ -1054,6 +1057,7 @@ class DirectlyAttachedUcsServerAndChassisPolicy(UcsPolicy):
                          preconfigured_api_client
                          )
         self.ucs_server_profile_names = ucs_server_profile_names
+        self.ucs_server_profile_template_names = ucs_server_profile_template_names
         self.ucs_chassis_profile_names = ucs_chassis_profile_names
 
     def __repr__(self):
@@ -1068,12 +1072,14 @@ class DirectlyAttachedUcsServerAndChassisPolicy(UcsPolicy):
             f"{self.tags}, "
             f"{self.api_client}, "
             f"'{self.ucs_server_profile_names}', "
+            f"'{self.ucs_server_profile_template_names}', "
             f"'{self.ucs_chassis_profile_names}')"
             )
 
     def _attach_ucs_server_and_chassis_profiles(self):
-        """This is a function to attach Intersight UCS Server Profiles and/or
-        UCS Chassis Profiles to an Intersight Policy.
+        """This is a function to attach Intersight UCS Server Profiles, UCS
+        Server Profile Templates, and/or UCS Chassis Profiles to an Intersight
+        Policy.
 
         Returns:
             A dictionary for the API body of the policy object to be posted on
@@ -1100,6 +1106,26 @@ class DirectlyAttachedUcsServerAndChassisPolicy(UcsPolicy):
                 self.intersight_api_body["Profiles"].append(
                     {"Moid": ucs_server_profile_moid,
                      "ObjectType": "server.Profile"}
+                    )
+        # Attach UCS Server Profile Templates
+        if self.ucs_server_profile_template_names:
+            provided_ucs_server_profile_template_list = string_to_list_maker(self.ucs_server_profile_template_names)
+            for provided_ucs_server_profile_template in provided_ucs_server_profile_template_list:
+                print("Attaching the UCS Server Profile Template named "
+                      f"{provided_ucs_server_profile_template}...")
+                # Get UCS Server Profile MOID
+                ucs_server_profile_template_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
+                                                                                    intersight_api_key=None,
+                                                                                    object_name=provided_ucs_server_profile_template,
+                                                                                    intersight_api_path="server/ProfileTemplates?$top=1000",
+                                                                                    object_type="UCS Server Profile Template",
+                                                                                    organization=self.organization,
+                                                                                    preconfigured_api_client=self.api_client
+                                                                                    )
+                # Update the API body with the appropriate Server Profile MOID
+                self.intersight_api_body["Profiles"].append(
+                    {"Moid": ucs_server_profile_template_moid,
+                     "ObjectType": "server.ProfileTemplate"}
                     )
         # Attach UCS Chassis Profile
         if self.ucs_chassis_profile_names:
@@ -1253,6 +1279,7 @@ class PowerPolicy(DirectlyAttachedUcsServerAndChassisPolicy):
                  tags=None,
                  preconfigured_api_client=None,
                  ucs_server_profile_names="",
+                 ucs_server_profile_template_names="",
                  ucs_chassis_profile_names="",
                  power_profiling="Enabled",
                  power_priority="Low",
@@ -1272,6 +1299,7 @@ class PowerPolicy(DirectlyAttachedUcsServerAndChassisPolicy):
                          tags,
                          preconfigured_api_client,
                          ucs_server_profile_names,
+                         ucs_server_profile_template_names,
                          ucs_chassis_profile_names
                          )
         self.power_profiling = power_profiling
@@ -1300,6 +1328,7 @@ class PowerPolicy(DirectlyAttachedUcsServerAndChassisPolicy):
             f"{self.tags}, "
             f"{self.api_client}, "
             f"'{self.ucs_server_profile_names}', "
+            f"'{self.ucs_server_profile_template_names}', "
             f"'{self.ucs_chassis_profile_names}', "
             f"'{self.power_profiling}', "
             f"'{self.power_priority}', "
@@ -1312,7 +1341,6 @@ class PowerPolicy(DirectlyAttachedUcsServerAndChassisPolicy):
             )
 
 
-# Establish function to make Policy
 def power_policy_maker(
     intersight_api_key_id,
     intersight_api_key,
@@ -1331,6 +1359,7 @@ def power_policy_maker(
     tags=None,
     preconfigured_api_client=None,
     ucs_server_profile_names="",
+    ucs_server_profile_template_names="",
     ucs_chassis_profile_names=""
     ):
     """This is a function used to make a Power Policy on Cisco Intersight.
@@ -1395,6 +1424,11 @@ def power_policy_maker(
             to. If providing more than one UCS Server Profile, additional 
             entries should be comma-separated. The default value is an empty
             string ("").
+        ucs_server_profile_template_names (str):
+            Optional; The UCS Server Profile Templates the policy should be
+            attached to. If providing more than one UCS Server Profile Template,
+            additional entries should be comma-separated. The default value is
+            an empty string ("").
         ucs_chassis_profile_names (str):
             Optional; The UCS Chassis Profiles the policy should be attached
             to. If providing more than one UCS Chassis Profile, additional 
@@ -1437,6 +1471,7 @@ def power_policy_maker(
             tags=tags,
             preconfigured_api_client=preconfigured_api_client,
             ucs_server_profile_names=ucs_server_profile_names,
+            ucs_server_profile_template_names=ucs_server_profile_template_names,
             ucs_chassis_profile_names=ucs_chassis_profile_names,
             power_profiling=power_profiling,
             power_priority=power_priority,
@@ -1490,6 +1525,7 @@ def main():
         tags=power_policy_tags,
         preconfigured_api_client=main_intersight_api_client,
         ucs_server_profile_names=ucs_server_profile_names,
+        ucs_server_profile_template_names=ucs_server_profile_template_names,
         ucs_chassis_profile_names=ucs_chassis_profile_names
         )
 
