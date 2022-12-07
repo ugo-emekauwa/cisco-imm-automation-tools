@@ -128,7 +128,7 @@
 7. Run the ucs_domain_deployment_tool.py file.
 
 ## Where to Demo
-The UCS Chassis Deployment Tool can be demoed on Cisco dCloud in the following content:
+The UCS Domain Deployment Tool can be demoed on Cisco dCloud in the following content:
 
 1. [Cisco Intersight with UCS X-Series Demo](https://dcloud2-rtp.cisco.com/content/instantdemo/cisco-intersight-mode-with-ucs-x-series-v1-instant-demo-2)
 ![Cisco UCS X-Series Demo Topology](../../../src/assets/Cisco_UCS_X-Series_Demo_Topology.png "Cisco UCS X-Series Demo Topology")
