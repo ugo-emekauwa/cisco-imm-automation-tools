@@ -58,8 +58,8 @@ iscsi_boot_policy_tags = {"Org": "IT", "Dept": "DevOps"}  # Empty the iscsi_boot
 iscsi_adapter_policy_name = "iSCSI-Adapter-Policy-1"
 configuration_type_for_target_source = "Static"     # Options: "Auto" or "Static"
 auto_target_dhcp_vendor_id_or_iqn = ""
-static_primary_target_policy_name = "iSCSI-Static-Target-Policy-1"
-static_secondary_target_policy_name = ""
+primary_static_target_policy_name = "iSCSI-Static-Target-Policy-1"
+secondary_static_target_policy_name = ""
 static_chap_username = ""
 static_chap_password = ""
 static_mutual_chap_username = ""
@@ -338,7 +338,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                 provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                               intersight_api_key=None,
                                                                               object_name=organization,
-                                                                              intersight_api_path="organization/Organizations",
+                                                                              intersight_api_path="organization/Organizations?$top=1000",
                                                                               object_type="Organization",
                                                                               preconfigured_api_client=api_client
                                                                               )
@@ -629,7 +629,7 @@ class UcsPolicy:
                     existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                        intersight_api_key=None,
                                                                                        object_name=existing_intersight_object_name,
-                                                                                       intersight_api_path=self.intersight_api_path,
+                                                                                       intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                        object_type=self.object_type,
                                                                                        preconfigured_api_client=self.api_client
                                                                                        )
@@ -680,7 +680,7 @@ class UcsPolicy:
         policy_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                     intersight_api_key=None,
                                                                     object_name=self.organization,
-                                                                    intersight_api_path="organization/Organizations",
+                                                                    intersight_api_path="organization/Organizations?$top=1000",
                                                                     object_type="Organization",
                                                                     preconfigured_api_client=self.api_client
                                                                     )
@@ -948,8 +948,8 @@ class IscsiBootPolicy(UcsPolicy):
                  iscsi_adapter_policy_name="",
                  configuration_type_for_target_source="Static",
                  auto_target_dhcp_vendor_id_or_iqn="",
-                 static_primary_target_policy_name="",
-                 static_secondary_target_policy_name="",
+                 primary_static_target_policy_name="",
+                 secondary_static_target_policy_name="",
                  static_chap_username="",
                  static_chap_password="",
                  static_mutual_chap_username="",
@@ -974,8 +974,8 @@ class IscsiBootPolicy(UcsPolicy):
         self.iscsi_adapter_policy_name = iscsi_adapter_policy_name
         self.configuration_type_for_target_source = configuration_type_for_target_source
         self.auto_target_dhcp_vendor_id_or_iqn = auto_target_dhcp_vendor_id_or_iqn
-        self.static_primary_target_policy_name = static_primary_target_policy_name
-        self.static_secondary_target_policy_name = static_secondary_target_policy_name
+        self.primary_static_target_policy_name = primary_static_target_policy_name
+        self.secondary_static_target_policy_name = secondary_static_target_policy_name
         self.static_chap_username = static_chap_username
         self.static_chap_password = static_chap_password
         self.static_mutual_chap_username = static_mutual_chap_username
@@ -1024,8 +1024,8 @@ class IscsiBootPolicy(UcsPolicy):
             f"'{self.iscsi_adapter_policy_name}', "
             f"'{self.configuration_type_for_target_source}', "
             f"'{self.auto_target_dhcp_vendor_id_or_iqn}', "
-            f"'{self.static_primary_target_policy_name}', "
-            f"'{self.static_secondary_target_policy_name}', "
+            f"'{self.primary_static_target_policy_name}', "
+            f"'{self.secondary_static_target_policy_name}', "
             f"'{self.static_chap_username}', "
             f"'{self.static_chap_password}', "
             f"'{self.static_mutual_chap_username}', "
@@ -1057,7 +1057,7 @@ class IscsiBootPolicy(UcsPolicy):
                 intersight_api_key_id=None,
                 intersight_api_key=None,
                 object_name=self.iscsi_adapter_policy_name,
-                intersight_api_path="vnic/IscsiAdapterPolicies",
+                intersight_api_path="vnic/IscsiAdapterPolicies?$top=1000",
                 object_type="iSCSI Adapter Policy",
                 preconfigured_api_client=self.api_client
                 )
@@ -1065,14 +1065,14 @@ class IscsiBootPolicy(UcsPolicy):
                 "Moid": iscsi_adapter_policy_moid
                 }
         else:
-            self.intersight_api_body["IscsiAdapterPolicy"] = self.iscsi_adapter_policy_name
+            self.intersight_api_body["IscsiAdapterPolicy"] = None
         # Update the API body with the provided primary iSCSI Static Target Policy
-        if self.static_primary_target_policy_name:
+        if self.primary_static_target_policy_name:
             static_primary_target_policy_moid = intersight_object_moid_retriever(
                 intersight_api_key_id=None,
                 intersight_api_key=None,
-                object_name=self.static_primary_target_policy_name,
-                intersight_api_path="vnic/IscsiStaticTargetPolicies",
+                object_name=self.primary_static_target_policy_name,
+                intersight_api_path="vnic/IscsiStaticTargetPolicies?$top=1000",
                 object_type="primary iSCSI Static Target Policy",
                 preconfigured_api_client=self.api_client
                 )
@@ -1080,14 +1080,14 @@ class IscsiBootPolicy(UcsPolicy):
                 "Moid": static_primary_target_policy_moid
                 }
         else:
-            self.intersight_api_body["PrimaryTargetPolicy"] = self.static_primary_target_policy_name
+            self.intersight_api_body["PrimaryTargetPolicy"] = None
         # Update the API body with the provided secondary iSCSI Static Target Policy
-        if self.static_secondary_target_policy_name:
+        if self.secondary_static_target_policy_name:
             static_secondary_target_policy_moid = intersight_object_moid_retriever(
                 intersight_api_key_id=None,
                 intersight_api_key=None,
-                object_name=self.static_secondary_target_policy_name,
-                intersight_api_path="vnic/IscsiStaticTargetPolicies",
+                object_name=self.secondary_static_target_policy_name,
+                intersight_api_path="vnic/IscsiStaticTargetPolicies?$top=1000",
                 object_type="secondary iSCSI Static Target Policy",
                 preconfigured_api_client=self.api_client
                 )
@@ -1095,14 +1095,14 @@ class IscsiBootPolicy(UcsPolicy):
                 "Moid": static_secondary_target_policy_moid
                 }
         else:
-            self.intersight_api_body["SecondaryTargetPolicy"] = self.static_secondary_target_policy_name
+            self.intersight_api_body["SecondaryTargetPolicy"] = None
         # Update the API body with the provided Initiator IP Source IP Pool
         if self.static_initiator_ip_source_pool_ip_pool_name:
             static_initiator_ip_source_pool_ip_pool_moid = intersight_object_moid_retriever(
                 intersight_api_key_id=None,
                 intersight_api_key=None,
                 object_name=self.static_initiator_ip_source_pool_ip_pool_name,
-                intersight_api_path="ippool/Pools",
+                intersight_api_path="ippool/Pools?$top=1000",
                 object_type="Initiator IP Source IP Pool",
                 preconfigured_api_client=self.api_client
                 )
@@ -1110,12 +1110,11 @@ class IscsiBootPolicy(UcsPolicy):
                 "Moid": static_initiator_ip_source_pool_ip_pool_moid
                 }
         else:
-            self.intersight_api_body["InitiatorIpPool"] = self.static_initiator_ip_source_pool_ip_pool_name
+            self.intersight_api_body["InitiatorIpPool"] = None
         # POST the API body to Intersight
         self._post_intersight_object()
 
 
-# Establish function to make Policy
 def iscsi_boot_policy_maker(
     intersight_api_key_id,
     intersight_api_key,
@@ -1123,8 +1122,8 @@ def iscsi_boot_policy_maker(
     iscsi_adapter_policy_name,
     configuration_type_for_target_source="Static",
     auto_target_dhcp_vendor_id_or_iqn="",
-    static_primary_target_policy_name="",
-    static_secondary_target_policy_name="",
+    primary_static_target_policy_name="",
+    secondary_static_target_policy_name="",
     static_chap_username="",
     static_chap_password="",
     static_mutual_chap_username="",
@@ -1163,12 +1162,12 @@ def iscsi_boot_policy_maker(
             initiator name (IQN) or the DHCP vendor ID. This value is only
             required for the Auto configuration type under the iSCSI Boot
             Policy. The default value is an empty string ("").
-        static_primary_target_policy_name (str):
+        primary_static_target_policy_name (str):
             Optional; The name of the primary iSCSI Static Target Policy to be
             used by the iSCSI Boot Policy. This value is only required for the
             Static configuration type under the iSCSI Boot Policy. The default
             value is an empty string ("").
-        static_secondary_target_policy_name (str):
+        secondary_static_target_policy_name (str):
             Optional; The name of the secondary iSCSI Static Target Policy to
             be used by the iSCSI Boot Policy. This value is only required for
             the Static configuration type under the iSCSI Boot Policy. The
@@ -1285,8 +1284,8 @@ def iscsi_boot_policy_maker(
             iscsi_adapter_policy_name=iscsi_adapter_policy_name,
             configuration_type_for_target_source=configuration_type_for_target_source,
             auto_target_dhcp_vendor_id_or_iqn=auto_target_dhcp_vendor_id_or_iqn,
-            static_primary_target_policy_name=static_primary_target_policy_name,
-            static_secondary_target_policy_name=static_secondary_target_policy_name,
+            primary_static_target_policy_name=primary_static_target_policy_name,
+            secondary_static_target_policy_name=secondary_static_target_policy_name,
             static_chap_username=static_chap_username,
             static_chap_password=static_chap_password,
             static_mutual_chap_username=static_mutual_chap_username,
@@ -1331,8 +1330,8 @@ def main():
         iscsi_adapter_policy_name=iscsi_adapter_policy_name,
         configuration_type_for_target_source=configuration_type_for_target_source,
         auto_target_dhcp_vendor_id_or_iqn=auto_target_dhcp_vendor_id_or_iqn,
-        static_primary_target_policy_name=static_primary_target_policy_name,
-        static_secondary_target_policy_name=static_secondary_target_policy_name,
+        primary_static_target_policy_name=primary_static_target_policy_name,
+        secondary_static_target_policy_name=secondary_static_target_policy_name,
         static_chap_username=static_chap_username,
         static_chap_password=static_chap_password,
         static_mutual_chap_username=static_mutual_chap_username,
