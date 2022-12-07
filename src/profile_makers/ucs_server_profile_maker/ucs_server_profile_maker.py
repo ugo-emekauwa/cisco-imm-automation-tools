@@ -76,8 +76,12 @@ resource_pool_name = ""
 
 # Compute Configuration
 uuid_assignment_type = "Pool"       # Options: "Pool", "Static", "None"
-uuid_pool = ""       # If the uuid_assignment_type variable is set to "Pool", provide a string value e.g. "UUID-Pool-1" for the uuid_pool variable
+uuid_pool_name = "UUID-Pool-1"       # If the uuid_assignment_type variable is set to "Pool", provide a string value e.g. "UUID-Pool-1" for the uuid_pool_name variable
 uuid_static_address = ""        # If the uuid_assignment_type variable is set to "Static", provide a string value e.g. "F733776E-1ED8-11E2-0000-000000000001" for the uuid_static_address variable
+
+# UCS Server Profile Template Attachment Settings (Change only if needed)
+ucs_server_profile_template_name_for_attachment = "UCS-Server-Profile-Template-1"
+overwrite_conflicting_ucs_server_profile_template_attachments = False
 
 # Profile Default Settings (Change only if needed)
 ucs_server_type = "FI-Attached"     # Options: "FI-Attached", "Standalone"
@@ -101,6 +105,7 @@ import intersight
 import re
 import time
 import urllib3
+import ast
 
 # Suppress InsecureRequestWarning error messages
 urllib3.disable_warnings()
@@ -805,6 +810,45 @@ def string_to_list_maker(string_list,
     return final_list
 
 
+# Establish function to provide a delay timer between tasks.
+def delay_timer(
+    delay_in_seconds=5,
+    delay_symbol="*"
+    ):
+    """This is a function to provide an delay timer between tasks.
+
+    Args:
+        delay_in_seconds (int):
+            Optional; This argument sets the delay time. The default value
+            is 5 seconds.
+        delay_symbol (str):
+            Optional; This argument sets the visual delay symbol. The
+            default value is "*".
+    
+    Raises:
+        Exception:
+            An exception occurred while performing the function.
+            An error message will be specified.
+    """
+    try:
+        while delay_in_seconds > 0:
+            print(delay_symbol, end="\r")
+            delay_in_seconds -= 1
+            time.sleep(1)
+    except Exception:
+        print("\nA configuration error has occurred!\n")
+        print("There was an issue with performing the delay timer with the "
+              "arguments provided.")
+        print("An attempt will be made with the default settings of 5 "
+              "seconds and the delay symbol as '*'.\n")
+        delay_in_seconds = 5
+        delay_symbol = "*"
+        while delay_in_seconds > 0:
+            print(delay_symbol, end="\r")
+            delay_in_seconds -= 1
+            time.sleep(1)
+
+
 # Establish Maker specific classes and functions
 class UcsServerProfile:
     """This class is used to configure a UCS Server Profile in Intersight.
@@ -852,8 +896,10 @@ class UcsServerProfile:
                  preconfigured_api_client=None,
                  ucs_server_type="FI-Attached",
                  uuid_assignment_type="Pool",
-                 uuid_pool="",
-                 uuid_static_address=""
+                 uuid_pool_name="",
+                 uuid_static_address="",
+                 ucs_server_profile_template_name_for_attachment="",
+                 overwrite_conflicting_ucs_server_profile_template_attachments=False
                  ):
         self.intersight_api_key_id = intersight_api_key_id
         self.intersight_api_key = intersight_api_key
@@ -874,8 +920,10 @@ class UcsServerProfile:
             self.api_client = preconfigured_api_client
         self.ucs_server_type = ucs_server_type
         self.uuid_assignment_type = uuid_assignment_type
-        self.uuid_pool = uuid_pool
+        self.uuid_pool_name = uuid_pool_name
         self.uuid_static_address = uuid_static_address
+        self.ucs_server_profile_template_name_for_attachment = ucs_server_profile_template_name_for_attachment
+        self.overwrite_conflicting_ucs_server_profile_template_attachments = overwrite_conflicting_ucs_server_profile_template_attachments
         self.intersight_api_body = {
             "Name": self.ucs_server_profile_name,
             "Description": self.ucs_server_profile_description,
@@ -894,8 +942,10 @@ class UcsServerProfile:
             f"{self.api_client}, "
             f"'{self.ucs_server_type}', "
             f"'{self.uuid_assignment_type}', "
-            f"'{self.uuid_pool}', "
-            f"'{self.uuid_static_address}')"
+            f"'{self.uuid_pool_name}', "
+            f"'{self.uuid_static_address}', "
+            f"'{self.ucs_server_profile_template_name_for_attachment}', "
+            f"{self.overwrite_conflicting_ucs_server_profile_template_attachments})"
             )
 
     def __str__(self):
@@ -925,16 +975,16 @@ class UcsServerProfile:
                   "has completed.")
             return "The POST method was successful."
         except intersight.exceptions.ApiException as error:
+            error_body_dictionary = ast.literal_eval(error.body)
             if error.status == 409:
-                existing_intersight_object_name = self.intersight_api_body.get("Name", "object")
                 print(f"The targeted {self.object_type} appears to already "
                       "exist.")
                 print("An attempt will be made to update the pre-existing "
-                      f"{existing_intersight_object_name}...")
+                      f"{self.ucs_server_profile_name}...")
                 try:
                     existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                        intersight_api_key=None,
-                                                                                       object_name=existing_intersight_object_name,
+                                                                                       object_name=self.ucs_server_profile_name,
                                                                                        intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                        object_type=self.object_type,
                                                                                        preconfigured_api_client=self.api_client
@@ -948,7 +998,7 @@ class UcsServerProfile:
                                              )
                     print(f"The update of the {self.object_type} has "
                           "completed.")
-                    print(f"The pre-existing {existing_intersight_object_name} "
+                    print(f"The pre-existing {self.ucs_server_profile_name} "
                           "has been updated.")
                     return "The POST method was successful."
                 except Exception:
@@ -956,11 +1006,126 @@ class UcsServerProfile:
                     print(f"Unable to update the {self.object_type} under the "
                           "Intersight API resource path "
                           f"'{full_intersight_api_path_with_moid}'.\n")
-                    print(f"The pre-existing {existing_intersight_object_name} "
+                    print(f"The pre-existing {self.ucs_server_profile_name} "
                           "could not be updated.")
                     print("Exception Message: ")
                     traceback.print_exc()
                     return "The POST method failed."
+            elif (
+                error.status == 403
+                and
+                error_body_dictionary.get("messageId") == "gershwin_cannot_edit_derived_sp"
+                ):
+                print(f"A {self.object_type} named "
+                      f"{self.ucs_server_profile_name} appears to already "
+                      "exist.")
+                print("It also appears a UCS Server Profile Template may "
+                      "already be attached.")
+                if self.ucs_server_profile_template_name_for_attachment:
+                    print("A UCS Server Profile Template named "
+                          f"{ucs_server_profile_template_name_for_attachment} "
+                          "has been provided for a new attachment.")
+                    print("If no UCS Server Profile Template is already attached, "
+                          "an attempt will be made to attach the newly "
+                          "provided UCS Server Profile Template.")
+                    print("If the newly provided UCS Server Profile Template "
+                          "is already attached, an attempt will be made to "
+                          "refresh the attachment...")
+                else:
+                    print("No UCS Server Profile Template has been provided "
+                          "for a new attachment.")
+                    print("An attempt will be made to update the pre-existing "
+                          f"{self.object_type} named "
+                          f"{self.ucs_server_profile_name}.")
+                try:
+                    if self.overwrite_conflicting_ucs_server_profile_template_attachments:
+                        modified_intersight_api_body = copy.deepcopy(self.intersight_api_body)
+                        modified_intersight_api_body["SrcTemplate"] = None
+                        # Post UCS Server Profile object with cleared source template in modified Intersight API body
+                        self.api_client.call_api(resource_path=full_intersight_api_path,
+                                                 method="POST",
+                                                 body=modified_intersight_api_body,
+                                                 auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                                 )
+                        # Re-Post UCS Server Profile object with original Intersight API body
+                        self.api_client.call_api(resource_path=full_intersight_api_path,
+                                                 method="POST",
+                                                 body=self.intersight_api_body,
+                                                 auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                                 )
+                        print(f"The update of the {self.object_type} has "
+                              "completed.")
+                        print(f"The pre-existing {self.ucs_server_profile_name} "
+                              "has been updated.")
+                        return "The POST method was successful."
+                    else:                        
+                        # Get UCS Server Profile MOID
+                        existing_ucs_server_profile_moid = intersight_object_moid_retriever(
+                            intersight_api_key_id=None,
+                            intersight_api_key=None,
+                            object_name=self.ucs_server_profile_name,
+                            intersight_api_path=f"{self.intersight_api_path}?$top=1000",
+                            object_type=self.object_type,
+                            preconfigured_api_client=self.api_client
+                            )
+                        # Get UCS Server Profile object dictionary attributes
+                        existing_ucs_server_profile_object = get_single_intersight_object(
+                            intersight_api_key_id=None,
+                            intersight_api_key=None,
+                            intersight_api_path=self.intersight_api_path,
+                            object_moid=existing_ucs_server_profile_moid,
+                            object_type=self.object_type,
+                            preconfigured_api_client=self.api_client
+                            )
+                        provided_ucs_server_profile_template_moid = self.intersight_api_body.get("SrcTemplate", {}).get("Moid")
+                        existing_ucs_server_profile_object_ucs_server_profile_template_moid = existing_ucs_server_profile_object.get("SrcTemplate", {}).get("Moid")
+                        # Check if UCS Server Profile Template is attached to pre-existing UCS Server Profile
+                        # If UCS Server Profile Template is attached to pre-existing UCS Server Profile, verify it matches the newly provided UCS Server Profile Template
+                        if (existing_ucs_server_profile_object_ucs_server_profile_template_moid is None
+                            or
+                            provided_ucs_server_profile_template_moid == existing_ucs_server_profile_object_ucs_server_profile_template_moid):
+                            # Update full Intersight API path with the MOID of the existing object
+                            full_intersight_api_path_with_moid = f"/{self.intersight_api_path}/{existing_ucs_server_profile_moid}"
+                            modified_intersight_api_body = copy.deepcopy(self.intersight_api_body)
+                            modified_intersight_api_body["SrcTemplate"] = None
+                            # Post UCS Server Profile object with cleared source template in modified Intersight API body
+                            self.api_client.call_api(resource_path=full_intersight_api_path_with_moid,
+                                                     method="POST",
+                                                     body=modified_intersight_api_body,
+                                                     auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                                     )
+                            # Re-Post UCS Server Profile object with original Intersight API body
+                            self.api_client.call_api(resource_path=full_intersight_api_path_with_moid,
+                                                     method="POST",
+                                                     body=self.intersight_api_body,
+                                                     auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
+                                                     )
+                            print(f"The update of the {self.object_type} has "
+                                  "completed.")
+                            print(f"The pre-existing {self.ucs_server_profile_name} "
+                                  "has been updated.")
+                            return "The POST method was successful."
+                        else:
+                            print("\nA configuration error has occurred!\n")
+                            print(f"The pre-existing {self.ucs_server_profile_name} "
+                                  "appears to have a current UCS Server Profile Template "
+                                  "attachment that is different from the "
+                                  "provided configuration.")
+                            print("As a safeguard, please update the pre-existing "
+                                  f"{self.ucs_server_profile_name} manually.")
+                            print("An an alternative solution, please change the "
+                                  "name of the proposed UCS Server Profile.")
+                            return "The POST method failed."                        
+                except Exception:
+                    print("\nA configuration error has occurred!\n")
+                    print(f"Unable to update the {self.object_type} under the "
+                          "Intersight API resource path "
+                          f"'{full_intersight_api_path_with_moid}'.\n")
+                    print(f"The pre-existing {self.ucs_server_profile_name} "
+                          "could not be updated.")
+                    print("Exception Message: ")
+                    traceback.print_exc()
+                    return "The POST method failed."                
             else:
                 print("\nA configuration error has occurred!\n")
                 print(f"Unable to configure the {self.object_type} under the "
@@ -1095,12 +1260,12 @@ class UcsServerProfile:
         self._update_api_body_general_attributes()
         # Update the API body with individual mapped object attributes
         self._update_api_body_mapped_object_attributes()
-        # Update the API body with any provided UUID Pool
-        if self.uuid_pool and self.intersight_api_body["UuidAddressType"] == "POOL":
+        # Update the API body with any provided UUID Pool or UUID Static Address
+        if self.uuid_pool_name and self.intersight_api_body["UuidAddressType"] == "POOL":
             uuid_pool_moid = intersight_object_moid_retriever(
                 intersight_api_key_id=None,
                 intersight_api_key=None,
-                object_name=self.uuid_pool,
+                object_name=self.uuid_pool_name,
                 intersight_api_path="uuidpool/Pools?$top=1000",
                 object_type="UUID Pool",
                 preconfigured_api_client=self.api_client
@@ -1114,6 +1279,27 @@ class UcsServerProfile:
             self.intersight_api_body["UuidAddressType"] = "NONE"
             self.intersight_api_body["UuidPool"] = None
             self.intersight_api_body["StaticUuidAddress"] = ""
+        # Update the API body with any provided UCS Server Profile Template for attachment
+        if self.ucs_server_profile_template_name_for_attachment:
+            print("The UCS Server Profile Template named "
+                  f"{self.ucs_server_profile_template_name_for_attachment} has "
+                  "been provided for attachment.")
+            ucs_server_profile_template_moid = intersight_object_moid_retriever(
+                intersight_api_key_id=None,
+                intersight_api_key=None,
+                object_name=self.ucs_server_profile_template_name_for_attachment,
+                intersight_api_path="server/ProfileTemplates",
+                object_type="UCS Server Profile Template",
+                preconfigured_api_client=self.api_client
+                )
+            self.intersight_api_body["SrcTemplate"] = {
+                "ClassId": "mo.MoRef",
+                "Moid": ucs_server_profile_template_moid,
+                "ObjectType": "server.ProfileTemplate",
+                "link": f"https://www.intersight.com/api/v1/server/ProfileTemplates/{ucs_server_profile_template_moid}"
+                }
+        else:
+            self.intersight_api_body["SrcTemplate"] = None
         # POST the API body to Intersight
         self._post_intersight_object()
 
@@ -1122,9 +1308,11 @@ def ucs_server_profile_maker(
     intersight_api_key_id,
     intersight_api_key,
     ucs_server_profile_name,
-    uuid_pool="",
+    uuid_pool_name="",
     uuid_assignment_type="Pool",
     uuid_static_address="",
+    ucs_server_profile_template_name_for_attachment="",
+    overwrite_conflicting_ucs_server_profile_template_attachments=False,
     ucs_server_type="FI-Attached",
     ucs_server_profile_description="",
     ucs_server_profile_organization="default",
@@ -1141,7 +1329,7 @@ def ucs_server_profile_maker(
             The system file path of the Intersight API key.
         ucs_server_profile_name (str):
             The name of the UCS Server Profile to be created.
-        uuid_pool (str):
+        uuid_pool_name (str):
             The name of the pre-existing UUID Pool to be used by the UCS Server
             Profile if the UUID assignment type has been set to "Pool". The
             default value is an empty string ("").
@@ -1152,6 +1340,20 @@ def ucs_server_profile_maker(
             Optional; The UUID static address to be used if the UUID
             assignment type has been set to "Static". The default value is an
             empty string ("").
+        ucs_server_profile_template_name_for_attachment (str):
+            Optional; The name of the UCS Server Profile Template that the UCS
+            Server Profile should be attached to. If attached to a UCS Server
+            Profile Template, the UCS Server Profile will inherit settings from
+            the UCS Server Profile Template. The default value is an empty
+            string ("").
+        overwrite_conflicting_ucs_server_profile_template_attachments (bool):
+            Optional; In the case of pre-exiting UCS Server Profiles, this
+            option allows the automatic overwrite of any previously attached
+            UCS Server Profile Templates that conflict with the newly provided
+            UCS Server Profile Template in the separate 
+            ucs_server_profile_template_name_for_attachment argument. Setting
+            to True will enable the automatic overwrite and provide for
+            potentially faster deployments. The default value is False.
         ucs_server_type (str):
             Optional; The desired UCS Server type (Target Platform) of the UCS
             Server Profile. The accepted values are "FI-Attached" or
@@ -1215,8 +1417,10 @@ def ucs_server_profile_maker(
             preconfigured_api_client=preconfigured_api_client,
             ucs_server_type=ucs_server_type,
             uuid_assignment_type=uuid_assignment_type,
-            uuid_pool=uuid_pool,
-            uuid_static_address=uuid_static_address
+            uuid_pool_name=uuid_pool_name,
+            uuid_static_address=uuid_static_address,
+            ucs_server_profile_template_name_for_attachment=ucs_server_profile_template_name_for_attachment,
+            overwrite_conflicting_ucs_server_profile_template_attachments=overwrite_conflicting_ucs_server_profile_template_attachments
             ))
 
 
@@ -1231,6 +1435,7 @@ def assign_and_deploy_ucs_server_profile(
     ucs_server_type="FI-Attached",
     assign_ucs_server_profile=True,
     deploy_ucs_server_profile=False,
+    deployment_start_delay=5,
     ucs_server_profile_organization="default",
     intersight_base_url="https://www.intersight.com/api/v1",
     preconfigured_api_client=None
@@ -1278,6 +1483,12 @@ def assign_and_deploy_ucs_server_profile(
             Optional; This argument enables or disables the option to deploy
             the provided UCS Server Profile to the provided Server or a
             previously assigned Server. The default value is False.
+        deployment_start_delay (int):
+            Optional; This argument sets the delay time between UCS Server
+            Profile assignment and deployment. The delay allows for system time
+            that may be needed for clearing previous configurations, etc.
+            before a new UCS Server Profile may be deployed. The default value
+            is 5 seconds.
         ucs_server_profile_organization (str):
             Optional; The Intersight account organization of the UCS Server
             Profile. The default value is "default".
@@ -1560,6 +1771,11 @@ def assign_and_deploy_ucs_server_profile(
     if deploy_ucs_server_profile:
         print("\nDeploying the UCS Server Profile named "
               f"{ucs_server_profile_name}...")
+        if deployment_start_delay:
+            print(f"A deployment start delay of {deployment_start_delay} "
+                  "seconds has been set, please wait...\n")
+            delay_timer(deployment_start_delay)
+            print("\n")
         # Deploy the UCS Server Profile
         print("Deploying the UCS Server Profile...")
         ucs_server_profile_deployment_api_body = {
@@ -1599,9 +1815,11 @@ def main():
         intersight_api_key_id=None,
         intersight_api_key=None,
         ucs_server_profile_name=ucs_server_profile_name,
-        uuid_pool=uuid_pool,
+        uuid_pool_name=uuid_pool_name,
         uuid_assignment_type=uuid_assignment_type,
         uuid_static_address=uuid_static_address,
+        ucs_server_profile_template_name_for_attachment=ucs_server_profile_template_name_for_attachment,
+        overwrite_conflicting_ucs_server_profile_template_attachments=overwrite_conflicting_ucs_server_profile_template_attachments,
         ucs_server_type=ucs_server_type,
         ucs_server_profile_description=ucs_server_profile_description,
         ucs_server_profile_organization=ucs_server_profile_organization,
@@ -1621,6 +1839,7 @@ def main():
             ucs_server_type=ucs_server_type,
             assign_ucs_server_profile=assign_ucs_server_profile,
             deploy_ucs_server_profile=False,
+            deployment_start_delay=5,
             ucs_server_profile_organization=ucs_server_profile_organization,
             preconfigured_api_client=main_intersight_api_client
             )
