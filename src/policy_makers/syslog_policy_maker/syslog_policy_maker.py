@@ -75,11 +75,12 @@ syslog_remote_logging_server_list = [
 intersight_base_url = "https://www.intersight.com/api/v1"
 url_certificate_verification = True
 
-# UCS Server Profile Attachment Settings
-ucs_server_profile_name = ""
+# UCS Server Profile Attachment Settings (If providing more than one UCS Server Profile and/or UCS Server Profile Template, additional entries should be comma-separated)
+ucs_server_profile_names = ""
+ucs_server_profile_template_names = ""
 
-# UCS Domain Profile Attachment Settings
-ucs_domain_profile_name = ""
+# UCS Domain Profile Attachment Settings (If providing more than one UCS Domain Profile, additional entries should be comma-separated)
+ucs_domain_profile_names = ""
 
 ####### Finish Configuration Settings - The required value entries are complete. #######
 
@@ -343,7 +344,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                 provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                               intersight_api_key=None,
                                                                               object_name=organization,
-                                                                              intersight_api_path="organization/Organizations",
+                                                                              intersight_api_path="organization/Organizations?$top=1000",
                                                                               object_type="Organization",
                                                                               preconfigured_api_client=api_client
                                                                               )
@@ -542,6 +543,102 @@ def get_single_intersight_object(intersight_api_key_id,
         sys.exit(0)
 
 
+# Establish function to convert a list of strings in string type format to list type format.
+def string_to_list_maker(string_list,
+                         remove_duplicate_elements_in_list=True
+                         ):
+    """This function converts a list of strings in string type format to list
+    type format. The provided string should contain commas, semicolons, or
+    spaces as the separator between strings. For each string in the list,
+    leading and rear spaces will be removed. Duplicate strings in the list are
+    removed by default.
+
+    Args:
+        string_list (str):
+            A string containing an element or range of elements.
+
+        remove_duplicate_elements_in_list (bool):
+            Optional; A setting to determine whether duplicate elements are
+            removed from the provided string list. The default value is True.
+
+    Returns:
+        A list of elements.   
+    """
+    def string_to_list_separator(string_list,
+                                 separator
+                                 ):
+        """This function converts a list of elements in string type format to
+        list type format using the provided separator. For each element in the
+        list, leading and rear spaces are removed.
+
+        Args:
+            string_list (str):
+                A string containing an element or range of elements.
+
+            separator (str):
+                The character to identify where elements in the
+                list should be separated (e.g., a comma, semicolon,
+                hyphen, etc.).
+
+        Returns:
+            A list of separated elements that have been stripped of any spaces.   
+        """
+        fully_stripped_list = []
+        # Split string by provided separator and create list of separated elements.
+        split_list = string_list.split(separator)
+        for element in split_list:
+            if element:
+                # Remove leading spaces from elements in list.
+                lstripped_element = element.lstrip()
+                # Remove rear spaces from elements in list.
+                rstripped_element = lstripped_element.rstrip()
+                # Populate new list with fully stripped elements.
+                fully_stripped_list.append(rstripped_element)
+        return fully_stripped_list
+
+    def list_to_list_separator(provided_list,
+                               separator
+                               ):
+        """This function converts a list of elements in list type format to
+        list type format using the provided separator. For each element in the
+        list, leading and rear spaces are removed.
+
+        Args:
+            provided_list (list): A list of elements to be separated.
+
+            separator (str): The character to identify where elements in the
+                list should be separated (e.g., a comma, semicolon,
+                hyphen, etc.).
+
+        Returns:
+            A list of separated elements that have been stripped of any spaces.        
+        """
+        new_list = []
+        # Split list by provided separator and create new list of separated elements.
+        for element in provided_list:
+            if separator in element:
+                split_provided_list = string_to_list_separator(element, separator)
+                new_list.extend(split_provided_list)
+            else:
+                new_list.append(element)
+        return new_list
+    
+    staged_list = []
+    # Split provided list by spaces.
+    space_split_list = string_to_list_separator(string_list, " ")
+    # Split provided list by commas.
+    post_comma_split_list = list_to_list_separator(space_split_list, ",")
+    # Split provided list by semicolons.
+    post_semicolon_split_list = list_to_list_separator(post_comma_split_list, ";")
+    # Split provided list by hyphens.
+    for post_semicolon_split_string_set in post_semicolon_split_list:
+        staged_list.append(post_semicolon_split_string_set)
+    # Remove duplicates from list if enabled.
+    if remove_duplicate_elements_in_list:
+        final_list = list(set(staged_list))
+    return final_list
+
+
 # Establish Maker specific classes and functions
 class UcsPolicy:
     """This class is used to configure a UCS Policy in Intersight.
@@ -634,7 +731,7 @@ class UcsPolicy:
                     existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                        intersight_api_key=None,
                                                                                        object_name=existing_intersight_object_name,
-                                                                                       intersight_api_path=self.intersight_api_path,
+                                                                                       intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                        object_type=self.object_type,
                                                                                        preconfigured_api_client=self.api_client
                                                                                        )
@@ -685,7 +782,7 @@ class UcsPolicy:
         policy_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                     intersight_api_key=None,
                                                                     object_name=self.organization,
-                                                                    intersight_api_path="organization/Organizations",
+                                                                    intersight_api_path="organization/Organizations?$top=1000",
                                                                     object_type="Organization",
                                                                     preconfigured_api_client=self.api_client
                                                                     )
@@ -937,9 +1034,9 @@ class UcsPolicy:
 
 class DirectlyAttachedUcsServerAndDomainPolicy(UcsPolicy):
     """This class is used to configure a UCS Server and/or UCS Domain Policy in
-    Intersight that is logically directly attached to UCS Servers through
-    UCS Server Profiles and/or UCS Fabric Interconnects through UCS Domain
-    Profiles.
+    Intersight that is logically directly attached to UCS Servers through UCS
+    Server Profiles and/or UCS Server Profile Templates, and/or UCS Fabric
+    Interconnects through UCS Domain Profiles.
     """
     object_type = "Directly Attached UCS Server and Domain Policy"
     intersight_api_path = None
@@ -953,8 +1050,9 @@ class DirectlyAttachedUcsServerAndDomainPolicy(UcsPolicy):
                  intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
-                 ucs_server_profile_name="",
-                 ucs_domain_profile_name="",
+                 ucs_server_profile_names="",
+                 ucs_server_profile_template_names="",
+                 ucs_domain_profile_names="",
                  fabric_interconnect="AB"
                  ):
         super().__init__(intersight_api_key_id,
@@ -966,8 +1064,9 @@ class DirectlyAttachedUcsServerAndDomainPolicy(UcsPolicy):
                          tags,
                          preconfigured_api_client
                          )
-        self.ucs_server_profile_name = ucs_server_profile_name
-        self.ucs_domain_profile_name = ucs_domain_profile_name
+        self.ucs_server_profile_names = ucs_server_profile_names
+        self.ucs_server_profile_template_names = ucs_server_profile_template_names
+        self.ucs_domain_profile_names = ucs_domain_profile_names
         self.fabric_interconnect = fabric_interconnect
 
     def __repr__(self):
@@ -981,14 +1080,16 @@ class DirectlyAttachedUcsServerAndDomainPolicy(UcsPolicy):
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
             f"{self.api_client}, "
-            f"'{self.ucs_server_profile_name}', "
-            f"'{self.ucs_domain_profile_name}', "
+            f"'{self.ucs_server_profile_names}', "
+            f"'{self.ucs_server_profile_template_names}', "
+            f"'{self.ucs_domain_profile_names}', "
             f"'{self.fabric_interconnect}')"
             )
 
     def _attach_ucs_server_and_domain_profiles(self):
-        """This is a function to attach an Intersight UCS Server Profile and/or
-        UCS Domain Profile to an Intersight Policy.
+        """This is a function to attach Intersight UCS Server Profiles, UCS
+        Server Profile Templates, and/or UCS Domain Profiles to an Intersight
+        Policy.
 
         Returns:
             A dictionary for the API body of the policy object to be posted on
@@ -997,97 +1098,121 @@ class DirectlyAttachedUcsServerAndDomainPolicy(UcsPolicy):
         # Update the API body with the Profiles key
         self.intersight_api_body["Profiles"] = []
         # Attach UCS Server Profile
-        if self.ucs_server_profile_name:
-            print("Attaching the UCS Server Profile named "
-                  f"{self.ucs_server_profile_name}...")
-            # Get UCS Server Profile MOID
-            ucs_server_profile_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
-                                                                       intersight_api_key=None,
-                                                                       object_name=self.ucs_server_profile_name,
-                                                                       intersight_api_path="server/Profiles",
-                                                                       object_type="UCS Server Profile",
-                                                                       organization=self.organization,
-                                                                       preconfigured_api_client=self.api_client
-                                                                       )
-            # Update the API body with the appropriate Server Profile MOID
-            self.intersight_api_body["Profiles"].append(
-                {"Moid": ucs_server_profile_moid,
-                 "ObjectType": "server.Profile"}
-                )
+        if self.ucs_server_profile_names:
+            provided_ucs_server_profile_list = string_to_list_maker(self.ucs_server_profile_names)
+            for provided_ucs_server_profile in provided_ucs_server_profile_list:
+                print("Attaching the UCS Server Profile named "
+                      f"{provided_ucs_server_profile}...")
+                # Get UCS Server Profile MOID
+                ucs_server_profile_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
+                                                                           intersight_api_key=None,
+                                                                           object_name=provided_ucs_server_profile,
+                                                                           intersight_api_path="server/Profiles?$top=1000",
+                                                                           object_type="UCS Server Profile",
+                                                                           organization=self.organization,
+                                                                           preconfigured_api_client=self.api_client
+                                                                           )
+                # Update the API body with the appropriate Server Profile MOID
+                self.intersight_api_body["Profiles"].append(
+                    {"Moid": ucs_server_profile_moid,
+                     "ObjectType": "server.Profile"}
+                    )
+        # Attach UCS Server Profile Templates
+        if self.ucs_server_profile_template_names:
+            provided_ucs_server_profile_template_list = string_to_list_maker(self.ucs_server_profile_template_names)
+            for provided_ucs_server_profile_template in provided_ucs_server_profile_template_list:
+                print("Attaching the UCS Server Profile Template named "
+                      f"{provided_ucs_server_profile_template}...")
+                # Get UCS Server Profile MOID
+                ucs_server_profile_template_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
+                                                                                    intersight_api_key=None,
+                                                                                    object_name=provided_ucs_server_profile_template,
+                                                                                    intersight_api_path="server/ProfileTemplates?$top=1000",
+                                                                                    object_type="UCS Server Profile Template",
+                                                                                    organization=self.organization,
+                                                                                    preconfigured_api_client=self.api_client
+                                                                                    )
+                # Update the API body with the appropriate Server Profile MOID
+                self.intersight_api_body["Profiles"].append(
+                    {"Moid": ucs_server_profile_template_moid,
+                     "ObjectType": "server.ProfileTemplate"}
+                    )
         # Attach UCS Domain Profile
-        if self.ucs_domain_profile_name:
-            print("Attaching the UCS Domain Profile named "
-                  f"{self.ucs_domain_profile_name}...")
-            # Get UCS Domain Profile MOID
-            ucs_domain_profile_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
-                                                                       intersight_api_key=None,
-                                                                       object_name=self.ucs_domain_profile_name,
-                                                                       intersight_api_path="fabric/SwitchClusterProfiles",
-                                                                       object_type="UCS Domain Profile",
-                                                                       organization=self.organization,
-                                                                       preconfigured_api_client=self.api_client
-                                                                       )
-            # Get UCS Domain Profile object dictionary attributes
-            ucs_domain_profile_object = get_single_intersight_object(intersight_api_key_id=None,
-                                                                     intersight_api_key=None,
-                                                                     intersight_api_path="fabric/SwitchClusterProfiles",
-                                                                     object_moid=ucs_domain_profile_moid,
-                                                                     object_type="UCS Domain Profile",
-                                                                     preconfigured_api_client=self.api_client
-                                                                     )
-            # Get Switch Profiles that are attached to the UCS Domain Profile
-            ucs_domain_profile_list_of_attached_switch_profiles = ucs_domain_profile_object.get("SwitchProfiles")
-            if len(ucs_domain_profile_list_of_attached_switch_profiles) != 2:
-                print("\nA configuration error has occurred!\n")
-                print("The provided UCS Domain Profile named "
-                      f"{self.ucs_domain_profile_name} is not configured with "
-                      "two attached Switch Profiles.")
-                print("To proceed, two Switch Profiles must be attached to the "
-                      "provided UCS Domain Profile.")
-                print("Please update the configuration of the provided UCS "
-                      f"Domain Profile, then re-attempt execution.\n")
-                sys.exit(0)
-            else:
-                fabric_interconnect_a_switch_profile_moid = ucs_domain_profile_list_of_attached_switch_profiles[0].get("Moid")
-                fabric_interconnect_b_switch_profile_moid = ucs_domain_profile_list_of_attached_switch_profiles[1].get("Moid")
-            # Update the API body with the appropriate Switch Profile MOIDs based on selected Fabric Interconnects
-            if self.fabric_interconnect not in ("AB", "BA", "A", "B"):
-                print("\nA configuration error has occurred!\n")
-                print("The provided UCS Domain Profile Fabric Interconnect "
-                      "value of "
-                      f"'{self.fabric_interconnect}' "
-                      "is not supported.")
-                print("To proceed, the Fabric Interconnect value for the "
-                      "UCS Domain Profile must be 'AB', 'A', or 'B'.")
-                print("Please update the configuration of the provided UCS "
-                      "Domain Profile Fabric Interconnect, then re-attempt "
-                      "execution.\n")
-                sys.exit(0)
-            else:
-                if self.fabric_interconnect == "A":
-                    print("The attachment will be made to Fabric Interconnect "
-                          "A.")
-                    self.intersight_api_body["Profiles"].append(
-                        {"Moid": fabric_interconnect_a_switch_profile_moid,
-                         "ObjectType": "fabric.SwitchProfile"}
-                        )
-                elif self.fabric_interconnect == "B":
-                    print("The attachment will be made to Fabric Interconnect "
-                          "B.")
-                    self.intersight_api_body["Profiles"].append(
-                        {"Moid": fabric_interconnect_b_switch_profile_moid,
-                         "ObjectType": "fabric.SwitchProfile"}
-                        )
+        if self.ucs_domain_profile_names:
+            provided_ucs_domain_profile_list = string_to_list_maker(self.ucs_domain_profile_names)
+            for provided_ucs_domain_profile in provided_ucs_domain_profile_list:            
+                print("Attaching the UCS Domain Profile named "
+                      f"{provided_ucs_domain_profile}...")
+                # Get UCS Domain Profile MOID
+                ucs_domain_profile_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
+                                                                           intersight_api_key=None,
+                                                                           object_name=provided_ucs_domain_profile,
+                                                                           intersight_api_path="fabric/SwitchClusterProfiles?$top=1000",
+                                                                           object_type="UCS Domain Profile",
+                                                                           organization=self.organization,
+                                                                           preconfigured_api_client=self.api_client
+                                                                           )
+                # Get UCS Domain Profile object dictionary attributes
+                ucs_domain_profile_object = get_single_intersight_object(intersight_api_key_id=None,
+                                                                         intersight_api_key=None,
+                                                                         intersight_api_path="fabric/SwitchClusterProfiles",
+                                                                         object_moid=ucs_domain_profile_moid,
+                                                                         object_type="UCS Domain Profile",
+                                                                         preconfigured_api_client=self.api_client
+                                                                         )
+                # Get Switch Profiles that are attached to the UCS Domain Profile
+                ucs_domain_profile_list_of_attached_switch_profiles = ucs_domain_profile_object.get("SwitchProfiles")
+                if len(ucs_domain_profile_list_of_attached_switch_profiles) != 2:
+                    print("\nA configuration error has occurred!\n")
+                    print("The provided UCS Domain Profile named "
+                          f"{provided_ucs_domain_profile} is not configured with "
+                          "two attached Switch Profiles.")
+                    print("To proceed, two Switch Profiles must be attached to the "
+                          "provided UCS Domain Profile.")
+                    print("Please update the configuration of the provided UCS "
+                          f"Domain Profile, then re-attempt execution.\n")
+                    sys.exit(0)
                 else:
-                    print("The attachment will be made to Fabric Interconnects "
-                          "A and B.")
-                    self.intersight_api_body["Profiles"].extend(
-                        [{"Moid": fabric_interconnect_a_switch_profile_moid,
-                          "ObjectType": "fabric.SwitchProfile"},
-                         {"Moid": fabric_interconnect_b_switch_profile_moid,
-                          "ObjectType": "fabric.SwitchProfile"}
-                         ]
-                        )
+                    fabric_interconnect_a_switch_profile_moid = ucs_domain_profile_list_of_attached_switch_profiles[0].get("Moid")
+                    fabric_interconnect_b_switch_profile_moid = ucs_domain_profile_list_of_attached_switch_profiles[1].get("Moid")
+                # Update the API body with the appropriate Switch Profile MOIDs based on selected Fabric Interconnects
+                if self.fabric_interconnect not in ("AB", "BA", "A", "B"):
+                    print("\nA configuration error has occurred!\n")
+                    print("The provided UCS Domain Profile Fabric Interconnect "
+                          "value of "
+                          f"'{self.fabric_interconnect}' "
+                          "is not supported.")
+                    print("To proceed, the Fabric Interconnect value for the "
+                          "UCS Domain Profile must be 'AB', 'A', or 'B'.")
+                    print("Please update the configuration of the provided UCS "
+                          "Domain Profile Fabric Interconnect, then re-attempt "
+                          "execution.\n")
+                    sys.exit(0)
+                else:
+                    if self.fabric_interconnect == "A":
+                        print("The attachment will be made to Fabric Interconnect "
+                              "A.")
+                        self.intersight_api_body["Profiles"].append(
+                            {"Moid": fabric_interconnect_a_switch_profile_moid,
+                             "ObjectType": "fabric.SwitchProfile"}
+                            )
+                    elif self.fabric_interconnect == "B":
+                        print("The attachment will be made to Fabric Interconnect "
+                              "B.")
+                        self.intersight_api_body["Profiles"].append(
+                            {"Moid": fabric_interconnect_b_switch_profile_moid,
+                             "ObjectType": "fabric.SwitchProfile"}
+                            )
+                    else:
+                        print("The attachment will be made to Fabric Interconnects "
+                              "A and B.")
+                        self.intersight_api_body["Profiles"].extend(
+                            [{"Moid": fabric_interconnect_a_switch_profile_moid,
+                              "ObjectType": "fabric.SwitchProfile"},
+                             {"Moid": fabric_interconnect_b_switch_profile_moid,
+                              "ObjectType": "fabric.SwitchProfile"}
+                             ]
+                            )
 
     def object_maker(self):
         """This function makes the targeted policy object.
@@ -1246,8 +1371,9 @@ class SyslogPolicy(DirectlyAttachedUcsServerAndDomainPolicy):
                  intersight_base_url="https://www.intersight.com/api/v1",
                  tags=None,
                  preconfigured_api_client=None,
-                 ucs_server_profile_name="",
-                 ucs_domain_profile_name="",
+                 ucs_server_profile_names="",
+                 ucs_server_profile_template_names="",
+                 ucs_domain_profile_names="",
                  syslog_local_logging_minimum_severity_to_report="warning",
                  syslog_remote_logging_server_list=None
                  ):
@@ -1259,8 +1385,9 @@ class SyslogPolicy(DirectlyAttachedUcsServerAndDomainPolicy):
                          intersight_base_url,
                          tags,
                          preconfigured_api_client,
-                         ucs_server_profile_name,
-                         ucs_domain_profile_name,
+                         ucs_server_profile_names,
+                         ucs_server_profile_template_names,
+                         ucs_domain_profile_names,
                          fabric_interconnect="AB"
                          )
         self.syslog_local_logging_minimum_severity_to_report = syslog_local_logging_minimum_severity_to_report
@@ -1290,26 +1417,29 @@ class SyslogPolicy(DirectlyAttachedUcsServerAndDomainPolicy):
             f"'{self.intersight_base_url}', "
             f"{self.tags}, "
             f"{self.api_client}, "
-            f"'{self.ucs_server_profile_name}', "
-            f"'{self.ucs_domain_profile_name}', "
+            f"'{self.ucs_server_profile_names}', "
+            f"'{self.ucs_server_profile_template_names}', "
+            f"'{self.ucs_domain_profile_names}', "
             f"'{self.syslog_local_logging_minimum_severity_to_report}', "
             f"{self.syslog_remote_logging_server_list})"
             )
 
 
-def syslog_policy_maker(intersight_api_key_id,
-                        intersight_api_key,
-                        policy_name,
-                        syslog_local_logging_minimum_severity_to_report="warning",
-                        syslog_remote_logging_server_list=None,
-                        policy_description="",
-                        organization="default",
-                        intersight_base_url="https://www.intersight.com/api/v1",
-                        tags=None,
-                        preconfigured_api_client=None,
-                        ucs_server_profile_name="",
-                        ucs_domain_profile_name=""
-                        ):
+def syslog_policy_maker(
+    intersight_api_key_id,
+    intersight_api_key,
+    policy_name,
+    syslog_local_logging_minimum_severity_to_report="warning",
+    syslog_remote_logging_server_list=None,
+    policy_description="",
+    organization="default",
+    intersight_base_url="https://www.intersight.com/api/v1",
+    tags=None,
+    preconfigured_api_client=None,
+    ucs_server_profile_names="",
+    ucs_server_profile_template_names="",
+    ucs_domain_profile_names=""
+    ):
     """This is a function used to make a Syslog Policy on Cisco Intersight.
 
     Args:
@@ -1365,12 +1495,21 @@ def syslog_policy_maker(intersight_api_key_id,
             is provided, empty strings ("") or None can be provided for the
             intersight_api_key_id, intersight_api_key, and intersight_base_url
             arguments.
-        ucs_server_profile_name (str):
-            Optional; The UCS Server Profile the policy should be attached to.
-            The default value is an empty string ("").
-        ucs_domain_profile_name (str):
-            Optional; The UCS Domain Profile the policy should be attached to.
-            The default value is an empty string ("").
+        ucs_server_profile_names (str):
+            Optional; The UCS Server Profiles the policy should be attached
+            to. If providing more than one UCS Server Profile, additional 
+            entries should be comma-separated. The default value is an empty
+            string ("").
+        ucs_server_profile_template_names (str):
+            Optional; The UCS Server Profile Templates the policy should be
+            attached to. If providing more than one UCS Server Profile Template,
+            additional entries should be comma-separated. The default value is
+            an empty string ("").
+        ucs_domain_profile_names (str):
+            Optional; The UCS Domain Profile the policy should be attached
+            to. If providing more than one UCS Domain Profile, additional 
+            entries should be comma-separated. The default value is an empty
+            string ("").
     """
     def builder(target_object):
         """This is a function used to build the objects that are components of
@@ -1407,8 +1546,9 @@ def syslog_policy_maker(intersight_api_key_id,
             intersight_base_url=intersight_base_url,
             tags=tags,
             preconfigured_api_client=preconfigured_api_client,
-            ucs_server_profile_name=ucs_server_profile_name,
-            ucs_domain_profile_name=ucs_domain_profile_name,
+            ucs_server_profile_names=ucs_server_profile_names,
+            ucs_server_profile_template_names=ucs_server_profile_template_names,
+            ucs_domain_profile_names=ucs_domain_profile_names,
             syslog_local_logging_minimum_severity_to_report=syslog_local_logging_minimum_severity_to_report,
             syslog_remote_logging_server_list=syslog_remote_logging_server_list
             ))
@@ -1448,8 +1588,9 @@ def main():
         intersight_base_url=intersight_base_url,
         tags=syslog_policy_tags,
         preconfigured_api_client=main_intersight_api_client,
-        ucs_server_profile_name=ucs_server_profile_name,
-        ucs_domain_profile_name=ucs_domain_profile_name
+        ucs_server_profile_names=ucs_server_profile_names,
+        ucs_server_profile_template_names=ucs_server_profile_template_names,
+        ucs_domain_profile_names=ucs_domain_profile_names
         )
 
     # Policy Maker completion
