@@ -326,7 +326,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                 provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                               intersight_api_key=None,
                                                                               object_name=organization,
-                                                                              intersight_api_path="organization/Organizations",
+                                                                              intersight_api_path="organization/Organizations?$top=1000",
                                                                               object_type="Organization",
                                                                               preconfigured_api_client=api_client
                                                                               )
@@ -617,7 +617,7 @@ class UcsPolicy:
                     existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                        intersight_api_key=None,
                                                                                        object_name=existing_intersight_object_name,
-                                                                                       intersight_api_path=self.intersight_api_path,
+                                                                                       intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                        object_type=self.object_type,
                                                                                        preconfigured_api_client=self.api_client
                                                                                        )
@@ -668,7 +668,7 @@ class UcsPolicy:
         policy_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                     intersight_api_key=None,
                                                                     object_name=self.organization,
-                                                                    intersight_api_path="organization/Organizations",
+                                                                    intersight_api_path="organization/Organizations?$top=1000",
                                                                     object_type="Organization",
                                                                     preconfigured_api_client=self.api_client
                                                                     )
@@ -970,17 +970,18 @@ class FibreChannelNetworkPolicy(UcsPolicy):
             )
 
 
-def fibre_channel_network_policy_maker(intersight_api_key_id,
-                                       intersight_api_key,
-                                       policy_name,
-                                       default_vlan=0,
-                                       vsan_id=1,
-                                       policy_description="",
-                                       organization="default",
-                                       intersight_base_url="https://www.intersight.com/api/v1",
-                                       tags=None,
-                                       preconfigured_api_client=None
-                                       ):
+def fibre_channel_network_policy_maker(
+    intersight_api_key_id,
+    intersight_api_key,
+    policy_name,
+    default_vlan=0,
+    vsan_id=1,
+    policy_description="",
+    organization="default",
+    intersight_base_url="https://www.intersight.com/api/v1",
+    tags=None,
+    preconfigured_api_client=None
+    ):
     """This is a function used to make a Fibre Channel Network Policy on Cisco
     Intersight.
 
@@ -1044,17 +1045,19 @@ def fibre_channel_network_policy_maker(intersight_api_key_id,
             traceback.print_exc()
 
     # Define and create Fibre Channel Network Policy object in Intersight
-    builder(FibreChannelNetworkPolicy(intersight_api_key_id=intersight_api_key_id,
-                                      intersight_api_key=intersight_api_key,
-                                      policy_name=policy_name,
-                                      policy_description=policy_description,
-                                      organization=organization,
-                                      intersight_base_url=intersight_base_url,
-                                      tags=tags,
-                                      preconfigured_api_client=preconfigured_api_client,
-                                      default_vlan=default_vlan,
-                                      vsan_id=vsan_id
-                                      ))
+    builder(
+        FibreChannelNetworkPolicy(
+            intersight_api_key_id=intersight_api_key_id,
+            intersight_api_key=intersight_api_key,
+            policy_name=policy_name,
+            policy_description=policy_description,
+            organization=organization,
+            intersight_base_url=intersight_base_url,
+            tags=tags,
+            preconfigured_api_client=preconfigured_api_client,
+            default_vlan=default_vlan,
+            vsan_id=vsan_id
+            ))
 
 
 def main():
