@@ -347,7 +347,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                 provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                               intersight_api_key=None,
                                                                               object_name=organization,
-                                                                              intersight_api_path="organization/Organizations",
+                                                                              intersight_api_path="organization/Organizations?$top=1000",
                                                                               object_type="Organization",
                                                                               preconfigured_api_client=api_client
                                                                               )
@@ -655,7 +655,7 @@ def advanced_intersight_object_moid_retriever(intersight_api_key_id,
                 provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                               intersight_api_key=None,
                                                                               object_name=organization,
-                                                                              intersight_api_path="organization/Organizations",
+                                                                              intersight_api_path="organization/Organizations?$top=1000",
                                                                               object_type="Organization",
                                                                               preconfigured_api_client=api_client
                                                                               )
@@ -1072,7 +1072,7 @@ class ResourcePool:
                     existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                        intersight_api_key=None,
                                                                                        object_name=existing_intersight_object_name,
-                                                                                       intersight_api_path=self.intersight_api_path,
+                                                                                       intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                        object_type=self.object_type,
                                                                                        preconfigured_api_client=self.api_client
                                                                                        )
@@ -1123,7 +1123,7 @@ class ResourcePool:
         pool_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                   intersight_api_key=None,
                                                                   object_name=self.organization,
-                                                                  intersight_api_path="organization/Organizations",
+                                                                  intersight_api_path="organization/Organizations?$top=1000",
                                                                   object_type="Organization",
                                                                   preconfigured_api_client=self.api_client
                                                                   )
@@ -1424,7 +1424,7 @@ class ResourcePool:
             retrieved_intersight_chassis = get_intersight_objects(
                 intersight_api_key_id=None,
                 intersight_api_key=None,
-                intersight_api_path="equipment/Chasses",
+                intersight_api_path="equipment/Chasses?$top=1000",
                 object_type="Chassis",
                 preconfigured_api_client=self.api_client
                 )
@@ -1446,7 +1446,7 @@ class ResourcePool:
                             object_attributes={
                                 "DeviceHostname": [chassis_resources_dictionary["DomainName"]]
                                 },
-                            intersight_api_path="asset/DeviceRegistrations",
+                            intersight_api_path="asset/DeviceRegistrations?$top=1000",
                             object_type="Domain Name",
                             organization=self.organization,
                             preconfigured_api_client=self.api_client
@@ -1477,7 +1477,7 @@ class ResourcePool:
                             object_attributes={
                                 "DeviceHostname": [chassis_resources_dictionary["DomainName"]]
                                 },
-                            intersight_api_path="asset/DeviceRegistrations",
+                            intersight_api_path="asset/DeviceRegistrations?$top=1000",
                             object_type="Domain Name",
                             organization=self.organization,
                             preconfigured_api_client=self.api_client
@@ -1512,7 +1512,7 @@ class ResourcePool:
                         object_attributes={
                             "DeviceHostname": [chassis_resources_dictionary["DomainName"]]
                             },
-                        intersight_api_path="asset/DeviceRegistrations",
+                        intersight_api_path="asset/DeviceRegistrations?$top=1000",
                         object_type="Domain Name",
                         organization=self.organization,
                         preconfigured_api_client=self.api_client
@@ -1521,7 +1521,7 @@ class ResourcePool:
                     retrieved_intersight_blade_servers = get_intersight_objects(
                         intersight_api_key_id=None,
                         intersight_api_key=None,
-                        intersight_api_path=f"compute/Blades?$filter=ManagementMode%20eq%20%27Intersight%27",
+                        intersight_api_path=f"compute/Blades?$top=1000&$filter=ManagementMode%20eq%20%27Intersight%27",
                         object_type="Blade Server",
                         preconfigured_api_client=self.api_client
                         )                    
@@ -1579,7 +1579,7 @@ class ResourcePool:
                         retrieved_intersight_blade_servers = get_intersight_objects(
                             intersight_api_key_id=None,
                             intersight_api_key=None,
-                            intersight_api_path=f"compute/Blades?$filter=ManagementMode%20eq%20%27Intersight%27",
+                            intersight_api_path=f"compute/Blades?$top=1000&$filter=ManagementMode%20eq%20%27Intersight%27",
                             object_type="Blade Server",
                             preconfigured_api_client=self.api_client
                             )                        
@@ -1614,7 +1614,7 @@ class ResourcePool:
                         retrieved_intersight_blade_servers = get_intersight_objects(
                             intersight_api_key_id=None,
                             intersight_api_key=None,
-                            intersight_api_path=f"compute/Blades?$filter=ManagementMode%20eq%20%27Intersight%27",
+                            intersight_api_path=f"compute/Blades?$top=1000&$filter=ManagementMode%20eq%20%27Intersight%27",
                             object_type="Blade Server",
                             preconfigured_api_client=self.api_client
                             )                        
@@ -1642,7 +1642,7 @@ class ResourcePool:
                             object_attributes={
                                 "DeviceHostname": [chassis_resources_dictionary["DomainName"]]
                                 },
-                            intersight_api_path="asset/DeviceRegistrations",
+                            intersight_api_path="asset/DeviceRegistrations?$top=1000",
                             object_type="Domain Name",
                             organization=self.organization,
                             preconfigured_api_client=self.api_client
@@ -1651,7 +1651,7 @@ class ResourcePool:
                         retrieved_intersight_blade_servers = get_intersight_objects(
                             intersight_api_key_id=None,
                             intersight_api_key=None,
-                            intersight_api_path=f"compute/Blades?$filter=ManagementMode%20eq%20%27Intersight%27",
+                            intersight_api_path=f"compute/Blades?$top=1000&$filter=ManagementMode%20eq%20%27Intersight%27",
                             object_type="Blade Server",
                             preconfigured_api_client=self.api_client
                             )                        
@@ -1668,7 +1668,7 @@ class ResourcePool:
                                 current_chassis_object = get_single_intersight_object(
                                     intersight_api_key_id=None,
                                     intersight_api_key=None,
-                                    intersight_api_path="equipment/Chasses",
+                                    intersight_api_path="equipment/Chasses?$top=1000",
                                     object_moid=current_chassis_moid,
                                     object_type="UCS Chassis",
                                     preconfigured_api_client=self.api_client
@@ -1695,7 +1695,7 @@ class ResourcePool:
             retrieved_intersight_blade_servers = get_intersight_objects(
                 intersight_api_key_id=None,
                 intersight_api_key=None,
-                intersight_api_path=f"compute/Blades?$filter=ManagementMode%20eq%20%27Intersight%27",
+                intersight_api_path=f"compute/Blades?$top=1000&$filter=ManagementMode%20eq%20%27Intersight%27",
                 object_type="Blade Server",
                 preconfigured_api_client=self.api_client
                 )
@@ -1795,7 +1795,7 @@ class ResourcePool:
                 retrieved_intersight_rack_servers = get_intersight_objects(
                     intersight_api_key_id=None,
                     intersight_api_key=None,
-                    intersight_api_path="compute/RackUnits?$filter=ManagementMode%20eq%20%27Intersight%27",
+                    intersight_api_path="compute/RackUnits?$top=1000&$filter=ManagementMode%20eq%20%27Intersight%27",
                     object_type="Rack Server",
                     preconfigured_api_client=self.api_client
                     )
@@ -1803,7 +1803,7 @@ class ResourcePool:
                 retrieved_intersight_rack_servers = get_intersight_objects(
                     intersight_api_key_id=None,
                     intersight_api_key=None,
-                    intersight_api_path="compute/RackUnits?$filter=ManagementMode%20eq%20%27IntersightStandalone%27",
+                    intersight_api_path="compute/RackUnits?$top=1000&$filter=ManagementMode%20eq%20%27IntersightStandalone%27",
                     object_type="Rack Server",
                     preconfigured_api_client=self.api_client
                     )
