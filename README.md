@@ -16,7 +16,7 @@
 - [UCS Chassis Deployment Tool](./src/deployment_tools/ucs_chassis_deployment_tool) - Build, assign and deploy many UCS chassis profiles with all policies and pools in seconds.
 - [UCS Default Policy Deployment Tool](./src/deployment_tools/ucs_default_policy_deployment_tool) - Quickly deploy your own set of 27 default UCS policies.
 - [UCS Domain Deployment Tool](./src/deployment_tools/ucs_domain_deployment_tool) - Build, assign and deploy a UCS domain profile with all policies in minutes.
-- [UCS FI Claim Handler](./src/deployment_tools/ucs_fi_claim_handler) - Claim many UCS IMM fabric interconnect clusters to an Intersight account.
+- [UCS FI Claim Handler](./src/deployment_tools/ucs_fi_claim_handler) - Claim one or more UCS IMM fabric interconnect clusters to an Intersight account.
 - [UCS Server Deployment Tool](./src/deployment_tools/ucs_server_deployment_tool) - Build, assign and deploy many UCS server profiles, along with a template and all policies and pools in minutes.
 
 ## Policy Makers
