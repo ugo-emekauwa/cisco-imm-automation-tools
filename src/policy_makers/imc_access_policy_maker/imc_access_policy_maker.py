@@ -69,8 +69,9 @@ default_out_of_band_ip_pool_name = ""
 intersight_base_url = "https://www.intersight.com/api/v1"
 url_certificate_verification = True
 
-# UCS Server Profile Attachment Settings (If providing more than one UCS Server Profile, additional entries should be comma-separated)
+# UCS Server Profile Attachment Settings (If providing more than one UCS Server Profile and/or UCS Server Profile Template, additional entries should be comma-separated)
 ucs_server_profile_names = ""
+ucs_server_profile_template_names = ""
 
 # UCS Chassis Profile Attachment Settings (If providing more than one UCS Chassis Profile, additional entries should be comma-separated)
 ucs_chassis_profile_names = ""
@@ -1028,7 +1029,8 @@ class UcsPolicy:
 class DirectlyAttachedUcsServerAndChassisPolicy(UcsPolicy):
     """This class is used to configure a UCS Server and/or UCS Chassis Policy
     in Intersight that is logically directly attached to UCS Servers through
-    UCS Server Profiles and/or UCS Chassis through UCS Chassis Profiles.
+    UCS Server Profiles and/or UCS Server Profile Templates, and/or UCS Chassis
+    through UCS Chassis Profiles.
     """
     object_type = "Directly Attached UCS Server and Chassis Policy"
     intersight_api_path = None
@@ -1043,6 +1045,7 @@ class DirectlyAttachedUcsServerAndChassisPolicy(UcsPolicy):
                  tags=None,
                  preconfigured_api_client=None,
                  ucs_server_profile_names="",
+                 ucs_server_profile_template_names="",
                  ucs_chassis_profile_names=""
                  ):
         super().__init__(intersight_api_key_id,
@@ -1055,6 +1058,7 @@ class DirectlyAttachedUcsServerAndChassisPolicy(UcsPolicy):
                          preconfigured_api_client
                          )
         self.ucs_server_profile_names = ucs_server_profile_names
+        self.ucs_server_profile_template_names = ucs_server_profile_template_names
         self.ucs_chassis_profile_names = ucs_chassis_profile_names
 
     def __repr__(self):
@@ -1069,12 +1073,14 @@ class DirectlyAttachedUcsServerAndChassisPolicy(UcsPolicy):
             f"{self.tags}, "
             f"{self.api_client}, "
             f"'{self.ucs_server_profile_names}', "
+            f"'{self.ucs_server_profile_template_names}', "
             f"'{self.ucs_chassis_profile_names}')"
             )
 
     def _attach_ucs_server_and_chassis_profiles(self):
-        """This is a function to attach Intersight UCS Server Profiles and/or
-        UCS Chassis Profiles to an Intersight Policy.
+        """This is a function to attach Intersight UCS Server Profiles, UCS
+        Server Profile Templates, and/or UCS Chassis Profiles to an Intersight
+        Policy.
 
         Returns:
             A dictionary for the API body of the policy object to be posted on
@@ -1101,6 +1107,26 @@ class DirectlyAttachedUcsServerAndChassisPolicy(UcsPolicy):
                 self.intersight_api_body["Profiles"].append(
                     {"Moid": ucs_server_profile_moid,
                      "ObjectType": "server.Profile"}
+                    )
+        # Attach UCS Server Profile Templates
+        if self.ucs_server_profile_template_names:
+            provided_ucs_server_profile_template_list = string_to_list_maker(self.ucs_server_profile_template_names)
+            for provided_ucs_server_profile_template in provided_ucs_server_profile_template_list:
+                print("Attaching the UCS Server Profile Template named "
+                      f"{provided_ucs_server_profile_template}...")
+                # Get UCS Server Profile MOID
+                ucs_server_profile_template_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
+                                                                                    intersight_api_key=None,
+                                                                                    object_name=provided_ucs_server_profile_template,
+                                                                                    intersight_api_path="server/ProfileTemplates?$top=1000",
+                                                                                    object_type="UCS Server Profile Template",
+                                                                                    organization=self.organization,
+                                                                                    preconfigured_api_client=self.api_client
+                                                                                    )
+                # Update the API body with the appropriate Server Profile MOID
+                self.intersight_api_body["Profiles"].append(
+                    {"Moid": ucs_server_profile_template_moid,
+                     "ObjectType": "server.ProfileTemplate"}
                     )
         # Attach UCS Chassis Profile
         if self.ucs_chassis_profile_names:
@@ -1156,6 +1182,7 @@ class ImcAccessPolicy(DirectlyAttachedUcsServerAndChassisPolicy):
                  tags=None,
                  preconfigured_api_client=None,
                  ucs_server_profile_names="",
+                 ucs_server_profile_template_names="",
                  ucs_chassis_profile_names="",
                  enable_in_band_configuration=True,
                  in_band_vlan_id=4,
@@ -1174,6 +1201,7 @@ class ImcAccessPolicy(DirectlyAttachedUcsServerAndChassisPolicy):
                          tags,
                          preconfigured_api_client,
                          ucs_server_profile_names,
+                         ucs_server_profile_template_names,
                          ucs_chassis_profile_names
                          )
         self.enable_in_band_configuration = enable_in_band_configuration
@@ -1209,6 +1237,7 @@ class ImcAccessPolicy(DirectlyAttachedUcsServerAndChassisPolicy):
             f"{self.tags}, "
             f"{self.api_client}, "
             f"'{self.ucs_server_profile_names}', "
+            f"'{self.ucs_server_profile_template_names}', "
             f"'{self.ucs_chassis_profile_names}', "
             f"{self.enable_in_band_configuration}, "
             f"{self.in_band_vlan_id}, "
@@ -1243,7 +1272,7 @@ class ImcAccessPolicy(DirectlyAttachedUcsServerAndChassisPolicy):
                 "Moid": default_in_band_ip_pool_moid
                 }
         else:
-            self.intersight_api_body["InbandIpPool"] = self.default_in_band_ip_pool_name
+            self.intersight_api_body["InbandIpPool"] = None
         # Update the API body with any provided Out-of-Band IP Pool
         if self.default_out_of_band_ip_pool_name:
             default_out_of_band_ip_pool_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
@@ -1257,32 +1286,33 @@ class ImcAccessPolicy(DirectlyAttachedUcsServerAndChassisPolicy):
                 "Moid": default_out_of_band_ip_pool_moid
                 }
         else:
-            self.intersight_api_body["OutOfBandIpPool"] = self.default_out_of_band_ip_pool_name
+            self.intersight_api_body["OutOfBandIpPool"] = None
         # Update the API body with a UCS Server Profile attached, if specified
         self._attach_ucs_server_and_chassis_profiles()
         # POST the API body to Intersight
         self._post_intersight_object()
 
 
-# Establish function to make Policy
-def imc_access_policy_maker(intersight_api_key_id,
-                            intersight_api_key,
-                            policy_name,
-                            enable_in_band_configuration=True,
-                            in_band_vlan_id=4,
-                            enable_in_band_ipv4_configuration=True,
-                            enable_in_band_ipv6_configuration=False,
-                            default_in_band_ip_pool_name="",
-                            enable_out_of_band_configuration=False,
-                            default_out_of_band_ip_pool_name="",
-                            policy_description="",
-                            organization="default",
-                            intersight_base_url="https://www.intersight.com/api/v1",
-                            tags=None,
-                            preconfigured_api_client=None,
-                            ucs_server_profile_names="",
-                            ucs_chassis_profile_names=""
-                            ):
+def imc_access_policy_maker(
+    intersight_api_key_id,
+    intersight_api_key,
+    policy_name,
+    enable_in_band_configuration=True,
+    in_band_vlan_id=4,
+    enable_in_band_ipv4_configuration=True,
+    enable_in_band_ipv6_configuration=False,
+    default_in_band_ip_pool_name="",
+    enable_out_of_band_configuration=False,
+    default_out_of_band_ip_pool_name="",
+    policy_description="",
+    organization="default",
+    intersight_base_url="https://www.intersight.com/api/v1",
+    tags=None,
+    preconfigured_api_client=None,
+    ucs_server_profile_names="",
+    ucs_server_profile_template_names="",
+    ucs_chassis_profile_names=""
+    ):
     """This is a function used to make a IMC Access Policy on Cisco Intersight.
 
     Args:
@@ -1342,6 +1372,11 @@ def imc_access_policy_maker(intersight_api_key_id,
             to. If providing more than one UCS Server Profile, additional 
             entries should be comma-separated. The default value is an empty
             string ("").
+        ucs_server_profile_template_names (str):
+            Optional; The UCS Server Profile Templates the policy should be
+            attached to. If providing more than one UCS Server Profile Template,
+            additional entries should be comma-separated. The default value is
+            an empty string ("").
         ucs_chassis_profile_names (str):
             Optional; The UCS Chassis Profiles the policy should be attached
             to. If providing more than one UCS Chassis Profile, additional 
@@ -1384,6 +1419,7 @@ def imc_access_policy_maker(intersight_api_key_id,
             tags=tags,
             preconfigured_api_client=preconfigured_api_client,
             ucs_server_profile_names=ucs_server_profile_names,
+            ucs_server_profile_template_names=ucs_server_profile_template_names,
             ucs_chassis_profile_names=ucs_chassis_profile_names,
             enable_in_band_configuration=enable_in_band_configuration,
             in_band_vlan_id=in_band_vlan_id,
@@ -1435,6 +1471,7 @@ def main():
         tags=imc_access_policy_tags,
         preconfigured_api_client=main_intersight_api_client,
         ucs_server_profile_names=ucs_server_profile_names,
+        ucs_server_profile_template_names=ucs_server_profile_template_names,
         ucs_chassis_profile_names=ucs_chassis_profile_names
         )
 
