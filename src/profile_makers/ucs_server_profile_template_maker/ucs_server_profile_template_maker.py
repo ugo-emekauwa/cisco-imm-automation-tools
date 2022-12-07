@@ -55,7 +55,7 @@ ucs_server_profile_template_organization = "default"
 ucs_server_profile_template_tags = {"Org": "IT", "Dept": "DevOps"}  # Empty the ucs_server_profile_template_tags dictionary if no tags are needed, for example: ucs_server_profile_template_tags = {}
 
 # Compute Configuration
-uuid_pool = ""
+uuid_pool_name = ""
 
 # Profile Template Default Settings (Change only if needed)
 ucs_server_type = "FI-Attached"     # Options: "FI-Attached", "Standalone"
@@ -814,7 +814,7 @@ class UcsServerProfileTemplate:
                  tags=None,
                  preconfigured_api_client=None,
                  ucs_server_type="FI-Attached",
-                 uuid_pool=""
+                 uuid_pool_name=""
                  ):
         self.intersight_api_key_id = intersight_api_key_id
         self.intersight_api_key = intersight_api_key
@@ -834,7 +834,7 @@ class UcsServerProfileTemplate:
         else:
             self.api_client = preconfigured_api_client
         self.ucs_server_type = ucs_server_type
-        self.uuid_pool = uuid_pool
+        self.uuid_pool_name = uuid_pool_name
         self.intersight_api_body = {
             "Name": self.ucs_server_profile_template_name,
             "Description": self.ucs_server_profile_template_description,
@@ -852,7 +852,7 @@ class UcsServerProfileTemplate:
             f"{self.tags}, "
             f"{self.api_client}, "
             f"'{self.ucs_server_type}', "
-            f"'{self.uuid_pool}')"
+            f"'{self.uuid_pool_name}')"
             )
 
     def __str__(self):
@@ -1053,12 +1053,12 @@ class UcsServerProfileTemplate:
         # Update the API body with individual mapped object attributes
         self._update_api_body_mapped_object_attributes()
         # Update the API body with any provided UUID Pool
-        if self.uuid_pool and self.ucs_server_type == "FI-Attached":
+        if self.uuid_pool_name and self.ucs_server_type == "FI-Attached":
             self.intersight_api_body["UuidAddressType"] = "POOL"
             uuid_pool_moid = intersight_object_moid_retriever(
                 intersight_api_key_id=None,
                 intersight_api_key=None,
-                object_name=self.uuid_pool,
+                object_name=self.uuid_pool_name,
                 intersight_api_path="uuidpool/Pools?$top=1000",
                 object_type="UUID Pool",
                 preconfigured_api_client=self.api_client
@@ -1077,7 +1077,7 @@ def ucs_server_profile_template_maker(
     intersight_api_key_id,
     intersight_api_key,
     ucs_server_profile_template_name,
-    uuid_pool="",
+    uuid_pool_name="",
     ucs_server_type="FI-Attached",
     ucs_server_profile_template_description="",
     ucs_server_profile_template_organization="default",
@@ -1095,7 +1095,7 @@ def ucs_server_profile_template_maker(
             The system file path of the Intersight API key.
         ucs_server_profile_template_name (str):
             The name of the UCS Server Profile Template to be created.
-        uuid_pool (str):
+        uuid_pool_name (str):
             The name of the pre-existing UUID Pool to be used by the UCS Server
             Profile Template. The default value is an empty string ("").
         ucs_server_type (str):
@@ -1161,7 +1161,7 @@ def ucs_server_profile_template_maker(
             tags=tags,
             preconfigured_api_client=preconfigured_api_client,
             ucs_server_type=ucs_server_type,
-            uuid_pool=uuid_pool
+            uuid_pool_name=uuid_pool_name
             ))
 
 
@@ -1193,7 +1193,7 @@ def main():
         intersight_api_key_id=None,
         intersight_api_key=None,
         ucs_server_profile_template_name=ucs_server_profile_template_name,
-        uuid_pool=uuid_pool,
+        uuid_pool_name=uuid_pool_name,
         ucs_server_type=ucs_server_type,
         ucs_server_profile_template_description=ucs_server_profile_template_description,
         ucs_server_profile_template_organization=ucs_server_profile_template_organization,
