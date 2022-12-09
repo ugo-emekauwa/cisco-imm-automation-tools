@@ -1061,6 +1061,7 @@ class UcsServerProfileTemplate:
                 object_name=self.uuid_pool_name,
                 intersight_api_path="uuidpool/Pools?$top=1000",
                 object_type="UUID Pool",
+                organization=self.ucs_server_profile_template_organization,
                 preconfigured_api_client=self.api_client
                 )
             self.intersight_api_body["UuidPool"] = {
