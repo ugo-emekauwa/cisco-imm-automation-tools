@@ -1268,6 +1268,7 @@ class UcsServerProfile:
                 object_name=self.uuid_pool_name,
                 intersight_api_path="uuidpool/Pools?$top=1000",
                 object_type="UUID Pool",
+                organization=self.ucs_server_profile_organization,
                 preconfigured_api_client=self.api_client
                 )
             self.intersight_api_body["UuidPool"] = {
@@ -1290,6 +1291,7 @@ class UcsServerProfile:
                 object_name=self.ucs_server_profile_template_name_for_attachment,
                 intersight_api_path="server/ProfileTemplates",
                 object_type="UCS Server Profile Template",
+                organization=self.ucs_server_profile_organization,
                 preconfigured_api_client=self.api_client
                 )
             self.intersight_api_body["SrcTemplate"] = {
@@ -1745,6 +1747,7 @@ def assign_and_deploy_ucs_server_profile(
                                                                   object_name=resource_pool_name,
                                                                   intersight_api_path="resourcepool/Pools?$top=1000",
                                                                   object_type="Resource Pool",
+                                                                  organization=ucs_server_profile_organization,
                                                                   preconfigured_api_client=preconfigured_api_client
                                                                   )
             ucs_server_profile_assignment_api_body["ServerAssignmentMode"] = "Pool"
