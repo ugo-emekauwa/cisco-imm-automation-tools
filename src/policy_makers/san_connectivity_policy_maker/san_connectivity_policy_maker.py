@@ -1171,6 +1171,7 @@ class UcsPolicy:
                                                                                        object_name=existing_intersight_object_name,
                                                                                        intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                        object_type=self.object_type,
+                                                                                       organization=self.organization,
                                                                                        preconfigured_api_client=self.api_client
                                                                                        )
                     # Update full Intersight API path with the MOID of the existing object
@@ -1740,12 +1741,13 @@ class SanConnectivityPolicy(DirectlyAttachedUcsServerPolicy):
         # Update the API body with any provided WWNN Pool
         if self.wwnn_pool_name:
             wwnn_pool_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
-                                                             intersight_api_key=None,
-                                                             object_name=self.wwnn_pool_name,
-                                                             intersight_api_path="fcpool/Pools?$top=1000",
-                                                             object_type="WWNN Pool",
-                                                             preconfigured_api_client=self.api_client
-                                                             )
+                                                              intersight_api_key=None,
+                                                              object_name=self.wwnn_pool_name,
+                                                              intersight_api_path="fcpool/Pools?$top=1000",
+                                                              object_type="WWNN Pool",
+                                                              organization=self.organization,
+                                                              preconfigured_api_client=self.api_client
+                                                              )
             self.intersight_api_body["WwnnPool"] = {
                 "Moid": wwnn_pool_moid
                 }
