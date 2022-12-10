@@ -631,6 +631,7 @@ class UcsPolicy:
                                                                                        object_name=existing_intersight_object_name,
                                                                                        intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                        object_type=self.object_type,
+                                                                                       organization=self.organization,
                                                                                        preconfigured_api_client=self.api_client
                                                                                        )
                     # Update full Intersight API path with the MOID of the existing object
@@ -1059,6 +1060,7 @@ class IscsiBootPolicy(UcsPolicy):
                 object_name=self.iscsi_adapter_policy_name,
                 intersight_api_path="vnic/IscsiAdapterPolicies?$top=1000",
                 object_type="iSCSI Adapter Policy",
+                organization=self.organization,
                 preconfigured_api_client=self.api_client
                 )
             self.intersight_api_body["IscsiAdapterPolicy"] = {
@@ -1074,6 +1076,7 @@ class IscsiBootPolicy(UcsPolicy):
                 object_name=self.primary_static_target_policy_name,
                 intersight_api_path="vnic/IscsiStaticTargetPolicies?$top=1000",
                 object_type="primary iSCSI Static Target Policy",
+                organization=self.organization,
                 preconfigured_api_client=self.api_client
                 )
             self.intersight_api_body["PrimaryTargetPolicy"] = {
@@ -1089,6 +1092,7 @@ class IscsiBootPolicy(UcsPolicy):
                 object_name=self.secondary_static_target_policy_name,
                 intersight_api_path="vnic/IscsiStaticTargetPolicies?$top=1000",
                 object_type="secondary iSCSI Static Target Policy",
+                organization=self.organization,
                 preconfigured_api_client=self.api_client
                 )
             self.intersight_api_body["SecondaryTargetPolicy"] = {
@@ -1104,6 +1108,7 @@ class IscsiBootPolicy(UcsPolicy):
                 object_name=self.static_initiator_ip_source_pool_ip_pool_name,
                 intersight_api_path="ippool/Pools?$top=1000",
                 object_type="Initiator IP Source IP Pool",
+                organization=self.organization,
                 preconfigured_api_client=self.api_client
                 )
             self.intersight_api_body["InitiatorIpPool"] = {
