@@ -123,7 +123,7 @@ iqn_static_identifier = ""      # If the iqn_assignment_type variable is set to 
 ##         "Failover": True,
 ##         "Ethernet Network Group Policy": "Sample-Eth-Net-Group-Policy",
 ##         "Ethernet Network Control Policy": "Sample-Eth-Net-Control-Policy",
-##         "Ethernet QoS": "Sample-Ethernet-QoS-Policy",
+##         "Ethernet QoS": "Sample-Eth-QoS-Policy",
 ##         "Ethernet Adapter": "Sample-Eth-Adapter-Policy",
 ##         "Connection Type": "usNIC",
 ##         "Number of usNICs": 1,
@@ -137,7 +137,7 @@ iqn_static_identifier = ""      # If the iqn_assignment_type variable is set to 
 ##         "Failover": True,
 ##         "Ethernet Network Group Policy": "Sample-Eth-Net-Group-Policy",
 ##         "Ethernet Network Control Policy": "Sample-Eth-Net-Control-Policy",
-##         "Ethernet QoS": "Sample-Ethernet-QoS-Policy",
+##         "Ethernet QoS": "Sample-Eth-QoS-Policy",
 ##         "Ethernet Adapter": "Sample-Eth-Adapter-Policy",
 ##         "Connection Type": "usNIC",
 ##         "Number of usNICs": 1,
@@ -240,7 +240,7 @@ vnic_list = [
 default_mac_address_pool_name = "MAC-Pool-1"
 default_ethernet_network_group_policy_name = "Default-Eth-Net-Group-Policy"
 default_ethernet_network_control_policy_name = "Default-Eth-Net-Control-Policy"
-default_ethernet_qos_policy_name = "Default-Ethernet-QoS-Policy"
+default_ethernet_qos_policy_name = "Default-Eth-QoS-Policy"
 default_ethernet_adapter_policy_name = "Default-Eth-Adapter-Policy"
 default_iscsi_boot_policy_name = ""
 default_usnic_adapter_policy_name = "Default-Eth-Adapter-Policy"
@@ -1200,6 +1200,7 @@ class UcsPolicy:
                                                                                        object_name=existing_intersight_object_name,
                                                                                        intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                        object_type=self.object_type,
+                                                                                       organization=self.organization,
                                                                                        preconfigured_api_client=self.api_client
                                                                                        )
                     # Update full Intersight API path with the MOID of the existing object
@@ -1765,6 +1766,7 @@ class LanConnectivityPolicy(DirectlyAttachedUcsServerPolicy):
                                                              object_name=self.iqn_pool_name,
                                                              intersight_api_path="iqnpool/Pools?$top=1000",
                                                              object_type="IQN Pool",
+                                                             organization=self.organization,
                                                              preconfigured_api_client=self.api_client
                                                              )
             self.intersight_api_body["IqnPool"] = {
