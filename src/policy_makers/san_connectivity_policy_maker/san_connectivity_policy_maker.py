@@ -2439,7 +2439,7 @@ class Vhba(Interface):
                                     "ClassId": "mo.MoRef",
                                     "Moid": policy_moid,
                                     "ObjectType": "vnic.SanConnectivityPolicy",
-                                    "link": f"https://www.intersight.com/api/v1/vnic/SanConnectivityPolicies/{policy_moid}"
+                                    "link": f"{self.intersight_base_url}/vnic/SanConnectivityPolicies/{policy_moid}"
                                     }
                                 },
                             intersight_api_path=f"{self.intersight_api_path}?$top=1000",
