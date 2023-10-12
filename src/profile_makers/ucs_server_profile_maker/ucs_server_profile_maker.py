@@ -1298,7 +1298,7 @@ class UcsServerProfile:
                 "ClassId": "mo.MoRef",
                 "Moid": ucs_server_profile_template_moid,
                 "ObjectType": "server.ProfileTemplate",
-                "link": f"https://www.intersight.com/api/v1/server/ProfileTemplates/{ucs_server_profile_template_moid}"
+                "link": f"{self.intersight_base_url}/server/ProfileTemplates/{ucs_server_profile_template_moid}"
                 }
         else:
             self.intersight_api_body["SrcTemplate"] = None
@@ -1730,7 +1730,7 @@ def assign_and_deploy_ucs_server_profile(
                     "ClassId": "mo.MoRef",
                     "Moid": matching_intersight_server_moid,
                     "ObjectType": "compute.Blade",
-                    "link": f"https://www.intersight.com/api/v1/compute/Blades/{matching_intersight_server_moid}"
+                    "link": f"{intersight_base_url}/compute/Blades/{matching_intersight_server_moid}"
                     }
                 }
             post_intersight_server_profile_update(
