@@ -1782,7 +1782,14 @@ def assign_and_deploy_ucs_server_profile(
         # Deploy the UCS Server Profile
         print("Deploying the UCS Server Profile...")
         ucs_server_profile_deployment_api_body = {
-            "Action": "Deploy"
+            "ScheduledActions":[
+                {"Action": "Deploy",
+                 "ProceedOnReboot": False
+                 },
+                {"Action": "Activate",
+                 "ProceedOnReboot": True
+                 }
+                ]
             }
         post_intersight_server_profile_update(
             server_profile_moid=ucs_server_profile_moid,
