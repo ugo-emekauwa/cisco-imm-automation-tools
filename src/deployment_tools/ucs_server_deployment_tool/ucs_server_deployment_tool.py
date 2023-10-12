@@ -4997,7 +4997,7 @@ class UcsServerProfile:
                 "ClassId": "mo.MoRef",
                 "Moid": ucs_server_profile_template_moid,
                 "ObjectType": "server.ProfileTemplate",
-                "link": f"https://www.intersight.com/api/v1/server/ProfileTemplates/{ucs_server_profile_template_moid}"
+                "link": f"{self.intersight_base_url}/server/ProfileTemplates/{ucs_server_profile_template_moid}"
                 }
         else:
             self.intersight_api_body["SrcTemplate"] = None
@@ -5429,7 +5429,7 @@ def assign_and_deploy_ucs_server_profile(
                     "ClassId": "mo.MoRef",
                     "Moid": matching_intersight_server_moid,
                     "ObjectType": "compute.Blade",
-                    "link": f"https://www.intersight.com/api/v1/compute/Blades/{matching_intersight_server_moid}"
+                    "link": f"{intersight_base_url}/compute/Blades/{matching_intersight_server_moid}"
                     }
                 }
             post_intersight_server_profile_update(
@@ -12158,7 +12158,7 @@ class Vnic(Interface):
                                     "ClassId": "mo.MoRef",
                                     "Moid": policy_moid,
                                     "ObjectType": "vnic.LanConnectivityPolicy",
-                                    "link": f"https://www.intersight.com/api/v1/vnic/LanConnectivityPolicies/{policy_moid}"
+                                    "link": f"{self.intersight_base_url}/vnic/LanConnectivityPolicies/{policy_moid}"
                                     }
                                 },
                             intersight_api_path=f"{self.intersight_api_path}?$top=1000",
@@ -15575,7 +15575,7 @@ class Vhba(Interface):
                                     "ClassId": "mo.MoRef",
                                     "Moid": policy_moid,
                                     "ObjectType": "vnic.SanConnectivityPolicy",
-                                    "link": f"https://www.intersight.com/api/v1/vnic/SanConnectivityPolicies/{policy_moid}"
+                                    "link": f"{self.intersight_base_url}/vnic/SanConnectivityPolicies/{policy_moid}"
                                     }
                                 },
                             intersight_api_path=f"{self.intersight_api_path}?$top=1000",
