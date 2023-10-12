@@ -1846,12 +1846,6 @@ virtual_media_policy_virtual_media_mapping_list = [
      "Password": "C1sco12345",
      "Authentication Protocol": "ntlm"
      },
-    {"Virtual Media Type": "CDD",
-     "Virtual Media Protocol": "HTTPS",
-     "Name": "sample-mapping-3",
-     "File Location": "https://hostname-or-IP/filePath/fileName.iso",
-     "Mount Options": ""
-     },
     ]
 
 
