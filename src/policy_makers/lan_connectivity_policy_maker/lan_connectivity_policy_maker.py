@@ -2626,7 +2626,7 @@ class Vnic(Interface):
                                     "ClassId": "mo.MoRef",
                                     "Moid": policy_moid,
                                     "ObjectType": "vnic.LanConnectivityPolicy",
-                                    "link": f"https://www.intersight.com/api/v1/vnic/LanConnectivityPolicies/{policy_moid}"
+                                    "link": f"{self.intersight_base_url}/vnic/LanConnectivityPolicies/{policy_moid}"
                                     }
                                 },
                             intersight_api_path=f"{self.intersight_api_path}?$top=1000",
