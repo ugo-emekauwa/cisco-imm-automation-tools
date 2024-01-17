@@ -448,7 +448,7 @@ network_connectivity_policy_tags = {"Org": "IT", "Dept": "DevOps"}  # Empty the 
 # Policy Detail Settings
 network_connectivity_policy_obtain_ipv4_dns_server_from_dhcp = False
 network_connectivity_policy_preferred_ipv4_dns_server = "192.168.1.10"
-network_connectivity_policy_alternate_ipv4_dns_server = "0.0.0.0"
+network_connectivity_policy_alternate_ipv4_dns_server = "8.8.8.8"
 network_connectivity_policy_enable_dynamic_dns = False
 network_connectivity_policy_dynamic_dns_update_domain = ""
 network_connectivity_policy_enable_ipv6 = False
