@@ -57,7 +57,7 @@ network_connectivity_policy_tags = {"Org": "IT", "Dept": "DevOps"}  # Empty the 
 # Policy Detail Settings
 obtain_ipv4_dns_server_from_dhcp = False
 preferred_ipv4_dns_server = "192.168.133.1"
-alternate_ipv4_dns_server = "0.0.0.0"
+alternate_ipv4_dns_server = "8.8.8.8"
 enable_dynamic_dns = False
 dynamic_dns_update_domain = ""
 enable_ipv6 = False
