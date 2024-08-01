@@ -306,6 +306,9 @@ port_policy_a_fabric_interconnect_model = "UCS-FI-6454"
 
 # Unified Port Settings (These values should be set based on the Fabric Interconnect model)
 # Empty the Port Mode list if no ports are needed, for example: port_policy_a_fc_port_mode_list = []
+## To configure breakout ports, set the appropriate port mode list, then in the next section for 'Port Role Settings', set the desired port list with the "AggregatePortId" attribute as the parent breakout port, for example:
+## port_policy_a_eth_breakout_25g_port_mode_list = [{"Ports": "17-18"}]
+## port_policy_a_server_port_list = [{"AggregatePortId": 17, "Ports": "1-4"}, {"AggregatePortId": 18, "Ports": "1-4"}]
 port_policy_a_fc_port_mode_list = [{"Ports": "1-8"}]
 port_policy_a_eth_breakout_10g_port_mode_list = []
 port_policy_a_eth_breakout_25g_port_mode_list = []
@@ -354,6 +357,9 @@ port_policy_b_fabric_interconnect_model = "UCS-FI-6454"
 
 # Unified Port Settings (These values should be set based on the Fabric Interconnect model)
 # Empty the Port Mode list if no ports are needed, for example: port_policy_b_fc_port_mode_list = []
+## To configure breakout ports, set the appropriate port mode list, then in the next section for 'Port Role Settings', set the desired port list with the "AggregatePortId" attribute as the parent breakout port, for example:
+## port_policy_b_eth_breakout_25g_port_mode_list = [{"Ports": "17-18"}]
+## port_policy_b_server_port_list = [{"AggregatePortId": 17, "Ports": "1-4"}, {"AggregatePortId": 18, "Ports": "1-4"}]
 port_policy_b_fc_port_mode_list = [{"Ports": "1-8"}]
 port_policy_b_eth_breakout_10g_port_mode_list = []
 port_policy_b_eth_breakout_25g_port_mode_list = []
