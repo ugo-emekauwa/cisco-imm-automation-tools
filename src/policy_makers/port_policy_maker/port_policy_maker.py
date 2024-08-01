@@ -8,6 +8,14 @@ GitHub Repository: https://github.com/ugo-emekauwa/cisco-imm-automation-tools
 """
 
 
+import sys
+import traceback
+import json
+import copy
+import intersight
+import re
+import urllib3
+
 ########################
 # MODULE REQUIREMENT 1 #
 ########################
@@ -56,7 +64,16 @@ port_policy_tags = {"Org": "IT", "Dept": "DevOps"}  # Empty the port_policy_tags
 fabric_interconnect_model = "UCS-FI-6454"
 
 # Unified Port Settings (These values should be set based on the Fabric Interconnect model)
-fc_port_mode_list = [{"Ports": "1-8"}]  # Empty the fc_port_mode_list list if no FC ports are needed, for example: fc_port_mode_list = []
+## Empty the Port Mode list if no ports are needed, for example: fc_port_mode_list = []
+## To configure breakout ports, set the appropriate port mode list, then in the next section for 'Port Role Settings', set the desired port list with the "AggregatePortId" attribute as the parent breakout port, for example:
+## eth_breakout_25g_port_mode_list = [{"Ports": "17-18"}]
+## server_port_list = [{"AggregatePortId": 17, "Ports": "1-4"}, {"AggregatePortId": 18, "Ports": "1-4"}]
+fc_port_mode_list = [{"Ports": "1-8"}]
+eth_breakout_10g_port_mode_list = []
+eth_breakout_25g_port_mode_list = []
+fc_breakout_8g_port_mode_list = []
+fc_breakout_16g_port_mode_list = []
+fc_breakout_32g_port_mode_list = []
 
 # Port Role Settings
 ## NOTE - To not configure a port role, leave the corresponding list empty, for example: server_port_list = []
@@ -119,14 +136,6 @@ port_policy_fabric_interconnect = "AB"      # Options: "AB", "A", "B"
 #############################################################################################################################
 #############################################################################################################################
 
-
-import sys
-import traceback
-import json
-import copy
-import intersight
-import re
-import urllib3
 
 # Suppress InsecureRequestWarning error messages
 urllib3.disable_warnings()
@@ -204,8 +213,7 @@ def test_intersight_api_service(intersight_api_key_id,
         intersight_base_url (str):
             Optional; The base URL for Intersight API paths. The default value
             is "https://www.intersight.com/api/v1". This value typically only
-            needs to be changed if using the Intersight Virtual Appliance. The
-            default value is "https://www.intersight.com/api/v1".
+            needs to be changed if using the Intersight Virtual Appliance.
         preconfigured_api_client ("ApiClient"):
             Optional; An ApiClient class instance which handles
             Intersight client-server communication through the use of API keys.
@@ -375,7 +383,7 @@ def intersight_object_moid_retriever(intersight_api_key_id,
                 provided_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                               intersight_api_key=None,
                                                                               object_name=organization,
-                                                                              intersight_api_path="organization/Organizations",
+                                                                              intersight_api_path="organization/Organizations?$top=1000",
                                                                               object_type="Organization",
                                                                               preconfigured_api_client=api_client
                                                                               )
@@ -798,8 +806,9 @@ class UcsPolicy:
                     existing_intersight_object_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                        intersight_api_key=None,
                                                                                        object_name=existing_intersight_object_name,
-                                                                                       intersight_api_path=self.intersight_api_path,
+                                                                                       intersight_api_path=f"{self.intersight_api_path}?$top=1000",
                                                                                        object_type=self.object_type,
+                                                                                       organization=self.organization,
                                                                                        preconfigured_api_client=self.api_client
                                                                                        )
                     # Update full Intersight API path with the MOID of the existing object
@@ -849,7 +858,7 @@ class UcsPolicy:
         policy_organization_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                     intersight_api_key=None,
                                                                     object_name=self.organization,
-                                                                    intersight_api_path="organization/Organizations",
+                                                                    intersight_api_path="organization/Organizations?$top=1000",
                                                                     object_type="Organization",
                                                                     preconfigured_api_client=self.api_client
                                                                     )
@@ -1162,7 +1171,7 @@ class DirectlyAttachedUcsDomainPolicy(UcsPolicy):
             ucs_domain_profile_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                        intersight_api_key=None,
                                                                        object_name=self.ucs_domain_profile_name,
-                                                                       intersight_api_path="fabric/SwitchClusterProfiles",
+                                                                       intersight_api_path="fabric/SwitchClusterProfiles?$top=1000",
                                                                        object_type="UCS Domain Profile",
                                                                        organization=self.organization,
                                                                        preconfigured_api_client=self.api_client
@@ -1303,10 +1312,11 @@ class PortPolicy(DirectlyAttachedUcsDomainPolicy):
 class IdConfigurator:
     """This class serves as a base class for configuring the IDs of objects in
     Intersight policies. Examples of the objects that would use these IDs are
-    ports, VLANs, and VSANs.
+    ports, Port Modes, VLANs, VSANs, vNICs, vHBAs, and drives.
     """
     object_type = "ID Configurator"
     attributes_that_require_special_handling = None
+    object_variable_value_maps = None
     
     def __init__(self,
                  intersight_api_key_id,
@@ -1446,7 +1456,7 @@ class IdConfigurator:
                         id_attribute_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                              intersight_api_key=None,
                                                                              object_name=staged_intersight_api_body[id_attribute["Name"]],
-                                                                             intersight_api_path=id_attribute["IntersightAPIPath"],
+                                                                             intersight_api_path=f'{id_attribute["IntersightAPIPath"]}?$top=1000',
                                                                              object_type=id_attribute["Type"],
                                                                              organization=self.organization,
                                                                              preconfigured_api_client=self.api_client
@@ -1459,23 +1469,135 @@ class IdConfigurator:
                             id_attribute_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                                                  intersight_api_key=None,
                                                                                  object_name=staged_intersight_api_body[id_attribute["Name"]],
-                                                                                 intersight_api_path=id_attribute["IntersightAPIPath"],
+                                                                                 intersight_api_path=f'{id_attribute["IntersightAPIPath"]}?$top=1000',
                                                                                  object_type=id_attribute["Type"],
                                                                                  organization=self.organization,
                                                                                  preconfigured_api_client=self.api_client
                                                                                  )
                             staged_intersight_api_body[id_attribute["Name"]] = {"Moid": id_attribute_moid}
 
+    def _update_class_instance_mapped_object_attributes(self):
+        """This function updates class instance attributes
+        that require mapping frontend to backend values for
+        compatibility with the Intersight API.
+
+        Raises:
+            Exception:
+                An exception occurred while reformatting a provided value for
+                an attribute. The issue will likely be due to the provided
+                value not being in string format. Changing the value to string
+                format should resolve the exception.
+        """
+        # Check for object variables with value maps that need configuration
+        if self.object_variable_value_maps:
+            for object_variable in self.object_variable_value_maps:
+                # Create list of all known and accepted frontend values
+                all_known_and_accepted_frontend_values = (object_variable_value["FrontEndValue"]
+                                                          for
+                                                          object_variable_value
+                                                          in
+                                                          object_variable["Values"]
+                                                          )
+                # Retrieve the user provided object variable value
+                provided_object_variable_value = getattr(self,
+                                                         object_variable["VariableName"]
+                                                         )
+                # Reformat the user provided object variable value to lowercase and remove spaces to prevent potential format issues
+                try:
+                    reformatted_object_variable_value = "".join(provided_object_variable_value.lower().split())
+                except Exception:
+                    print("\nA configuration error has occurred!\n")
+                    print(f"During the configuration of the {self.object_type} named "
+                          f"{self.policy_name}, there was an issue with the value "
+                          f"provided for the {object_variable['Description']} setting.")
+                    print(f"The value provided was {provided_object_variable_value}.")
+                    print("To proceed, the value provided for the "
+                          f"{object_variable['Description']} setting should be updated to "
+                          "an accepted string format.")
+                    print("The recommended values are the following:\n")
+                    # Print list of all known and accepted frontend values for user
+                    print(*all_known_and_accepted_frontend_values,
+                          sep=", "
+                          )
+                    print("\nPlease update the configuration, then re-attempt "
+                          "execution.\n")
+                    sys.exit(0)
+                # Cycle through known values and match provided object variable value to backend value
+                for object_variable_value in object_variable["Values"]:
+                    # Create list of all known and accepted frontend and backend values
+                    current_known_frontend_and_backend_value_options = (object_variable_value.values())
+                    # Retrieve the current known backend value
+                    current_known_backend_value = object_variable_value["BackEndValue"]
+                    if (
+                        reformatted_object_variable_value
+                        in
+                        ("".join(current_known_frontend_or_backend_value.lower().split())
+                         for
+                         current_known_frontend_or_backend_value
+                         in
+                         current_known_frontend_and_backend_value_options
+                         )
+                        ):
+                        backend_object_variable_value = current_known_backend_value
+                        break
+                else:
+                    # If no backend match is found with the user provided object variable value, pass on the user provided object variable value to Intersight to decide
+                    print(f"\nWARNING: An unknown {self.object_type} value of "
+                          f"'{provided_object_variable_value}' has been "
+                          f"provided for the {object_variable['Description']} "
+                          "settings!")
+                    print("An attempt will be made to configure the unknown "
+                          f"{object_variable['Description']} value.")
+                    print("If there is an error, please use one of the "
+                          "following known values for the "
+                          f"{object_variable['Description']} settings, then "
+                          "re-attempt execution:\n")
+                    print(*all_known_and_accepted_frontend_values,
+                          sep=", "
+                          )
+                    backend_object_variable_value = provided_object_variable_value
+                # Update the class instance with the converted object variable value
+                setattr(self,
+                        object_variable["VariableName"],
+                        backend_object_variable_value
+                        )
+
 
 class PortModes(IdConfigurator):
     """This class is used to configure the Port Modes of an
     Intersight Port Policy.
     """
-    object_type = "FC Port Mode"
+    object_type = "Port Mode"
     id_type = "Port"
     intersight_api_path = "fabric/PortModes"
     policy_type = "Port Policy"
     policy_intersight_api_path = "fabric/PortPolicies"
+    object_variable_value_maps = [
+        {"VariableName": "port_mode_type",
+         "Description": "Port Mode Type",
+         "AttributeName": "CustomMode",
+         "Values": [
+             {"FrontEndValue": "Fibre Channel",
+              "BackEndValue": "FibreChannel"
+              },
+             {"FrontEndValue": "Breakout Ethernet 10G",
+              "BackEndValue": "BreakoutEthernet10G"
+              },
+             {"FrontEndValue": "Breakout Ethernet 25G",
+              "BackEndValue": "BreakoutEthernet25G"
+              },
+             {"FrontEndValue": "Breakout Fibre Channel 8G",
+              "BackEndValue": "BreakoutFibreChannel8G"
+              },
+             {"FrontEndValue": "Breakout Fibre Channel 16G",
+              "BackEndValue": "BreakoutFibreChannel16G"
+              },
+             {"FrontEndValue": "Breakout Fibre Channel 32G",
+              "BackEndValue": "BreakoutFibreChannel32G"
+              }
+             ]
+         }
+        ]
     
     def __init__(self,
                  intersight_api_key_id,
@@ -1485,7 +1607,8 @@ class PortModes(IdConfigurator):
                  organization="default",
                  intersight_base_url="https://www.intersight.com/api/v1",
                  preconfigured_api_client=None,
-                 default_slot_id=1
+                 default_slot_id=1,
+                 port_mode_type="FibreChannel"
                  ):
         super().__init__(intersight_api_key_id,
                          intersight_api_key,
@@ -1496,6 +1619,7 @@ class PortModes(IdConfigurator):
                          preconfigured_api_client
                          )
         self.default_slot_id = default_slot_id
+        self.port_mode_type = port_mode_type
         
     def __repr__(self):
         return (
@@ -1507,7 +1631,8 @@ class PortModes(IdConfigurator):
             f"'{self.organization}', "
             f"'{self.intersight_base_url}', "
             f"{self.api_client}, "
-            f"{self.default_slot_id})"
+            f"{self.default_slot_id}, "
+            f"'{self.port_mode_type}')"
             )
 
     def object_maker(self):
@@ -1538,28 +1663,54 @@ class PortModes(IdConfigurator):
                                          body=body,
                                          auth_settings=['cookieAuth', 'http_signature', 'oAuth2', 'oAuth2']
                                          )
-                print(f"The configuration of {self.object_type} "
-                      f"for ports {full_fc_port_mode_start_port_id} - "
-                      f"{full_fc_port_mode_end_port_id} has completed.")
+                if self.port_mode_type == "FibreChannel":
+                    print(f"The configuration of {logged_port_mode_type} "
+                          f"{self.object_type} for Ports "
+                          f"{full_fc_port_mode_start_port_id} - "
+                          f"{full_fc_port_mode_end_port_id} has completed.")
+                else:
+                    print(f"The configuration of {logged_port_mode_type} "
+                          f"{self.object_type} for Port "
+                          f"{full_current_port_mode_port_id} has completed.")
                 return "The POST method was successful."
             except Exception:
                 print("\nA configuration error has occurred!\n")
-                print(f"Unable to configure {self.object_type} "
-                      f"for ports {full_fc_port_mode_start_port_id} - "
-                      f"{full_fc_port_mode_end_port_id} under the "
-                      "Intersight API resource path "
-                      f"'{full_intersight_api_path}'.\n")
+                if self.port_mode_type == "FibreChannel":
+                    print(f"Unable to configure {logged_port_mode_type} "
+                          f"{self.object_type} for Ports "
+                          f"{full_fc_port_mode_start_port_id} - "
+                          f"{full_fc_port_mode_end_port_id} under the "
+                          "Intersight API resource path "
+                          f"'{full_intersight_api_path}'.\n")
+                else:
+                    print(f"Unable to configure {logged_port_mode_type} "
+                          f"{self.object_type} for Port "
+                          f"{full_current_port_mode_port_id} "
+                          f"under the Intersight API resource path "
+                          f"'{full_intersight_api_path}'.\n")
                 print("Exception Message: ")
                 traceback.print_exc()
                 return "The POST method failed."
-            
+
+        # Update the class instance with individual mapped object attributes
+        self._update_class_instance_mapped_object_attributes()
+        # Define dictionary map for logging of Port Mode types
+        port_mode_type_logging_map = {
+            "FibreChannel": "Fibre Channel",
+            "BreakoutEthernet10G": "Breakout Ethernet 10G",
+            "BreakoutEthernet25G": "Breakout Ethernet 25G",
+            "BreakoutFibreChannel8G": "Breakout Fibre Channel 8G",
+            "BreakoutFibreChannel16G": "Breakout Fibre Channel 16G",
+            "BreakoutFibreChannel32G": "Breakout Fibre Channel 32G"
+            }
+
         if self.id_list:
             ports_id_key = f"{self.id_type}s"
             # Retrieving the Port Policy MOID
             policy_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                            intersight_api_key=None,
                                                            object_name=self.policy_name,
-                                                           intersight_api_path=self.policy_intersight_api_path,
+                                                           intersight_api_path=f"{self.policy_intersight_api_path}?$top=1000",
                                                            object_type=self.policy_type,
                                                            organization=self.organization,
                                                            preconfigured_api_client=self.api_client
@@ -1571,15 +1722,28 @@ class PortModes(IdConfigurator):
                 staged_intersight_api_body = copy.deepcopy(id_dictionary)
                 staged_intersight_api_body.pop(ports_id_key)
                 staged_intersight_api_body["PortPolicy"] = {"Moid": policy_moid}
-                fc_port_mode_start = min(ports_enumerated_id_range)
-                staged_intersight_api_body["PortIdStart"] = fc_port_mode_start
-                fc_port_mode_end = max(ports_enumerated_id_range)
-                staged_intersight_api_body["PortIdEnd"] = fc_port_mode_end
                 current_slot_id = id_dictionary.get("SlotId", self.default_slot_id)
                 staged_intersight_api_body["SlotId"] = current_slot_id
-                full_fc_port_mode_start_port_id = f"{current_slot_id}/{fc_port_mode_start}"
-                full_fc_port_mode_end_port_id = f"{current_slot_id}/{fc_port_mode_end}"
-                post_intersight_port_modes(staged_intersight_api_body)
+                staged_intersight_api_body["CustomMode"] = self.port_mode_type
+                logged_port_mode_type = port_mode_type_logging_map.get(self.port_mode_type, "the unknown")
+                
+                if self.port_mode_type == "FibreChannel":
+                    # The port mode type "FibreChannel" only creates one PortMode object with distinct starting and ending port IDs based on list provided in ports_id_key
+                    fc_port_mode_start = min(ports_enumerated_id_range)
+                    staged_intersight_api_body["PortIdStart"] = fc_port_mode_start
+                    fc_port_mode_end = max(ports_enumerated_id_range)
+                    staged_intersight_api_body["PortIdEnd"] = fc_port_mode_end
+                    full_fc_port_mode_start_port_id = f"{current_slot_id}/{fc_port_mode_start}"
+                    full_fc_port_mode_end_port_id = f"{current_slot_id}/{fc_port_mode_end}"
+                    post_intersight_port_modes(staged_intersight_api_body)
+                else:
+                    # Other port mode types provided will assume a breakout port configuration is being used and will create a PortMode object for each port ID in the list provided in ports_id_key
+                    # Supported breakout port mode types include "BreakoutEthernet10G", "BreakoutEthernet25G", "BreakoutFibreChannel8G", "BreakoutFibreChannel16G", and "BreakoutFibreChannel32G" as of 7/24/24
+                    for current_port_id in ports_enumerated_id_range:
+                        staged_intersight_api_body["PortIdStart"] = current_port_id
+                        staged_intersight_api_body["PortIdEnd"] = current_port_id
+                        full_current_port_mode_port_id = f"{current_slot_id}/{current_port_id}"
+                        post_intersight_port_modes(staged_intersight_api_body)
 
 
 class Port(IdConfigurator):
@@ -1674,7 +1838,7 @@ class Port(IdConfigurator):
             policy_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                            intersight_api_key=None,
                                                            object_name=self.policy_name,
-                                                           intersight_api_path=self.policy_intersight_api_path,
+                                                           intersight_api_path=f"{self.policy_intersight_api_path}?$top=1000",
                                                            object_type=self.policy_type,
                                                            organization=self.organization,
                                                            preconfigured_api_client=self.api_client
@@ -1698,7 +1862,10 @@ class Port(IdConfigurator):
                 staged_intersight_api_body["AggregatePortId"] = current_aggregate_port_id
                 for current_port_id in ports_enumerated_id_range:
                     staged_intersight_api_body[f"{self.id_type}Id"] = current_port_id
-                    full_current_port_id = f"{current_slot_id}/{current_port_id}"
+                    if current_aggregate_port_id > 0:
+                        full_current_port_id = f"{current_slot_id}/{current_aggregate_port_id}/{current_port_id}"
+                    else:
+                        full_current_port_id = f"{current_slot_id}/{current_port_id}"
                     post_intersight_port(staged_intersight_api_body)
 
 
@@ -2019,7 +2186,7 @@ class PortChannel(IdConfigurator):
             policy_moid = intersight_object_moid_retriever(intersight_api_key_id=None,
                                                            intersight_api_key=None,
                                                            object_name=self.policy_name,
-                                                           intersight_api_path=self.policy_intersight_api_path,
+                                                           intersight_api_path=f"{self.policy_intersight_api_path}?$top=1000",
                                                            object_type=self.policy_type,
                                                            organization=self.organization,
                                                            preconfigured_api_client=self.api_client
@@ -2050,7 +2217,10 @@ class PortChannel(IdConfigurator):
                     pc_member_dictionary_list_for_intersight_api_body.append(
                         pc_member_dictionary
                         )
-                    full_current_port_id = f"{current_slot_id}/{current_port_id}"
+                    if current_aggregate_port_id > 0:
+                        full_current_port_id = f"{current_slot_id}/{current_aggregate_port_id}/{current_port_id}"
+                    else:
+                        full_current_port_id = f"{current_slot_id}/{current_port_id}"
                     pc_member_dictionary_list_for_logging.append(
                         full_current_port_id
                         )
@@ -2332,6 +2502,11 @@ def port_policy_maker(intersight_api_key_id,
                       policy_name,
                       fabric_interconnect_model="UCS-FI-6454",
                       fc_port_mode_list=None,
+                      eth_breakout_10g_port_mode_list=None,
+                      eth_breakout_25g_port_mode_list=None,
+                      fc_breakout_8g_port_mode_list=None,
+                      fc_breakout_16g_port_mode_list=None,
+                      fc_breakout_32g_port_mode_list=None,
                       server_port_list=None,
                       ethernet_uplink_port_list=None,
                       fcoe_uplink_port_list=None,
@@ -2658,7 +2833,7 @@ def port_policy_maker(intersight_api_key_id,
                        fabric_interconnect_model=fabric_interconnect_model
                        ))
 
-    # Define and create Port Modes object in Intersight
+    # Define and create FC Port Mode objects in Intersight
     builder(PortModes(intersight_api_key_id=intersight_api_key_id,
                       intersight_api_key=intersight_api_key,
                       policy_name=policy_name,
@@ -2666,7 +2841,68 @@ def port_policy_maker(intersight_api_key_id,
                       organization=organization,
                       intersight_base_url=intersight_base_url,
                       preconfigured_api_client=preconfigured_api_client,
-                      default_slot_id=default_slot_id_of_fc_uplink_ports
+                      default_slot_id=default_slot_id_of_fc_uplink_ports,
+                      port_mode_type="Fibre Channel"
+                      ))
+    
+    # Define and create 10G Ethernet Breakout Port Mode objects in Intersight
+    builder(PortModes(intersight_api_key_id=intersight_api_key_id,
+                      intersight_api_key=intersight_api_key,
+                      policy_name=policy_name,
+                      id_list=eth_breakout_10g_port_mode_list,
+                      organization=organization,
+                      intersight_base_url=intersight_base_url,
+                      preconfigured_api_client=preconfigured_api_client,
+                      default_slot_id=default_slot_id_of_fc_uplink_ports,
+                      port_mode_type="Breakout Ethernet 10G"
+                      ))
+    
+    # Define and create 25G Ethernet Breakout Port Mode objects in Intersight
+    builder(PortModes(intersight_api_key_id=intersight_api_key_id,
+                      intersight_api_key=intersight_api_key,
+                      policy_name=policy_name,
+                      id_list=eth_breakout_25g_port_mode_list,
+                      organization=organization,
+                      intersight_base_url=intersight_base_url,
+                      preconfigured_api_client=preconfigured_api_client,
+                      default_slot_id=default_slot_id_of_fc_uplink_ports,
+                      port_mode_type="Breakout Ethernet 25G"
+                      ))
+    
+    # Define and create 8G FC Breakout Port Mode objects in Intersight
+    builder(PortModes(intersight_api_key_id=intersight_api_key_id,
+                      intersight_api_key=intersight_api_key,
+                      policy_name=policy_name,
+                      id_list=fc_breakout_8g_port_mode_list,
+                      organization=organization,
+                      intersight_base_url=intersight_base_url,
+                      preconfigured_api_client=preconfigured_api_client,
+                      default_slot_id=default_slot_id_of_fc_uplink_ports,
+                      port_mode_type="Breakout Fibre Channel 8G"
+                      ))
+    
+    # Define and create 16G FC Breakout Port Mode objects in Intersight
+    builder(PortModes(intersight_api_key_id=intersight_api_key_id,
+                      intersight_api_key=intersight_api_key,
+                      policy_name=policy_name,
+                      id_list=fc_breakout_16g_port_mode_list,
+                      organization=organization,
+                      intersight_base_url=intersight_base_url,
+                      preconfigured_api_client=preconfigured_api_client,
+                      default_slot_id=default_slot_id_of_fc_uplink_ports,
+                      port_mode_type="Breakout Fibre Channel 16G"
+                      ))
+    
+    # Define and create 32G FC Breakout Port Mode objects in Intersight
+    builder(PortModes(intersight_api_key_id=intersight_api_key_id,
+                      intersight_api_key=intersight_api_key,
+                      policy_name=policy_name,
+                      id_list=fc_breakout_32g_port_mode_list,
+                      organization=organization,
+                      intersight_base_url=intersight_base_url,
+                      preconfigured_api_client=preconfigured_api_client,
+                      default_slot_id=default_slot_id_of_fc_uplink_ports,
+                      port_mode_type="Breakout FibreChannel 32G"
                       ))
     
     # Define and create Server Port objects in Intersight
@@ -2819,6 +3055,11 @@ def main():
         policy_name=port_policy_name,
         fabric_interconnect_model=fabric_interconnect_model,
         fc_port_mode_list=fc_port_mode_list,
+        eth_breakout_10g_port_mode_list=eth_breakout_10g_port_mode_list,
+        eth_breakout_25g_port_mode_list=eth_breakout_25g_port_mode_list,
+        fc_breakout_8g_port_mode_list=fc_breakout_8g_port_mode_list,
+        fc_breakout_16g_port_mode_list=fc_breakout_16g_port_mode_list,
+        fc_breakout_32g_port_mode_list=fc_breakout_32g_port_mode_list,
         server_port_list=server_port_list,
         ethernet_uplink_port_list=ethernet_uplink_port_list,
         fcoe_uplink_port_list=fcoe_uplink_port_list,
