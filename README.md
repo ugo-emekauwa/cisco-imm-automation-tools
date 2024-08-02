@@ -89,18 +89,23 @@
 - [Base UCS Server Profile Template Maker](./src/profile_makers/ucs_server_profile_template_maker)
 
 ## Demonstrations and Learning Labs
-Cisco IMM Automation Tools can be demoed on Cisco dCloud in the following content:
+Cisco IMM Automation Tools is used to power and can be demoed on multiple Cisco UCS and Intersight demonstrations and labs on Cisco dCloud:
 
-1. [Cisco Intersight with UCS X-Series Demo](https://dcloud2-rtp.cisco.com/content/instantdemo/cisco-intersight-mode-with-ucs-x-series-v1-instant-demo-2)
-![Cisco UCS X-Series Demo Topology](./src/assets/Cisco_UCS_X-Series_Demo_Topology.png "Cisco UCS X-Series Demo Topology")
+- [Running Gen AI and LLMs on Cisco UCS X-Series](https://dcloud2.cisco.com/demo/ai-workloads-on-cisco-ucs-x-series-v1)
+- [Cisco Intersight with UCS X-Series Lab](https://dcloud2.cisco.com/demo/cisco-intersight-management-with-x-series-lab-v1)
+- [Cisco Intersight with UCS X-Series Demo](https://dcloud2-rtp.cisco.com/content/instantdemo/cisco-intersight-mode-with-ucs-x-series-v1-instant-demo-2)
+- [Cisco Intersight with UCS B-Series Lab](https://dcloud2.cisco.com/demo/cisco-intersight-management-for-ucs-b-series-lab)
+<br><br>
 
-2. [Cisco Intersight with UCS X-Series Lab](https://dcloud2.cisco.com/demo/cisco-intersight-management-with-x-series-lab-v1)
-![Cisco UCS X-Series Lab Topology](./src/assets/Cisco_UCS_X-Series_Lab_Topology.png "Cisco UCS X-Series Lab Topology")
-
-3. [Cisco Intersight with UCS B-Series Lab](https://dcloud2.cisco.com/demo/cisco-intersight-management-for-ucs-b-series-lab)
-![Cisco UCS B-Series Lab Topology](./src/assets/Cisco_UCS_B-Series_Lab_Topology.png "Cisco UCS B-Series Lab Topology")
+![Cisco UCS X-Series Lab Topology](./src/assets/Cisco_UCS_X-Series_Lab_Topology_2.png "Cisco UCS X-Series Lab Topology")
+<br><br>
 
 dCloud is available at [https://dcloud.cisco.com](https://dcloud.cisco.com), where Cisco product demonstrations and labs can be found in the Catalog.
+
+## Related Tools
+Here are similar tools to help administer and manage Cisco UCS and Intersight environments.
+- [Automated OS Install Tool for Cisco Intersight](https://github.com/ugo-emekauwa/intersight-os-installer)
+- [UCS CIMC Certificate Renewal Tool](https://github.com/ugo-emekauwa/ucs_cimc_csr_tool)
 
 ## Author
 Ugo Emekauwa
