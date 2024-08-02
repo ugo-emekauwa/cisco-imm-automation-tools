@@ -91,7 +91,7 @@
 ## Demonstrations and Learning Labs
 Cisco IMM Automation Tools is used to power and can be demoed on multiple Cisco UCS and Intersight demonstrations and labs on Cisco dCloud:
 
-- [Running Gen AI and LLMs on Cisco UCS X-Series](https://dcloud2.cisco.com/demo/ai-workloads-on-cisco-ucs-x-series-v1)
+- [Running Gen AI and LLMs on Cisco UCS X-Series with NVIDIA GPUs](https://dcloud2.cisco.com/demo/ai-workloads-on-cisco-ucs-x-series-v1)
 - [Cisco Intersight with UCS X-Series Lab](https://dcloud2.cisco.com/demo/cisco-intersight-management-with-x-series-lab-v1)
 - [Cisco Intersight with UCS X-Series Demo](https://dcloud2-rtp.cisco.com/content/instantdemo/cisco-intersight-mode-with-ucs-x-series-v1-instant-demo-2)
 - [Cisco Intersight with UCS B-Series Lab](https://dcloud2.cisco.com/demo/cisco-intersight-management-for-ucs-b-series-lab)
