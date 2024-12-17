@@ -344,9 +344,9 @@ ethernet_qos_policy_tags = {"Org": "IT", "Dept": "DevOps"}  # Empty the ethernet
 # Policy Detail Settings
 ethernet_qos_policy_ethernet_qos_mtu_in_bytes = 1500        # Options: 1500 - 9000
 ethernet_qos_policy_ethernet_qos_rate_limit_in_mbps = 0        # Options: 0 - 100000
-ethernet_qos_policy_ethernet_qos_cos = 3        # Options: 0 - 6
-ethernet_qos_policy_ethernet_qos_burst = 1024        # Options: 1024 - 1000000
-ethernet_qos_policy_ethernet_qos_priority = "Best Effort"        # Options: "Best Effort", "FC", "Platinum", "Gold", "Silver", "Bronze"
+ethernet_qos_cos = 0        # Options: 0, 1, 2, 4, 5, 6
+ethernet_qos_burst = 10240        # Options: 1024 - 1000000
+ethernet_qos_priority = "Best Effort"        # Options: "Best Effort", "Platinum", "Gold", "Silver", "Bronze"
 ethernet_qos_policy_ethernet_qos_enable_trust_host_cos = False        # Options: True, False
 
 
