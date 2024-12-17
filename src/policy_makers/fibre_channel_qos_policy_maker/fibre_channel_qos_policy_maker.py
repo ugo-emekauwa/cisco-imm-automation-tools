@@ -57,7 +57,7 @@ fibre_channel_qos_policy_tags = {"Org": "IT", "Dept": "DevOps"}  # Empty the fib
 # Policy Detail Settings
 fibre_channel_qos_rate_limit_in_mbps = 0        # Options: 0 - 100000
 fibre_channel_qos_maximum_data_field_size_in_bytes = 2112        # Options: 256 - 2112
-fibre_channel_qos_cos = 3        # Options: 0 - 6
+fibre_channel_qos_cos = 3
 fibre_channel_qos_burst = 10240        # Options: 1 - 1000000
 
 # Intersight Base URL Setting (Change only if using the Intersight Virtual Appliance)
