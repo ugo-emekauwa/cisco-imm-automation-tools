@@ -6849,7 +6849,7 @@ class BootOrderPolicy(DirectlyAttachedUcsServerPolicy):
                     for bootdevice in self.boot_device_type_maps["FixedFrontEndValues"]["boot"]:
                         print(f"'{bootdevice}'")
                     try:
-                        unknown_boot_device_type_conversion_split_list = re.split("\s|boot|-", provided_boot_device_type.lower())
+                        unknown_boot_device_type_conversion_split_list = re.split(r"\s|boot|-", provided_boot_device_type.lower())
                     except Exception:
                         print("\nA configuration error has occurred!\n")
                         print("During the configuration of the {self.object_type} named "
