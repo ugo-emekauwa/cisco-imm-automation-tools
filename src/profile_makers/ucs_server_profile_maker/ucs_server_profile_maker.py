@@ -59,7 +59,7 @@ assign_ucs_server_profile = False
 
 ## NOTE - Assignment to a Specific Individual Server
 ## For the Server assignment identifier variable, the accepted values are the Server serial, name, model, or user label. This information can be found in Intersight, if needed.
-## If there are Servers with duplicate names, models, or PIDs, please use the serial to ensure the correct Server is selected.
+## If there are Servers with duplicate names, models, or user labels, please use the serial to ensure the correct Server is selected.
 ## Here is an example using the Server serial: ucs_server_assignment_identifier = " FCH25067777"
 ## Here is an example using the Server name: ucs_server_assignment_identifier = "UCS-IMM-Pod-1-1"
 ## Here is an example using the Server model: ucs_server_assignment_identifier = "UCSX-210C-M6"
@@ -1863,3 +1863,4 @@ if __name__ == "__main__":
 
 # Exiting the Profile Maker for Cisco Intersight
 sys.exit(0)
+
