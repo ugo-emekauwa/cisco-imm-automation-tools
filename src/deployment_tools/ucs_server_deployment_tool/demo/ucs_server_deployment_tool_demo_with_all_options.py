@@ -89,10 +89,10 @@ ucs_server_profile_tags = {"Org": "IT", "Dept": "DevOps"}  # Empty the ucs_serve
 # UCS Server Profile Name and Assignment Settings
 ## NOTE - For the "Server Assignment Identifier" key below, the accepted values are the Server serial, name, model, or PID (product ID). This information can be found in Intersight, if needed.
 ## If there are Server with duplicate names, models, or PIDs, please use the serial to ensure the correct Server is selected.
-## Here is an example using the Server serial: "Server Assignment Identifier": "FOX1337G777"
-## Here is an example using the Server name: "Server Assignment Identifier": "UCS-IMM-Pod-1"
-## Here is an example using the Server model: "Server Assignment Identifier": "N20-C6508"
-## Here is an example using the Server PID: "Server Assignment Identifier": "N20-C6508"
+## Here is an example using the Server serial: "Server Assignment Identifier": "FCH27387777"
+## Here is an example using the Server name: "Server Assignment Identifier": "UCS-IMM-Pod-1-1"
+## Here is an example using the Server model: "Server Assignment Identifier": "UCSX-210C-M7"
+## Here is an example using the Server PID: "Server Assignment Identifier": "UCSX-210C-M7"
 ## For the "Deploy Server Profile" key, setting to False will allow for only assignment of Server profiles to valid Server identifiers. Set to True for full deployment.
 ## The value set for the "Server Assignment Identifier" key will override any Resource Pool value set in the "Server Resource Pool" key to allow for discrete server assignments if desired.
 ## To deploy additional UCS Server Profiles, add more rows below.
@@ -20968,4 +20968,5 @@ if __name__ == "__main__":
 
 # Exiting the UCS Server Deployment Tool for Cisco Intersight
 sys.exit(0)
+
 
