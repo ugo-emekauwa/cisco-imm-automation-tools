@@ -19132,7 +19132,8 @@ class VirtualMediaPolicy(DirectlyAttachedUcsServerPolicy):
             "Description": self.policy_description,
             "Enabled": self.enable_virtual_media,
             "Encryption": self.enable_virtual_media_encryption,
-            "LowPowerUsb": self.enable_low_power_usb
+            "LowPowerUsb": self.enable_low_power_usb,
+            "Mappings": self.virtual_media_mapping_list
             }
 
     def __repr__(self):
@@ -20964,3 +20965,4 @@ if __name__ == "__main__":
 
 # Exiting the UCS Server Deployment Tool for Cisco Intersight
 sys.exit(0)
+
