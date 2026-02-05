@@ -74,12 +74,6 @@ virtual_media_mapping_list = [
      "Password": "C1sco12345",
      "Authentication Protocol": "ntlm"
      },
-    {"Virtual Media Type": "CDD",
-     "Virtual Media Protocol": "HTTPS",
-     "Name": "sample-mapping-3",
-     "File Location": "https://hostname-or-IP/filePath/fileName.iso",
-     "Mount Options": ""
-     },
     ]
 
 # Intersight Base URL Setting (Change only if using the Intersight Virtual Appliance)
@@ -1338,7 +1332,8 @@ class VirtualMediaPolicy(DirectlyAttachedUcsServerPolicy):
             "Description": self.policy_description,
             "Enabled": self.enable_virtual_media,
             "Encryption": self.enable_virtual_media_encryption,
-            "LowPowerUsb": self.enable_low_power_usb
+            "LowPowerUsb": self.enable_low_power_usb,
+            "Mappings": self.virtual_media_mapping_list
             }
 
     def __repr__(self):
@@ -1582,3 +1577,4 @@ if __name__ == "__main__":
 
 # Exiting the Policy Maker for Cisco Intersight
 sys.exit(0)
+
